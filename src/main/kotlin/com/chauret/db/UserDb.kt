@@ -1,5 +1,6 @@
 package com.chauret.db
 
+import com.chauret.ForbiddenException
 import com.chauret.NotFoundException
 import com.chauret.UnauthorizedException
 import com.chauret.model.Permissions
@@ -27,6 +28,9 @@ object UserDb {
     }
 
     fun createUser(username: String, encodedPassword: String) {
+        if (Permissions.values().find { it.name.lowercase() == username.lowercase() } != null) {
+            throw ForbiddenException("Username is reserved")
+        }
         database.save(User(
             username = username,
             encodedPassword = encodedPassword,

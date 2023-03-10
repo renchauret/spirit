@@ -1,6 +1,7 @@
 package com.chauret.api
 
 import com.chauret.NotFoundException
+import com.chauret.ServerException
 import com.chauret.UnauthorizedException
 import com.chauret.api.request.SignInRequest
 import com.chauret.db.SessionDb
@@ -42,58 +43,33 @@ object AuthInterceptor: HttpRequestInterceptor {
 
 @Post("/signIn", MimeType.JSON)
 fun signIn(): HttpResponse {
-    val request = runCatching { getBody<SignInRequest>() }.getOrElse {
-        return response(ResponseType.BAD_REQUEST, "username and password are required")
+    return runWithBodyAndResponse<SignInRequest> {
+        // Validate the username and password against the database or authentication service
+        authenticateUser(it.username, encodePassword(it.password))
     }
-    // Validate the username and password against the database or authentication service
-    val session: Session = runCatching {
-        authenticateUser(request.username, encodePassword(request.password))
-    }.getOrElse {
-        if (it is NotFoundException) {
-            return response(
-                ResponseType.UNAUTHORIZED,
-                "Invalid username"
-            )
-        } else if (it is UnauthorizedException) {
-            return response(
-                ResponseType.UNAUTHORIZED,
-                "Wrong password"
-            )
-        }
-        println(it.message)
-        return unexpectedErrorResponse()
-    }
-
-    return okResponse(session)
 }
 
 @Post("/signUp", MimeType.JSON)
 fun signUp(): HttpResponse {
-    val request = runCatching { getBody<SignInRequest>() }.getOrElse {
-        return response(ResponseType.BAD_REQUEST, "username and password are required")
-    }
-    val encodedPassword = encodePassword(request.password)
-    // Check if user exists first
-    val session: Session = runCatching {
-        try {
-            authenticateUser(request.username, encodedPassword)
-        } catch (e: UnauthorizedException) {
-            return response(
-                ResponseType.UNAUTHORIZED,
-                "User already exists with a different password"
-            )
-        } catch (e: NotFoundException) {
-            // If user doesn't exist, create a new user
-            UserDb.createUser(request.username, encodedPassword)
-            // Then authenticate the user
-            authenticateUser(request.username, encodedPassword)
+    return runWithBodyAndResponse<SignInRequest> {
+        val encodedPassword = encodePassword(it.password)
+        // Check if user exists first
+        runCatching {
+            try {
+                authenticateUser(it.username, encodedPassword)
+            } catch (e: UnauthorizedException) {
+                throw UnauthorizedException("User already exists with a different password")
+            } catch (e: NotFoundException) {
+                // If user doesn't exist, create a new user
+                UserDb.createUser(it.username, encodedPassword)
+                // Then authenticate the user
+                authenticateUser(it.username, encodedPassword)
+            }
+        }.getOrElse {
+            println(it.message)
+            throw ServerException()
         }
-    }.getOrElse {
-        println(it.message)
-        return unexpectedErrorResponse()
     }
-
-    return okResponse(session)
 }
 
 private fun authenticateUser(username: String, encodedPassword: String): Session {

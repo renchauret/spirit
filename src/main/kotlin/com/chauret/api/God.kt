@@ -1,6 +1,6 @@
 package com.chauret.api
 
-import com.chauret.NotFoundException
+import com.chauret.ServerException
 import com.chauret.db.SessionDb
 import com.chauret.db.UserDb
 import io.kotless.MimeType
@@ -10,26 +10,19 @@ import io.kotless.dsl.model.HttpResponse
 
 @Post("god/createTables", MimeType.JSON)
 fun createTables(): HttpResponse {
-    runCatching {
-        UserDb.createTable()
-        SessionDb.createTable()
-    }.onFailure {
-        println(it)
-        return response(ResponseType.SERVER_ERROR, "Error creating tables")
+    return runWithResponse(ResponseType.CREATED) {
+        runCatching {
+            UserDb.createTable()
+            SessionDb.createTable()
+            "Tables created"
+        }.onFailure { throw ServerException("Error creating tables") }
     }
-    return response(ResponseType.CREATED, "Tables created")
 }
 
 @Put("god/grantAdmin", MimeType.JSON)
 fun grantAdmin(username: String): HttpResponse {
-    runCatching {
+    return runWithResponse {
         UserDb.grantAdmin(username)
-    }.onFailure {
-        println(it.message)
-        if (it is NotFoundException) {
-            return response(ResponseType.BAD_REQUEST, "User not found")
-        }
-        return response(ResponseType.SERVER_ERROR, "Error granting admin")
+        "Admin permissions granted to $username"
     }
-    return okResponse("Admin permissions granted to $username")
 }
