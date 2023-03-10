@@ -5,9 +5,15 @@ import com.chauret.SpiritException
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotless.dsl.model.HttpResponse
 
-enum class ResponseType(val statusCode: Int) {
+interface ResponseType {
+    val statusCode: Int
+}
+enum class SuccessfulResponseType(override val statusCode: Int): ResponseType {
     OK(200),
-    CREATED(201),
+    CREATED(201)
+}
+
+enum class ErrorResponseType(override val statusCode: Int): ResponseType {
     BAD_REQUEST(400),
     UNAUTHORIZED(401),
     FORBIDDEN(403),
@@ -24,7 +30,7 @@ private fun response(responseType: ResponseType, body: Any): HttpResponse {
     } ?: body
     return HttpResponse(
         statusCode = responseType.statusCode,
-        headers = headers (),
+        headers = headers(),
         body = ObjectMapper().writeValueAsString(finalBody)
     )
 }
@@ -41,8 +47,11 @@ private fun response(responseType: ResponseType, message: String): HttpResponse 
 
 fun response(exception: SpiritException) = response(exception.type, exception.message ?: "Unknown error")
 
-fun runWithResponse(responseType: ResponseType = ResponseType.OK, block: () -> Any) = response(
-    responseType,
+fun runWithResponse(
+    expectedResponseType: SuccessfulResponseType = SuccessfulResponseType.OK,
+    block: () -> Any
+) = response(
+    expectedResponseType,
     runCatching(block).getOrElse {
         println(it.message)
         if (it is SpiritException) {

@@ -42,33 +42,29 @@ object AuthInterceptor: HttpRequestInterceptor {
 }
 
 @Post("/signIn", MimeType.JSON)
-fun signIn(): HttpResponse {
-    return runWithBodyAndResponse<SignInRequest> {
-        // Validate the username and password against the database or authentication service
-        authenticateUser(it.username, encodePassword(it.password))
-    }
+fun signIn() = runWithBodyAndResponse<SignInRequest> {
+    // Validate the username and password against the database or authentication service
+    authenticateUser(it.username, encodePassword(it.password))
 }
 
 @Post("/signUp", MimeType.JSON)
-fun signUp(): HttpResponse {
-    return runWithBodyAndResponse<SignInRequest> {
-        val encodedPassword = encodePassword(it.password)
-        // Check if user exists first
-        runCatching {
-            try {
-                authenticateUser(it.username, encodedPassword)
-            } catch (e: UnauthorizedException) {
-                throw UnauthorizedException("User already exists with a different password")
-            } catch (e: NotFoundException) {
-                // If user doesn't exist, create a new user
-                UserDb.createUser(it.username, encodedPassword)
-                // Then authenticate the user
-                authenticateUser(it.username, encodedPassword)
-            }
-        }.getOrElse {
-            println(it.message)
-            throw ServerException()
+fun signUp(): HttpResponse = runWithBodyAndResponse<SignInRequest> {
+    val encodedPassword = encodePassword(it.password)
+    // Check if user exists first
+    runCatching {
+        try {
+            authenticateUser(it.username, encodedPassword)
+        } catch (e: UnauthorizedException) {
+            throw UnauthorizedException("User already exists with a different password")
+        } catch (e: NotFoundException) {
+            // If user doesn't exist, create a new user
+            UserDb.createUser(it.username, encodedPassword)
+            // Then authenticate the user
+            authenticateUser(it.username, encodedPassword)
         }
+    }.getOrElse {
+        println(it.message)
+        throw ServerException()
     }
 }
 
@@ -80,9 +76,8 @@ private fun authenticateUser(username: String, encodedPassword: String): Session
     user.username?.let { return SessionDb.createSession(it) } ?: throw Exception("username is null")
 }
 
-private fun encodePassword(password: String): String {
-    return Base64.getUrlEncoder().encodeToString(
-        MessageDigest.getInstance("SHA-256").digest(
-            password.toByteArray(Charsets.UTF_8)
-        ))
-}
+private fun encodePassword(password: String) = Base64.getUrlEncoder().encodeToString(
+    MessageDigest.getInstance("SHA-256").digest(
+        password.toByteArray(Charsets.UTF_8)
+    )
+)

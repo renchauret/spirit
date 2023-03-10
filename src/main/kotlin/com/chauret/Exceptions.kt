@@ -1,10 +1,10 @@
 package com.chauret
 
-import com.chauret.api.ResponseType
+import com.chauret.api.ErrorResponseType
 
-sealed class SpiritException(val type: ResponseType, message: String) : Exception(message)
-class NotFoundException(message: String) : SpiritException(ResponseType.NOT_FOUND, message)
-class UnauthorizedException(message: String) : SpiritException(ResponseType.UNAUTHORIZED, message)
-class ForbiddenException(message: String) : SpiritException(ResponseType.FORBIDDEN, message)
-class BadRequestException(message: String) : SpiritException(ResponseType.BAD_REQUEST, message)
-class ServerException(message: String = "Unexpected error") : SpiritException(ResponseType.SERVER_ERROR, message)
+sealed class SpiritException(val type: ErrorResponseType, message: String) : Exception(message)
+class NotFoundException(message: String) : SpiritException(ErrorResponseType.NOT_FOUND, message)
+class UnauthorizedException(message: String) : SpiritException(ErrorResponseType.UNAUTHORIZED, message)
+class ForbiddenException(message: String) : SpiritException(ErrorResponseType.FORBIDDEN, message)
+class BadRequestException(message: String) : SpiritException(ErrorResponseType.BAD_REQUEST, message)
+class ServerException(message: String = "Unexpected error") : SpiritException(ErrorResponseType.SERVER_ERROR, message)
