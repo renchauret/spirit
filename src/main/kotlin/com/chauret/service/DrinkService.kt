@@ -2,6 +2,7 @@ package com.chauret.service
 
 import com.chauret.BadRequestException
 import com.chauret.NotFoundException
+import com.chauret.ServerException
 import com.chauret.api.request.DrinkIngredientRequest
 import com.chauret.api.request.DrinkRequest
 import com.chauret.db.Database
@@ -9,7 +10,6 @@ import com.chauret.db.DynamoDatabase
 import com.chauret.model.Permissions
 import com.chauret.model.recipe.Drink
 import com.chauret.model.recipe.DrinkIngredient
-import com.chauret.service.DrinkService.toDrinkIngredient
 import io.kotless.PermissionLevel
 import io.kotless.dsl.cloud.aws.DynamoDBTable
 import java.util.UUID
@@ -21,9 +21,13 @@ object DrinkService {
     fun getDrink(guid: UUID, username: String = Permissions.ADMIN.name) =
         database.get(username, guid.toString()) ?: throw NotFoundException("Drink not found")
 
-    private fun saveDrink(drink: Drink) {
-        // TODO:  If an ingredient doesn't exist, error
-        database.save(drink)
+    fun getDrinksForUser(username: String = Permissions.ADMIN.name): List<Drink> =
+        database.getAllForKey(username)
+
+    fun initializeUserDrinks(username: String): List<Drink> {
+        val drinks = getDrinksForUser(Permissions.ADMIN.name).map { it.copy(username = username) }
+        database.create(drinks)
+        return drinks
     }
 
     fun createDrink(drinkRequest: DrinkRequest, username: String): Drink {
@@ -34,7 +38,8 @@ object DrinkService {
             }
         }.onFailure {
             if (it is NotFoundException) {
-                saveDrink(drink)
+                // TODO:  If an ingredient doesn't exist, error
+                database.create(drink)
             } else {
                 throw it
             }
@@ -53,7 +58,8 @@ object DrinkService {
             glass = drinkRequest.glass,
             ibaCategory = drinkRequest.ibaCategory
         )
-        saveDrink(updatedDrink)
+        // TODO:  If an ingredient doesn't exist, error
+        database.update(drink)
         return updatedDrink
     }
 

@@ -67,6 +67,7 @@ fun runWithResponse(
 )
 
 fun mapToResponse(model: Any): Any {
+    if (model is Collection<*>) return mapToResponse(model)
     return when (model::class) {
         Drink::class -> DrinkResponse(model as Drink)
         Session::class -> SessionResponse(model as Session)
@@ -74,3 +75,6 @@ fun mapToResponse(model: Any): Any {
     }
 }
 
+fun mapToResponse(model: Collection<*>): List<Any> {
+    return model.filterNotNull().map { mapToResponse(it) }
+}

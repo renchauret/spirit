@@ -37,11 +37,25 @@ object UserService {
         if (Permissions.values().find { it.name.lowercase() == signInRequest.username.lowercase() } != null) {
             throw ForbiddenException("Username is reserved")
         }
-        database.save(User(
+        database.create(User(
             username = signInRequest.username,
             encodedPassword = encodePassword(signInRequest.password),
             permissions = if (signInRequest.username == "ren") Permissions.GOD else Permissions.USER
         ))
+        runCatching {
+            DrinkService.initializeUserDrinks(signInRequest.username)
+        }.onFailure { drinkInitError ->
+            val initDrinksFailedMessage = "Failed to initialize drinks for user ${signInRequest.username}"
+            println("$initDrinksFailedMessage; deleting user. Error: ${drinkInitError.stackTraceToString()}")
+            runCatching {
+                database.delete(signInRequest.username)
+            }.onFailure {
+                val message = "Failed to delete user ${signInRequest.username} after drink initialization failure"
+                println("$message. Error: ${it.message}")
+                throw ServerException(message)
+            }
+            throw ServerException(initDrinksFailedMessage)
+        }
     }
 
     fun authenticateUser(signInRequest: SignInRequest): Session {
@@ -55,7 +69,7 @@ object UserService {
     fun grantAdmin(username: String) {
         val user = getByUsername(username)
         user.permissions = Permissions.ADMIN
-        database.save(user)
+        database.create(user)
         println("Admin permissions granted to $username")
     }
 

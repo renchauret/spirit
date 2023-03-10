@@ -7,10 +7,14 @@ import software.amazon.awssdk.enhanced.dynamodb.DynamoDbTable
 import software.amazon.awssdk.enhanced.dynamodb.Expression
 import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
+import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest
+import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
+import kotlin.streams.toList
 
 open class DynamoDatabase<T: Any> constructor(type : KClass<T>): Database<T> {
 
@@ -38,10 +42,8 @@ open class DynamoDatabase<T: Any> constructor(type : KClass<T>): Database<T> {
      * @param key the value of the partitionKey of the item
      * @param secondaryKey the value of the sortKey of the item, if it has one
      */
-    override fun get(key: String, secondaryKey: String?): T? {
-        println(key)
-        println(secondaryKey)
-        return if (secondaryKey == null) {
+    override fun get(key: String, secondaryKey: String?): T? =
+        if (secondaryKey == null) {
             table.getItem(
                 Key.builder()
                     .partitionValue(key)
@@ -55,7 +57,6 @@ open class DynamoDatabase<T: Any> constructor(type : KClass<T>): Database<T> {
                     .build()
             )
         }
-    }
 
     /**
      * Get an item from the table by any number of values
@@ -76,13 +77,39 @@ open class DynamoDatabase<T: Any> constructor(type : KClass<T>): Database<T> {
         ).items().firstOrNull()
     }
 
+    override fun getAllForKey(key: String): List<T> =
+        table.query(
+            QueryConditional.keyEqualTo(
+                Key.builder()
+                    .partitionValue(key)
+                    .build()
+            )
+        ).items().stream().toList()
+
     override fun delete(id: String) {
         table.deleteItem(Key.builder().partitionValue(id).build())
     }
 
-    override fun save(item: T) {
+    override fun create(item: T) {
         table.putItem(item)
     }
+
+    override fun create(items: List<T>) {
+        if (items.isEmpty()) return
+        var writeBatchBuilder = WriteBatch.builder(items[0]::class.java)
+            .mappedTableResource(table)
+        items.forEach { writeBatchBuilder = writeBatchBuilder.addPutItem(it) }
+        enhancedClient.batchWriteItem(
+            BatchWriteItemEnhancedRequest.builder()
+                .addWriteBatch(writeBatchBuilder.build())
+                .build()
+        )
+    }
+
+    override fun update(item: T) {
+        table.updateItem(item)
+    }
+
 
     /**
      * Delete the table and recreate it

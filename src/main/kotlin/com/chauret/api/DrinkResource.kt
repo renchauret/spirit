@@ -45,3 +45,13 @@ fun getAdminDrink(guid: String) = runWithResponse(SuccessfulResponseType.OK) {
 fun getUserDrink(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
     DrinkService.getDrink(UUID.fromString(guid), username)
 }
+
+@Get("$ADMIN_ROUTE_PREFIX/all")
+fun getAdminDrinks() = runWithResponse(SuccessfulResponseType.OK) {
+    DrinkService.getDrinksForUser(Permissions.ADMIN.name)
+}
+
+@Get("$ROUTE_PREFIX/all")
+fun getUserDrinks() = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
+    DrinkService.getDrinksForUser(username)
+}

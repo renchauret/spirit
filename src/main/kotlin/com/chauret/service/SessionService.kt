@@ -16,7 +16,7 @@ object SessionService {
     }
 
     private fun save(session: Session) {
-        database.save(session)
+        database.create(session)
     }
 
     fun createTable() {
