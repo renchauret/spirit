@@ -1,7 +1,7 @@
 package com.chauret.api
 
 import com.chauret.ServerException
-import com.chauret.SpiritException
+import com.chauret.ExceptionResponse
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotless.dsl.model.HttpResponse
 
@@ -46,7 +46,7 @@ private fun response(responseType: ResponseType, message: String): HttpResponse 
     )
 }
 
-fun response(exception: SpiritException) = response(exception.type, exception.message ?: "Unknown error")
+fun response(exception: ExceptionResponse) = response(exception.type, exception.message ?: "Unknown error")
 
 fun runWithResponse(
     expectedResponseType: SuccessfulResponseType = SuccessfulResponseType.OK,
@@ -55,7 +55,7 @@ fun runWithResponse(
     expectedResponseType,
     runCatching(block).getOrElse {
         println(it.message)
-        if (it is SpiritException) {
+        if (it is ExceptionResponse) {
             return response(it)
         }
         return response(ServerException("Unexpected error"))
