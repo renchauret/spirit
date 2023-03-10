@@ -19,3 +19,8 @@ data class DrinkRequest(
     val glass: String? = null,
     val ibaCategory: String? = null
 )
+
+@Serializable
+data class BulkDrinkRequest(
+    val drinks: List<DrinkRequest>
+)

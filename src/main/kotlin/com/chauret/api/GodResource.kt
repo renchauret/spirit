@@ -1,6 +1,8 @@
 package com.chauret.api
 
 import com.chauret.ServerException
+import com.chauret.api.request.BulkDrinkRequest
+import com.chauret.api.request.runWithBodyAndResponse
 import com.chauret.api.response.SuccessfulResponseType
 import com.chauret.api.response.runWithResponse
 import com.chauret.service.DrinkService
@@ -33,4 +35,11 @@ fun createDrinkTables() = runWithResponse(SuccessfulResponseType.CREATED) {
 fun grantAdmin(username: String) = runWithResponse {
     UserService.grantAdmin(username)
     "Admin permissions granted to $username"
+}
+
+@Post("$ROUTE_PREFIX/admin/drink/all", MimeType.JSON)
+fun createAdminDrinks() = runWithBodyAndResponse<BulkDrinkRequest>(SuccessfulResponseType.CREATED) {
+    runCatching {
+        DrinkService.createDrinks(it)
+    }.getOrElse { throw ServerException("Error creating admin drinks") }
 }

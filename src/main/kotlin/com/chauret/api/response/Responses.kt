@@ -6,6 +6,8 @@ import com.chauret.model.Session
 import com.chauret.model.recipe.Drink
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotless.dsl.model.HttpResponse
+import kotlin.reflect.full.memberProperties
+import kotlin.reflect.full.starProjectedType
 
 interface ResponseType {
     val statusCode: Int
@@ -28,9 +30,13 @@ fun headers() = hashMapOf("Content-Type" to "application/json")
 
 private fun response(responseType: ResponseType, body: Any): HttpResponse {
     if (body is String) return response(responseType, body.toString())
-    val finalBody = body::class.simpleName?.let { bodyName ->
-        mapOf(bodyName.replaceFirstChar { it.lowercase() } to body)
-    } ?: body
+    val finalBody = if (body is Collection<*>) {
+        body
+    } else {
+        body::class.simpleName?.let { bodyName ->
+            mapOf(bodyName.replaceFirstChar { it.lowercase() } to body)
+        } ?: body
+    }
     return HttpResponse(
         statusCode = responseType.statusCode,
         headers = headers(),
@@ -75,6 +81,4 @@ fun mapToResponse(model: Any): Any {
     }
 }
 
-fun mapToResponse(model: Collection<*>): List<Any> {
-    return model.filterNotNull().map { mapToResponse(it) }
-}
+inline fun <reified T> mapToResponse(model: Collection<T>): List<Any> = model.filterNotNull().map { mapToResponse(it) }

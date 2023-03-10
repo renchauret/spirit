@@ -2,7 +2,7 @@ package com.chauret.service
 
 import com.chauret.BadRequestException
 import com.chauret.NotFoundException
-import com.chauret.ServerException
+import com.chauret.api.request.BulkDrinkRequest
 import com.chauret.api.request.DrinkIngredientRequest
 import com.chauret.api.request.DrinkRequest
 import com.chauret.db.Database
@@ -45,6 +45,12 @@ object DrinkService {
             }
         }
         return drink
+    }
+
+    fun createDrinks(bulkDrinkRequest: BulkDrinkRequest, username: String = Permissions.ADMIN.name): List<Drink> {
+        val drinks = bulkDrinkRequest.drinks.map { it.toDrink(username) }
+        database.create(drinks)
+        return drinks
     }
 
     fun editDrink(drinkRequest: DrinkRequest, username: String, guid: UUID): Drink {
