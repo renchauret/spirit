@@ -3,12 +3,12 @@ package com.chauret.api
 import com.chauret.NotFoundException
 import com.chauret.UnauthorizedException
 import com.chauret.api.request.SignInRequest
-import com.chauret.db.*
+import com.chauret.db.SessionDb
+import com.chauret.db.UserDb
 import com.chauret.model.Permissions
 import com.chauret.model.Session
 import io.kotless.MimeType
 import io.kotless.dsl.app.http.RouteKey
-import io.kotless.dsl.lang.http.Get
 import io.kotless.dsl.lang.http.HttpRequestInterceptor
 import io.kotless.dsl.lang.http.Post
 import io.kotless.dsl.model.HttpRequest
