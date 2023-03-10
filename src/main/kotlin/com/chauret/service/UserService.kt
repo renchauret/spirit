@@ -20,7 +20,7 @@ object UserService {
     private val database: Database<User> = DynamoDatabase.invoke()
 
     fun getByUsername(username: String) =
-        database.get(username) ?: throw NotFoundException("User not found")
+        database.get(username) ?: throw NotFoundException("User $username not found")
 
     private fun getByUsernameAndPassword(username: String, encodedPassword: String): User {
         val user = database.get(username)

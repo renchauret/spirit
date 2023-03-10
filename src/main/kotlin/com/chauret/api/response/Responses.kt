@@ -2,6 +2,7 @@ package com.chauret.api.response
 
 import com.chauret.ServerException
 import com.chauret.ExceptionResponse
+import com.chauret.model.Session
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotless.dsl.model.HttpResponse
 
@@ -27,7 +28,7 @@ fun headers() = hashMapOf("Content-Type" to "application/json")
 private fun response(responseType: ResponseType, body: Any): HttpResponse {
     if (body is String) return response(responseType, body.toString())
     val finalBody = body::class.simpleName?.let { bodyName ->
-        mapOf(bodyName.lowercase() to body)
+        mapOf(bodyName.replaceFirstChar { it.lowercase() } to body)
     } ?: body
     return HttpResponse(
         statusCode = responseType.statusCode,
@@ -53,7 +54,9 @@ fun runWithResponse(
     block: () -> Any
 ) = response(
     expectedResponseType,
-    runCatching(block).getOrElse {
+    runCatching {
+        mapToResponse(block())
+    }.getOrElse {
         println(it.message)
         if (it is ExceptionResponse) {
             return response(it)
@@ -61,3 +64,11 @@ fun runWithResponse(
         return response(ServerException("Unexpected error"))
     }
 )
+
+fun mapToResponse(model: Any): Any {
+    return when (model::class) {
+        Session::class -> SessionResponse(model as Session)
+        else -> model
+    }
+}
+

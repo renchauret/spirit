@@ -12,7 +12,7 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 
-open class DynamoDatabase<T: Any> constructor(private val type : KClass<T>): Database<T> {
+open class DynamoDatabase<T: Any> constructor(type : KClass<T>): Database<T> {
 
     companion object{
         inline operator fun <reified T: Any> invoke() = DynamoDatabase(T::class)
@@ -39,7 +39,22 @@ open class DynamoDatabase<T: Any> constructor(private val type : KClass<T>): Dat
      * @param secondaryKey the value of the sortKey of the item, if it has one
      */
     override fun get(key: String, secondaryKey: String?): T? {
-        return table.getItem(Key.builder().partitionValue(key).build())
+        println(key)
+        println(secondaryKey)
+        return if (secondaryKey == null) {
+            table.getItem(
+                Key.builder()
+                    .partitionValue(key)
+                    .build()
+            )
+        } else {
+            table.getItem(
+                Key.builder()
+                    .partitionValue(key)
+                    .sortValue(secondaryKey)
+                    .build()
+            )
+        }
     }
 
     /**
@@ -66,7 +81,6 @@ open class DynamoDatabase<T: Any> constructor(private val type : KClass<T>): Dat
     }
 
     override fun save(item: T) {
-        println(item)
         table.putItem(item)
     }
 
@@ -74,8 +88,10 @@ open class DynamoDatabase<T: Any> constructor(private val type : KClass<T>): Dat
      * Delete the table and recreate it
      */
     override fun createTable() {
-        runCatching { table.deleteTable() }
-        client.waiter().waitUntilTableNotExists { builder -> builder.tableName(tableName) }
+        runCatching {
+            table.deleteTable()
+            client.waiter().waitUntilTableNotExists { builder -> builder.tableName(tableName) }
+        }
         table.createTable()
         client.waiter().waitUntilTableExists { builder -> builder.tableName(tableName) }
         println("Created table $tableName")
@@ -86,13 +102,12 @@ open class DynamoDatabase<T: Any> constructor(private val type : KClass<T>): Dat
      * @param attributeName must be a number field of class T representing epoch time in seconds
      */
     override fun enableTimeToLive(attributeName: String) {
-        val request = client.updateTimeToLive { builder ->
+        println(client.updateTimeToLive { builder ->
             builder.tableName(tableName)
             builder.timeToLiveSpecification {
                 it.attributeName(attributeName)
                 it.enabled(true)
             }
-        }
-        println(request)
+        })
     }
 }
