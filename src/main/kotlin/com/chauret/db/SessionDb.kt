@@ -22,8 +22,8 @@ object SessionDb {
         database.enableTimeToLive(Session::expirationTimeSeconds.name)
     }
 
-    fun createSession(): Session {
-        val session = Session()
+    fun createSession(username: String): Session {
+        val session = Session(username = username)
         save(session)
         return session
     }

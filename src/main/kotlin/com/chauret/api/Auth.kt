@@ -4,13 +4,41 @@ import com.chauret.NotFoundException
 import com.chauret.UnauthorizedException
 import com.chauret.api.request.SignInRequest
 import com.chauret.db.*
+import com.chauret.model.Permissions
 import com.chauret.model.Session
-import com.chauret.model.User
 import io.kotless.MimeType
+import io.kotless.dsl.app.http.RouteKey
+import io.kotless.dsl.lang.http.Get
+import io.kotless.dsl.lang.http.HttpRequestInterceptor
 import io.kotless.dsl.lang.http.Post
+import io.kotless.dsl.model.HttpRequest
 import io.kotless.dsl.model.HttpResponse
 import java.security.MessageDigest
 import java.util.Base64
+import java.util.UUID
+
+object AuthInterceptor: HttpRequestInterceptor {
+    override val priority = 0
+
+    override fun intercept(request: HttpRequest, key: RouteKey, next: (HttpRequest, RouteKey) -> HttpResponse): HttpResponse {
+        val power = runCatching {
+            SessionDb.getSessionByGuid(UUID.fromString(request.headers["auth"]))?.username?.let {
+                UserDb.getByUsername(it).permissions.power } ?: Permissions.USER.power
+        }.getOrElse { 0 }
+        Permissions.values().forEach { permission ->
+            if (key.path.toAbsoluteString().contains(permission.name.lowercase()) && power < permission.power) {
+                val message = if (power == 0) {
+                    "/signIn then include session.guid as a header named 'auth'"
+                } else {
+                    "You don't have permission to access this resource"
+                }
+                println("Unauthorized access attempt: ${request.headers["auth"]} to ${key.path.toAbsoluteString()} with power $power")
+                return response(ResponseType.UNAUTHORIZED, message)
+            }
+        }
+        return next(request, key)
+    }
+}
 
 @Post("/signIn", MimeType.JSON)
 fun signIn(): HttpResponse {
@@ -56,7 +84,7 @@ fun signUp(): HttpResponse {
             )
         } catch (e: NotFoundException) {
             // If user doesn't exist, create a new user
-            UserDb.save(User(username = request.username, encodedPassword = encodedPassword))
+            UserDb.createUser(request.username, encodedPassword)
             // Then authenticate the user
             authenticateUser(request.username, encodedPassword)
         }
@@ -80,13 +108,27 @@ fun createTables(): HttpResponse {
     return response(ResponseType.CREATED, "Tables created")
 }
 
+@Get("/god/hello", MimeType.JSON)
+fun godHello(): HttpResponse {
+    return response(ResponseType.OK, "Hello God")
+}
+
+@Get("/user/hello", MimeType.JSON)
+fun userHello(): HttpResponse {
+    return response(ResponseType.OK, "Hello User")
+}
+
+@Get("/admin/hello", MimeType.JSON)
+fun adminHello(): HttpResponse {
+    return response(ResponseType.OK, "Hello Admin")
+}
+
 private fun authenticateUser(username: String, encodedPassword: String): Session {
     // Query the database for a user with the given username and password
     val user = UserDb.getByUsernameAndPassword(username, encodedPassword)
 
     // If a user is found, create and return a session
-    return if (user != null) SessionDb.createSession() else
-        throw NotFoundException("Invalid username or password")
+    user.username?.let { return SessionDb.createSession(it) } ?: throw Exception("username is null")
 }
 
 private fun encodePassword(password: String): String {
