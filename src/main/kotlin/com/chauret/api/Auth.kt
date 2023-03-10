@@ -34,7 +34,7 @@ object AuthInterceptor: HttpRequestInterceptor {
                     "You don't have permission to access this resource"
                 }
                 println("Unauthorized access attempt: ${request.headers["auth"]} to ${key.path.toAbsoluteString()} with power $power")
-                return response(ResponseType.UNAUTHORIZED, message)
+                return response(UnauthorizedException(message))
             }
         }
         return next(request, key)
