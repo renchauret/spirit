@@ -1,8 +1,9 @@
-package com.chauret.api
+package com.chauret.api.request
 
 import com.chauret.BadRequestException
+import com.chauret.api.response.SuccessfulResponseType
+import com.chauret.api.response.runWithResponse
 import io.kotless.dsl.lang.KotlessContext
-import io.kotless.dsl.model.HttpResponse
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 

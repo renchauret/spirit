@@ -34,10 +34,11 @@ open class DynamoDatabase<T: Any> constructor(private val type : KClass<T>): Dat
     private val table: DynamoDbTable<T> = enhancedClient.table(tableName, tableSchema)
 
     /**
-     * Get an item from the table by its key
+     * Get an item from the table by its primary key
      * @param key the value of the partitionKey of the item
+     * @param secondaryKey the value of the sortKey of the item, if it has one
      */
-    override fun get(key: String): T? {
+    override fun get(key: String, secondaryKey: String?): T? {
         return table.getItem(Key.builder().partitionValue(key).build())
     }
 

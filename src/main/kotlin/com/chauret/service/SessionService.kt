@@ -1,12 +1,14 @@
-package com.chauret.db
+package com.chauret.service
 
+import com.chauret.db.Database
+import com.chauret.db.DynamoDatabase
 import com.chauret.model.Session
 import io.kotless.PermissionLevel
 import io.kotless.dsl.cloud.aws.DynamoDBTable
 import java.util.UUID
 
 @DynamoDBTable("session", PermissionLevel.ReadWrite)
-object SessionDb {
+object SessionService {
     private val database: Database<Session> = DynamoDatabase.invoke()
 
     fun getSessionByGuid(sessionId: UUID): Session? {

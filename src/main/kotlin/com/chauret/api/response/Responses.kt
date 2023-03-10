@@ -1,4 +1,4 @@
-package com.chauret.api
+package com.chauret.api.response
 
 import com.chauret.ServerException
 import com.chauret.ExceptionResponse
