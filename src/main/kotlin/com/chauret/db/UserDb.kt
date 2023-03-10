@@ -34,6 +34,12 @@ object UserDb {
         ))
     }
 
+    fun grantAdmin(username: String) {
+        val user = getByUsername(username)
+        user.permissions = Permissions.ADMIN
+        database.save(user)
+    }
+
     fun createTable() {
         database.createTable()
     }

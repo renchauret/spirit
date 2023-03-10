@@ -96,32 +96,20 @@ fun signUp(): HttpResponse {
     return okResponse(session)
 }
 
-@Post("/createTables", MimeType.JSON)
-fun createTables(): HttpResponse {
-    runCatching {
-        UserDb.createTable()
-        SessionDb.createTable()
-    }.onFailure {
-        println(it)
-        return response(ResponseType.SERVER_ERROR, "Error creating tables")
-    }
-    return response(ResponseType.CREATED, "Tables created")
-}
-
-@Get("/god/hello", MimeType.JSON)
-fun godHello(): HttpResponse {
-    return response(ResponseType.OK, "Hello God")
-}
-
-@Get("/user/hello", MimeType.JSON)
-fun userHello(): HttpResponse {
-    return response(ResponseType.OK, "Hello User")
-}
-
-@Get("/admin/hello", MimeType.JSON)
-fun adminHello(): HttpResponse {
-    return response(ResponseType.OK, "Hello Admin")
-}
+//@Get("/god/hello", MimeType.JSON)
+//fun godHello(): HttpResponse {
+//    return response(ResponseType.OK, "Hello God")
+//}
+//
+//@Get("/user/hello", MimeType.JSON)
+//fun userHello(): HttpResponse {
+//    return response(ResponseType.OK, "Hello User")
+//}
+//
+//@Get("/admin/hello", MimeType.JSON)
+//fun adminHello(): HttpResponse {
+//    return response(ResponseType.OK, "Hello Admin")
+//}
 
 private fun authenticateUser(username: String, encodedPassword: String): Session {
     // Query the database for a user with the given username and password

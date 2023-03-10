@@ -35,5 +35,6 @@ fun response(responseType: ResponseType, message: String): HttpResponse {
 }
 
 fun okResponse(body: Any): HttpResponse = response(ResponseType.OK, body)
+fun okResponse(body: String): HttpResponse = response(ResponseType.OK, body)
 
 fun unexpectedErrorResponse() = response(ResponseType.SERVER_ERROR, "Unexpected error")
