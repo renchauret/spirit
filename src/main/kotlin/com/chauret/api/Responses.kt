@@ -8,6 +8,7 @@ import io.kotless.dsl.model.HttpResponse
 interface ResponseType {
     val statusCode: Int
 }
+
 enum class SuccessfulResponseType(override val statusCode: Int): ResponseType {
     OK(200),
     CREATED(201)
