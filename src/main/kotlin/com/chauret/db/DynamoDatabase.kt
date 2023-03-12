@@ -9,6 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
+import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch
 import software.amazon.awssdk.regions.Region
@@ -16,7 +17,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue
 import kotlin.streams.toList
 
-open class DynamoDatabase<T: Any> constructor(type : KClass<T>): Database<T> {
+open class DynamoDatabase<T: Any> constructor(private val type : KClass<T>): Database<T> {
 
     companion object{
         inline operator fun <reified T: Any> invoke() = DynamoDatabase(T::class)
@@ -77,6 +78,17 @@ open class DynamoDatabase<T: Any> constructor(type : KClass<T>): Database<T> {
         ).items().firstOrNull()
     }
 
+    override fun getAllForKeyAndSecondaryKeys(key: String, secondaryKeys: List<String>): List<T> {
+        var readBatchBuilder = ReadBatch.builder(type.java)
+            .mappedTableResource(table)
+        secondaryKeys.forEach {
+            readBatchBuilder = readBatchBuilder.addGetItem(Key.builder().partitionValue(key).sortValue(it).build())
+        }
+        return enhancedClient.batchGetItem {
+                builder -> builder.addReadBatch(readBatchBuilder.build())
+        }.resultsForTable(table).stream().toList()
+    }
+
     override fun getAllForKey(key: String): List<T> =
         table.query(
             QueryConditional.keyEqualTo(
@@ -96,7 +108,7 @@ open class DynamoDatabase<T: Any> constructor(type : KClass<T>): Database<T> {
 
     override fun create(items: List<T>) {
         if (items.isEmpty()) return
-        var writeBatchBuilder = WriteBatch.builder(items[0]::class.java)
+        var writeBatchBuilder = WriteBatch.builder(type.java)
             .mappedTableResource(table)
         items.forEach { writeBatchBuilder = writeBatchBuilder.addPutItem(it) }
         enhancedClient.batchWriteItem(

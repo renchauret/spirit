@@ -10,6 +10,7 @@ import com.chauret.db.DynamoDatabase
 import com.chauret.model.Permissions
 import com.chauret.model.recipe.Drink
 import com.chauret.model.recipe.DrinkIngredient
+import com.chauret.service.DrinkService.checkIngredientsExist
 import io.kotless.PermissionLevel
 import io.kotless.dsl.cloud.aws.DynamoDBTable
 import java.util.UUID
@@ -36,18 +37,19 @@ object DrinkService {
             getDrink(drink.guid, drink.username).let {
                 throw BadRequestException("Drink already exists; edit it instead")
             }
-        }.onFailure {
-            if (it is NotFoundException) {
-                // TODO:  If an ingredient doesn't exist, error
+        }.onFailure { throwable ->
+            if (throwable is NotFoundException) {
+                drinkRequest.checkIngredientsExist(username)
                 database.create(drink)
             } else {
-                throw it
+                throw throwable
             }
         }
         return drink
     }
 
     fun createDrinks(bulkDrinkRequest: BulkDrinkRequest, username: String = Permissions.ADMIN.name): List<Drink> {
+        bulkDrinkRequest.checkIngredientsExist(username)
         val drinks = bulkDrinkRequest.drinks.map { it.toDrink(username) }
         database.create(drinks)
         return drinks
@@ -64,7 +66,7 @@ object DrinkService {
             glass = drinkRequest.glass,
             ibaCategory = drinkRequest.ibaCategory
         )
-        // TODO:  If an ingredient doesn't exist, error
+        drinkRequest.checkIngredientsExist(username)
         database.update(drink)
         return updatedDrink
     }
@@ -72,6 +74,25 @@ object DrinkService {
     fun createTable() {
         database.createTable()
     }
+
+    private fun checkIngredientsExist(ingredientGuids: List<UUID>, username: String = Permissions.ADMIN.name) {
+        val existingIngredients = IngredientService.getIngredientsForUserAndGuids(
+            username, ingredientGuids.map { it }
+        )
+        if (existingIngredients.size != ingredientGuids.size) {
+            throw BadRequestException("One or more ingredients do not exist")
+        }
+    }
+
+    private fun BulkDrinkRequest.checkIngredientsExist(username: String = Permissions.ADMIN.name) {
+        checkIngredientsExist(drinks.flatMap { it.getIngredientGuids() }, username)
+    }
+
+    private fun DrinkRequest.checkIngredientsExist(username: String = Permissions.ADMIN.name) {
+        checkIngredientsExist(getIngredientGuids(), username)
+    }
+
+    private fun DrinkRequest.getIngredientGuids() = ingredients.map { UUID.fromString(it.ingredientGuid) }
 
     private fun DrinkIngredientRequest.toDrinkIngredient() = DrinkIngredient(
         ingredientGuid = UUID.fromString(ingredientGuid),

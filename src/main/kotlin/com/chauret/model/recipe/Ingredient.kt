@@ -6,6 +6,20 @@ import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbParti
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSortKey
 import java.util.UUID
 
+enum class IngredientType {
+    BITTERS,
+    FRUIT,
+    GARNISH,
+    JUICE,
+    LIQUEUR,
+    SODA,
+    SPIRIT,
+    FORTIFIED_WINE,
+    WINE,
+    OTHER_ALCOHOL,
+    OTHER
+}
+
 @DynamoDbBean
 data class Ingredient(
     @get:DynamoDbSortKey
@@ -13,5 +27,6 @@ data class Ingredient(
     @get:DynamoDbPartitionKey
     val username: String = Permissions.ADMIN.name,
     val name: String = "",
+    var type: IngredientType? = null,
     val imagePath: String? = null
 )
