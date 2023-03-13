@@ -17,5 +17,6 @@ interface Recipe {
     val ingredients: List<RecipeIngredient>
     val instructions: List<String>
     val tags: List<String>
+    val liked: Boolean
     val imagePath: String?
 }

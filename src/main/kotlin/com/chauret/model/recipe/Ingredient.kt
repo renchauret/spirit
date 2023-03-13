@@ -23,10 +23,11 @@ enum class IngredientType {
 @DynamoDbBean
 data class Ingredient(
     @get:DynamoDbSortKey
-    val guid: UUID = UUID.randomUUID(),
+    var guid: UUID = UUID.randomUUID(),
     @get:DynamoDbPartitionKey
-    val username: String = Permissions.ADMIN.name,
-    val name: String = "",
+    var username: String = Permissions.ADMIN.name,
+    var name: String = "",
+    var liked: Boolean = false,
     var type: IngredientType? = null,
-    val imagePath: String? = null
+    var imagePath: String? = null
 )

@@ -23,6 +23,7 @@ data class DrinkRequest(
     val ingredients: List<DrinkIngredientRequest> = emptyList(),
     val instructions: List<String> = emptyList(),
     val tags: List<String> = emptyList(),
+    val liked: Boolean = false,
     val imagePath: String? = null,
     val glass: String? = null,
     val ibaCategory: String? = null

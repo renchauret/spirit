@@ -59,6 +59,7 @@ object IngredientService {
         val ingredient = getIngredient(guid, username)
         val updatedIngredient = ingredient.copy(
             name = ingredientRequest.name,
+            liked = ingredientRequest.liked,
             type = ingredientRequest.type,
             imagePath = ingredientRequest.imagePath
         )
@@ -74,6 +75,7 @@ object IngredientService {
     private fun IngredientRequest.toIngredient(username: String) = Ingredient(
         username = username,
         name = name,
+        liked = liked,
         type = type,
         imagePath = imagePath
     )

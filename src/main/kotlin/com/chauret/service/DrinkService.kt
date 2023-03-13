@@ -40,7 +40,6 @@ object DrinkService {
             }
         }.onFailure { throwable ->
             if (throwable is NotFoundException) {
-//                drinkRequest.checkIngredientsExist(username)
                 database.create(drink)
             } else {
                 throw throwable
@@ -50,7 +49,6 @@ object DrinkService {
     }
 
     fun createDrinks(bulkDrinkRequest: BulkDrinkRequest, username: String = Permissions.ADMIN.name): List<Drink> {
-//        bulkDrinkRequest.checkIngredientsExist(username)
         val drinks = bulkDrinkRequest.drinks.map { it.toDrink(username) }
         database.create(drinks)
         return drinks
@@ -63,11 +61,11 @@ object DrinkService {
             ingredients = drinkRequest.ingredients.map { it.toDrinkIngredient(username) },
             instructions = drinkRequest.instructions,
             tags = drinkRequest.tags,
+            liked = drinkRequest.liked,
             imagePath = drinkRequest.imagePath,
             glass = drinkRequest.glass,
             ibaCategory = drinkRequest.ibaCategory
         )
-//        drinkRequest.checkIngredientsExist(username)
         database.update(drink)
         return updatedDrink
     }
@@ -75,25 +73,6 @@ object DrinkService {
     fun createTable() {
         database.createTable()
     }
-
-//    private fun checkIngredientsExist(ingredientGuids: List<UUID>, username: String = Permissions.ADMIN.name) {
-//        val existingIngredients = IngredientService.getIngredientsForUserAndGuids(
-//            username, ingredientGuids.map { it }
-//        )
-//        if (existingIngredients.size != ingredientGuids.size) {
-//            throw BadRequestException("One or more ingredients do not exist")
-//        }
-//    }
-
-//    private fun BulkDrinkRequest.checkIngredientsExist(username: String = Permissions.ADMIN.name) {
-//        checkIngredientsExist(drinks.flatMap { it.getIngredientGuids() }, username)
-//    }
-//
-//    private fun DrinkRequest.checkIngredientsExist(username: String = Permissions.ADMIN.name) {
-//        checkIngredientsExist(getIngredientGuids(), username)
-//    }
-//
-//    private fun DrinkRequest.getIngredientGuids() = ingredients.map { UUID.fromString(it.ingredientGuid) }
 
     private fun DrinkIngredientRequest.toDrinkIngredient(username: String) = DrinkIngredient(
         ingredientGuid = UUID.fromString(
@@ -126,6 +105,7 @@ object DrinkService {
         ingredients = ingredients.map { it.toDrinkIngredient(username) },
         instructions = instructions,
         tags = tags,
+        liked = liked,
         imagePath = imagePath,
         glass = glass,
         ibaCategory = ibaCategory
