@@ -40,7 +40,6 @@ object IngredientService {
             }
         }.onFailure {
             if (it is NotFoundException) {
-                // TODO:  If an ingredient doesn't exist, error
                 database.create(ingredient)
             } else {
                 throw it
@@ -63,7 +62,6 @@ object IngredientService {
             type = ingredientRequest.type,
             imagePath = ingredientRequest.imagePath
         )
-        // TODO:  If an ingredient doesn't exist, error
         database.update(ingredient)
         return updatedIngredient
     }
