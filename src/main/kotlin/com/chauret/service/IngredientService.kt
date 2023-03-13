@@ -77,4 +77,8 @@ object IngredientService {
         type = type,
         imagePath = imagePath
     )
+
+    fun getIngredientByName(name: String, username: String): Ingredient {
+        return database.get(username, mapOf("name" to name)) ?: throw NotFoundException("Ingredient not found")
+    }
 }

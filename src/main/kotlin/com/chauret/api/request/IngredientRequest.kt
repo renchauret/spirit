@@ -6,7 +6,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class IngredientRequest(
     val name: String,
-    val type: IngredientType,
+    val type: IngredientType? = null,
     val imagePath: String? = null
 )
 

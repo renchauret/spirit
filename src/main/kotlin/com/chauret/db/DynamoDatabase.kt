@@ -9,6 +9,7 @@ import software.amazon.awssdk.enhanced.dynamodb.Key
 import software.amazon.awssdk.enhanced.dynamodb.TableSchema
 import software.amazon.awssdk.enhanced.dynamodb.model.BatchWriteItemEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.QueryConditional
+import software.amazon.awssdk.enhanced.dynamodb.model.QueryEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.ReadBatch
 import software.amazon.awssdk.enhanced.dynamodb.model.ScanEnhancedRequest
 import software.amazon.awssdk.enhanced.dynamodb.model.WriteBatch
@@ -88,6 +89,25 @@ open class DynamoDatabase<T: Any> constructor(private val type : KClass<T>): Dat
                 builder -> builder.addReadBatch(readBatchBuilder.build())
         }.resultsForTable(table).stream().toList()
     }
+
+    override fun get(key: String, queryArguments: Map<String, Any>): T? =
+        table.query(
+            QueryEnhancedRequest.builder()
+                .queryConditional(QueryConditional.keyEqualTo(
+                    Key.builder()
+                        .partitionValue(key)
+                        .build()
+                ))
+                .filterExpression(Expression.builder()
+                    .expression(queryArguments.keys.joinToString(" AND ") { "$it = :$it" })
+                    .expressionValues(queryArguments
+                        .mapKeys { ":${it.key}" }
+                        .mapValues { AttributeValue.builder().s(it.value.toString()).build() }
+                    )
+                    .build()
+                )
+                .build()
+        ).items().firstOrNull()
 
     override fun getAllForKey(key: String): List<T> =
         table.query(

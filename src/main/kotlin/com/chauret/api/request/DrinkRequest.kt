@@ -3,8 +3,16 @@ package com.chauret.api.request
 import kotlinx.serialization.Serializable
 
 @Serializable
+sealed class IngredientGuidOrName {
+    data class Guid(val guid: String) : IngredientGuidOrName()
+    data class Name(val name: String) : IngredientGuidOrName()
+}
+
+@Serializable
 data class DrinkIngredientRequest(
-    val ingredientGuid: String,
+    // TODO:  one of ingredientGuid or name should be required
+    val ingredientGuidOrName: IngredientGuidOrName,
+//    val ingredientGuid: String,
     val amount: Float,
     val unit: String? = null
 )
