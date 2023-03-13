@@ -7,7 +7,6 @@ import com.chauret.api.request.runWithUsernameAndResponse
 import com.chauret.api.response.SuccessfulResponseType
 import com.chauret.api.response.runWithResponse
 import com.chauret.model.Permissions
-import com.chauret.service.DrinkService
 import com.chauret.service.IngredientService
 import io.kotless.dsl.lang.http.Delete
 import io.kotless.dsl.lang.http.Get
