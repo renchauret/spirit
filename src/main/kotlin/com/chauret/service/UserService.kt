@@ -43,6 +43,7 @@ object UserService {
             permissions = if (signInRequest.username == "ren") Permissions.GOD else Permissions.USER
         ))
         runCatching {
+            IngredientService.initializeUserIngredients(signInRequest.username)
             DrinkService.initializeUserDrinks(signInRequest.username)
         }.onFailure { drinkInitError ->
             val initDrinksFailedMessage = "Failed to initialize drinks for user ${signInRequest.username}"
