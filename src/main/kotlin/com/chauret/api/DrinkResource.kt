@@ -8,6 +8,7 @@ import com.chauret.api.response.SuccessfulResponseType
 import com.chauret.api.response.runWithResponse
 import com.chauret.model.Permissions
 import com.chauret.service.DrinkService
+import io.kotless.dsl.lang.http.Delete
 import io.kotless.dsl.lang.http.Get
 import io.kotless.dsl.lang.http.Post
 import io.kotless.dsl.lang.http.Put
@@ -36,13 +37,24 @@ fun editDrink(guid: String) = runWithBodyAndUsernameAndResponse<DrinkRequest>(Su
     DrinkService.editDrink(body, username, UUID.fromString(guid))
 }
 
+@Delete(ADMIN_ROUTE_PREFIX)
+fun deleteAdminDrink(guid: String) = runWithResponse(SuccessfulResponseType.OK) {
+    DrinkService.deleteDrink(UUID.fromString(guid), Permissions.ADMIN.name)
+}
+
+@Delete(ROUTE_PREFIX)
+fun deleteDrink(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
+    DrinkService.deleteDrink(UUID.fromString(guid), username)
+}
+
+
 @Get(ADMIN_ROUTE_PREFIX)
 fun getAdminDrink(guid: String) = runWithResponse(SuccessfulResponseType.OK) {
     DrinkService.getDrink(UUID.fromString(guid), Permissions.ADMIN.name)
 }
 
 @Get(ROUTE_PREFIX)
-fun getUserDrink(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
+fun getDrink(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
     DrinkService.getDrink(UUID.fromString(guid), username)
 }
 
@@ -52,6 +64,6 @@ fun getAdminDrinks() = runWithResponse(SuccessfulResponseType.OK) {
 }
 
 @Get("$ROUTE_PREFIX/all")
-fun getUserDrinks() = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
+fun getDrinks() = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
     DrinkService.getDrinksForUser(username)
 }

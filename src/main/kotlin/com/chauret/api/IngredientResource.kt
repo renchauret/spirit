@@ -7,7 +7,9 @@ import com.chauret.api.request.runWithUsernameAndResponse
 import com.chauret.api.response.SuccessfulResponseType
 import com.chauret.api.response.runWithResponse
 import com.chauret.model.Permissions
+import com.chauret.service.DrinkService
 import com.chauret.service.IngredientService
+import io.kotless.dsl.lang.http.Delete
 import io.kotless.dsl.lang.http.Get
 import io.kotless.dsl.lang.http.Post
 import io.kotless.dsl.lang.http.Put
@@ -36,13 +38,23 @@ fun editIngredient(guid: String) = runWithBodyAndUsernameAndResponse<IngredientR
     IngredientService.editIngredient(body, username, UUID.fromString(guid))
 }
 
+@Delete(ADMIN_ROUTE_PREFIX)
+fun deleteAdminIngredient(guid: String) = runWithResponse(SuccessfulResponseType.OK) {
+    IngredientService.deleteIngredient(UUID.fromString(guid), Permissions.ADMIN.name)
+}
+
+@Delete(ROUTE_PREFIX)
+fun deleteIngredient(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
+    IngredientService.deleteIngredient(UUID.fromString(guid), username)
+}
+
 @Get(ADMIN_ROUTE_PREFIX)
 fun getAdminIngredient(guid: String) = runWithResponse(SuccessfulResponseType.OK) {
     IngredientService.getIngredient(UUID.fromString(guid), Permissions.ADMIN.name)
 }
 
 @Get(ROUTE_PREFIX)
-fun getUserIngredient(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
+fun getIngredient(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
     IngredientService.getIngredient(UUID.fromString(guid), username)
 }
 
@@ -52,6 +64,6 @@ fun getAdminIngredients() = runWithResponse(SuccessfulResponseType.OK) {
 }
 
 @Get("$ROUTE_PREFIX/all")
-fun getUserIngredients() = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
+fun getIngredients() = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
     IngredientService.getIngredientsForUser(username)
 }

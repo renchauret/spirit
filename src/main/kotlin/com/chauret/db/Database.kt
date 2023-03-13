@@ -10,7 +10,7 @@ interface Database<T> {
     fun create(items: List<T>)
     fun update(item: T)
 
-    fun delete(id: String)
+    fun delete(key: String, secondaryKey: String? = null)
     fun createTable()
     fun enableTimeToLive(attributeName: String)
 }

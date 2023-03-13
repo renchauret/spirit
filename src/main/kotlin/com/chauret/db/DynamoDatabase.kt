@@ -118,8 +118,21 @@ open class DynamoDatabase<T: Any> constructor(private val type : KClass<T>): Dat
             )
         ).items().stream().toList()
 
-    override fun delete(id: String) {
-        table.deleteItem(Key.builder().partitionValue(id).build())
+    override fun delete(key: String, secondaryKey: String?) {
+        if (secondaryKey == null) {
+            table.deleteItem(
+                Key.builder()
+                    .partitionValue(key)
+                    .build()
+            )
+        } else {
+            table.deleteItem(
+                Key.builder()
+                    .partitionValue(key)
+                    .sortValue(secondaryKey)
+                    .build()
+            )
+        }
     }
 
     override fun create(item: T) {

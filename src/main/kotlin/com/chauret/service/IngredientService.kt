@@ -68,6 +68,13 @@ object IngredientService {
         return updatedIngredient
     }
 
+    fun deleteIngredient(guid: UUID, username: String = Permissions.ADMIN.name) {
+        if (DrinkService.getDrinksByIngredient(guid, username).isNotEmpty()) {
+            throw BadRequestException("Ingredient is used in a drink")
+        }
+        database.delete(username, guid.toString())
+    }
+
     fun createTable() {
         database.createTable()
     }

@@ -26,6 +26,11 @@ object DrinkService {
     fun getDrinksForUser(username: String = Permissions.ADMIN.name): List<Drink> =
         database.getAllForKey(username)
 
+    fun getDrinksByIngredient(ingredientGuid: UUID, username: String = Permissions.ADMIN.name): List<Drink> =
+        getDrinksForUser(username).filter { drink ->
+            drink.ingredients.any { it.ingredientGuid == ingredientGuid }
+        }
+
     fun initializeUserDrinks(username: String): List<Drink> {
         val drinks = getDrinksForUser(Permissions.ADMIN.name).map { it.copy(username = username) }
         database.create(drinks)
@@ -69,6 +74,9 @@ object DrinkService {
         database.update(drink)
         return updatedDrink
     }
+
+    fun deleteDrink(guid: UUID, username: String = Permissions.ADMIN.name) =
+        database.delete(username, guid.toString())
 
     fun createTable() {
         database.createTable()
