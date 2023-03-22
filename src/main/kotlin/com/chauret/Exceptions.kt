@@ -1,6 +1,6 @@
 package com.chauret
 
-import com.chauret.api.ErrorResponseType
+import com.chauret.api.response.ErrorResponseType
 
 sealed class ExceptionResponse(val type: ErrorResponseType, message: String) : Exception(message)
 class NotFoundException(message: String) : ExceptionResponse(ErrorResponseType.NOT_FOUND, message)
