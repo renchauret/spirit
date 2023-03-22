@@ -11,6 +11,7 @@ class DrinkIngredientResponse(model: DrinkIngredient) {
 
 class DrinkResponse(model: Drink) {
     val guid: String = model.guid.toString()
+    val username: String = model.username
     val name: String = model.name
     val ingredients: List<DrinkIngredientResponse> = model.ingredients.map { DrinkIngredientResponse(it) }
     val instructions: List<String> = model.instructions
@@ -18,4 +19,5 @@ class DrinkResponse(model: Drink) {
     val imagePath: String? = model.imagePath
     val glass: String? = model.glass
     val ibaCategory: String? = model.ibaCategory
+    val liked: Boolean = model.liked
 }

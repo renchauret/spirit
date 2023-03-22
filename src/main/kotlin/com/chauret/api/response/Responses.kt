@@ -4,6 +4,7 @@ import com.chauret.ServerException
 import com.chauret.ExceptionResponse
 import com.chauret.model.Session
 import com.chauret.model.recipe.Drink
+import com.chauret.model.recipe.Ingredient
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotless.dsl.model.HttpResponse
 import kotlin.reflect.full.memberProperties
@@ -77,6 +78,7 @@ fun mapToResponse(model: Any): Any {
     return when (model::class) {
         Drink::class -> DrinkResponse(model as Drink)
         Session::class -> SessionResponse(model as Session)
+        Ingredient::class -> IngredientResponse(model as Ingredient)
         else -> model
     }
 }

@@ -24,7 +24,7 @@ data class Drink (
     override var instructions: List<String> = emptyList(),
     override var tags: List<String> = emptyList(),
     override var liked: Boolean = false,
-    override var imagePath: String = "$username/$guid.jpg",
+    override var imagePath: String? = null,
     var glass: String? = null,
     var ibaCategory: String? = null
 ): Recipe
