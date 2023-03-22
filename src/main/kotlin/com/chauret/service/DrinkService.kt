@@ -5,10 +5,13 @@ import com.chauret.NotFoundException
 import com.chauret.api.request.BulkDrinkRequest
 import com.chauret.api.request.DrinkIngredientRequest
 import com.chauret.api.request.DrinkRequest
+import com.chauret.api.request.ImageRequest
 import com.chauret.api.request.IngredientGuidOrName
 import com.chauret.api.request.IngredientRequest
 import com.chauret.db.Database
 import com.chauret.db.DynamoDatabase
+import com.chauret.db.ImageDatabase
+import com.chauret.db.S3ImageDatabase
 import com.chauret.model.Permissions
 import com.chauret.model.recipe.Drink
 import com.chauret.model.recipe.DrinkIngredient
@@ -19,6 +22,7 @@ import java.util.UUID
 @DynamoDBTable("drink", PermissionLevel.ReadWrite)
 object DrinkService {
     private val database: Database<Drink> = DynamoDatabase.invoke()
+    private val imageDatabase: ImageDatabase = S3ImageDatabase(Drink::class.simpleName!!.lowercase())
 
     fun getDrink(guid: UUID, username: String = Permissions.ADMIN.name) =
         database.get(username, guid.toString()) ?: throw NotFoundException("Drink not found")
@@ -59,6 +63,12 @@ object DrinkService {
         return drinks
     }
 
+    private fun uploadImage(imageRequest: ImageRequest, username: String, drinkGuid: UUID): String {
+        val imagePath = "$username/$drinkGuid.${imageRequest.type.name.lowercase()}"
+        imageDatabase.create(imagePath, imageRequest.imageBase64)
+        return imagePath
+    }
+
     fun editDrink(drinkRequest: DrinkRequest, username: String, guid: UUID): Drink {
         val drink = getDrink(guid, username)
         val updatedDrink = drink.copy(
@@ -67,10 +77,12 @@ object DrinkService {
             instructions = drinkRequest.instructions,
             tags = drinkRequest.tags,
             liked = drinkRequest.liked,
-            imagePath = drinkRequest.imagePath,
             glass = drinkRequest.glass,
             ibaCategory = drinkRequest.ibaCategory
         )
+        if (drinkRequest.image != null) {
+            updatedDrink.imagePath = uploadImage(drinkRequest.image, username, drink.guid)
+        }
         database.update(drink)
         return updatedDrink
     }
@@ -107,15 +119,20 @@ object DrinkService {
         unit = unit
     )
 
-    private fun DrinkRequest.toDrink(username: String) = Drink(
-        username = username,
-        name = name,
-        ingredients = ingredients.map { it.toDrinkIngredient(username) },
-        instructions = instructions,
-        tags = tags,
-        liked = liked,
-        imagePath = imagePath,
-        glass = glass,
-        ibaCategory = ibaCategory
-    )
+    private fun DrinkRequest.toDrink(username: String): Drink {
+        val drink = Drink(
+            username = username,
+            name = name,
+            ingredients = ingredients.map { it.toDrinkIngredient(username) },
+            instructions = instructions,
+            tags = tags,
+            liked = liked,
+            glass = glass,
+            ibaCategory = ibaCategory
+        )
+        if (image != null) {
+            drink.imagePath = uploadImage(image, username, drink.guid)
+        }
+        return drink
+    }
 }

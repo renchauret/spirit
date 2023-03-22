@@ -24,7 +24,7 @@ data class DrinkRequest(
     val instructions: List<String> = emptyList(),
     val tags: List<String> = emptyList(),
     val liked: Boolean = false,
-    val imagePath: String? = null,
+    val image: ImageRequest? = null,
     val glass: String? = null,
     val ibaCategory: String? = null
 )

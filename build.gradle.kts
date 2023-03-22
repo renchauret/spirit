@@ -24,6 +24,8 @@ dependencies {
     implementation("software.amazon.awssdk:bom:2.17.2")
     implementation("software.amazon.awssdk:dynamodb-enhanced:2.17.2")
     implementation("software.amazon.awssdk:dynamodb:2.17.2")
+    implementation("software.amazon.awssdk:s3:2.17.2")
+
     implementation("org.slf4j:slf4j-simple:1.7.32")
 
     testImplementation(kotlin("test"))

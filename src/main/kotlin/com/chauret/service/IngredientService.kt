@@ -3,9 +3,12 @@ package com.chauret.service
 import com.chauret.BadRequestException
 import com.chauret.NotFoundException
 import com.chauret.api.request.BulkIngredientRequest
+import com.chauret.api.request.ImageRequest
 import com.chauret.api.request.IngredientRequest
 import com.chauret.db.Database
 import com.chauret.db.DynamoDatabase
+import com.chauret.db.ImageDatabase
+import com.chauret.db.S3ImageDatabase
 import com.chauret.model.Permissions
 import com.chauret.model.recipe.Ingredient
 import io.kotless.PermissionLevel
@@ -16,6 +19,7 @@ import kotlin.streams.toList
 @DynamoDBTable("ingredient", PermissionLevel.ReadWrite)
 object IngredientService {
     private val database: Database<Ingredient> = DynamoDatabase.invoke()
+    private val imageDatabase: ImageDatabase = S3ImageDatabase(Ingredient::class.simpleName!!.lowercase())
 
     fun getIngredient(guid: UUID, username: String = Permissions.ADMIN.name) =
         database.get(username, guid.toString()) ?: throw NotFoundException("Ingredient not found")
@@ -30,6 +34,12 @@ object IngredientService {
         val ingredients = getIngredientsForUser(Permissions.ADMIN.name).map { it.copy(username = username) }
         database.create(ingredients)
         return ingredients
+    }
+
+    private fun uploadImage(imageRequest: ImageRequest, username: String, drinkGuid: UUID): String {
+        val imagePath = "$username/$drinkGuid.${imageRequest.type.name.lowercase()}"
+        imageDatabase.create(imagePath, imageRequest.imageBase64)
+        return imagePath
     }
 
     fun createIngredient(ingredientRequest: IngredientRequest, username: String): Ingredient {
@@ -60,8 +70,10 @@ object IngredientService {
             name = ingredientRequest.name,
             liked = ingredientRequest.liked,
             type = ingredientRequest.type,
-            imagePath = ingredientRequest.imagePath
         )
+        if (ingredientRequest.image != null) {
+            ingredient.imagePath = uploadImage(ingredientRequest.image, username, ingredient.guid)
+        }
         database.update(ingredient)
         return updatedIngredient
     }
@@ -77,13 +89,18 @@ object IngredientService {
         database.createTable()
     }
 
-    private fun IngredientRequest.toIngredient(username: String) = Ingredient(
-        username = username,
-        name = name,
-        liked = liked,
-        type = type,
-        imagePath = imagePath
-    )
+    private fun IngredientRequest.toIngredient(username: String): Ingredient {
+        val ingredient = Ingredient(
+            username = username,
+            name = name,
+            liked = liked,
+            type = type
+        )
+        if (image != null) {
+            ingredient.imagePath = uploadImage(image, username, ingredient.guid)
+        }
+        return ingredient
+    }
 
     fun getIngredientByName(name: String, username: String): Ingredient {
         return database.get(username, mapOf("name" to name)) ?: throw NotFoundException("Ingredient not found")
