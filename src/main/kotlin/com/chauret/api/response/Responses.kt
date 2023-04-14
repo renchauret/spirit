@@ -7,8 +7,6 @@ import com.chauret.model.recipe.Drink
 import com.chauret.model.recipe.Ingredient
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotless.dsl.model.HttpResponse
-import kotlin.reflect.full.memberProperties
-import kotlin.reflect.full.starProjectedType
 
 interface ResponseType {
     val statusCode: Int

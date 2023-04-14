@@ -18,7 +18,7 @@ private const val ROUTE_PREFIX = "/drink"
 private const val ADMIN_ROUTE_PREFIX = "/admin$ROUTE_PREFIX"
 
 @Post(ADMIN_ROUTE_PREFIX)
-fun createAdminDrink() = runWithBodyAndResponse<DrinkRequest> (SuccessfulResponseType.CREATED) { body ->
+fun createAdminDrink() = runWithBodyAndResponse<DrinkRequest>(SuccessfulResponseType.CREATED) { body ->
     DrinkService.createDrink(body, Permissions.ADMIN.name)
 }
 
@@ -33,9 +33,10 @@ fun editAdminDrink(guid: String) = runWithBodyAndResponse<DrinkRequest>(Successf
 }
 
 @Put(ROUTE_PREFIX)
-fun editDrink(guid: String) = runWithBodyAndUsernameAndResponse<DrinkRequest>(SuccessfulResponseType.OK) { body, username ->
-    DrinkService.editDrink(body, username, UUID.fromString(guid))
-}
+fun editDrink(guid: String) =
+    runWithBodyAndUsernameAndResponse<DrinkRequest>(SuccessfulResponseType.OK) { body, username ->
+        DrinkService.editDrink(body, username, UUID.fromString(guid))
+    }
 
 @Delete(ADMIN_ROUTE_PREFIX)
 fun deleteAdminDrink(guid: String) = runWithResponse(SuccessfulResponseType.OK) {
