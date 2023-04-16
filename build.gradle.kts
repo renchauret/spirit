@@ -36,9 +36,6 @@ kotless {
 
 val fritz2Version = "1.0-RC4"
 
-//group = "my.fritz2.app"
-//version = "0.0.1-SNAPSHOT"
-
 kotlin {
     jvm()
     js(IR) {
