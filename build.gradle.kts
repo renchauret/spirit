@@ -7,11 +7,11 @@ group = "com.chauret"
 version = "0.1.0"
 
 plugins {
-    kotlin("plugin.serialization") version "1.8.10" apply true
-    kotlin("multiplatform") version "1.7.20"
+    kotlin("plugin.serialization") version "1.8.20" apply true
+    kotlin("multiplatform") version "1.8.20"
     id("io.kotless") version "0.2.0" apply true
     // KSP support
-    id("com.google.devtools.ksp") version "1.7.20-1.0.6"
+    id("com.google.devtools.ksp") version "1.8.20-1.0.10"
 }
 
 repositories {
@@ -56,7 +56,6 @@ kotlin {
             dependencies {
                 implementation("io.kotless:kotless-lang:0.2.0")
                 implementation("io.kotless:kotless-lang-aws:0.2.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
 
                 implementation("software.amazon.awssdk:bom:2.17.2")
                 implementation("software.amazon.awssdk:dynamodb-enhanced:2.17.2")
@@ -96,6 +95,7 @@ kotlin {
  */
 dependencies {
     "implementation"("io.kotless", "kotless-lang", "0.2.0")
+    "implementation"("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
     add("kspCommonMainMetadata", "dev.fritz2:lenses-annotation-processor:$fritz2Version")
 }
 kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
