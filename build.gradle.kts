@@ -50,6 +50,7 @@ kotlin {
             dependencies {
                 implementation("dev.fritz2:core:$fritz2Version")
                 // implementation("dev.fritz2:headless:$fritz2Version") // optional
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
             }
         }
         val jvmMain by getting {
@@ -97,6 +98,7 @@ dependencies {
     "implementation"("io.kotless", "kotless-lang", "0.2.0")
     "implementation"("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
     add("kspCommonMainMetadata", "dev.fritz2:lenses-annotation-processor:$fritz2Version")
+    add("kspCommonMainMetadata", "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
 }
 kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
 

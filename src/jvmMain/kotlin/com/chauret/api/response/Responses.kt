@@ -1,7 +1,7 @@
 package com.chauret.api.response
 
-import com.chauret.ServerException
 import com.chauret.ExceptionResponse
+import com.chauret.ServerException
 import com.chauret.model.Session
 import com.chauret.model.recipe.Drink
 import com.chauret.model.recipe.Ingredient
@@ -12,12 +12,12 @@ interface ResponseType {
     val statusCode: Int
 }
 
-enum class SuccessfulResponseType(override val statusCode: Int): ResponseType {
+enum class SuccessfulResponseType(override val statusCode: Int) : ResponseType {
     OK(200),
     CREATED(201)
 }
 
-enum class ErrorResponseType(override val statusCode: Int): ResponseType {
+enum class ErrorResponseType(override val statusCode: Int) : ResponseType {
     BAD_REQUEST(400),
     UNAUTHORIZED(401),
     FORBIDDEN(403),
@@ -44,11 +44,15 @@ private fun response(responseType: ResponseType, body: Any): HttpResponse {
 }
 
 private fun response(responseType: ResponseType, message: String): HttpResponse {
-    val messageObject = object { val message = message }
+    val messageObject = object {
+        val message = message
+    }
     return response(
         responseType,
         if (responseType.statusCode >= 400)
-            object { val error = messageObject }
+            object {
+                val error = messageObject
+            }
         else messageObject
     )
 }
@@ -74,9 +78,9 @@ fun runWithResponse(
 fun mapToResponse(model: Any): Any {
     if (model is Collection<*>) return mapToResponse(model)
     return when (model::class) {
-        Drink::class -> DrinkResponse(model as Drink)
-        Session::class -> SessionResponse(model as Session)
-        Ingredient::class -> IngredientResponse(model as Ingredient)
+        Drink::class -> ResponseFactory.createDrinkResponse(model as Drink)
+        Session::class -> ResponseFactory.createSessionResponse(model as Session)
+        Ingredient::class -> ResponseFactory.createIngredientResponse(model as Ingredient)
         else -> model
     }
 }
