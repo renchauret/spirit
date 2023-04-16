@@ -1,5 +1,5 @@
-import io.kotless.plugin.gradle.dsl.kotless
 import io.kotless.DSLType
+import io.kotless.plugin.gradle.dsl.kotless
 
 //import io.kotless.plugin.gradle.dsl.Webapp.Route53
 
@@ -7,7 +7,6 @@ group = "com.chauret"
 version = "0.1.0"
 
 plugins {
-//    kotlin("jvm") version "1.8.0" apply true
     kotlin("plugin.serialization") version "1.8.10" apply true
     kotlin("multiplatform") version "1.7.20"
     id("io.kotless") version "0.2.0" apply true
@@ -51,11 +50,9 @@ kotlin {
             dependencies {
                 implementation("dev.fritz2:core:$fritz2Version")
                 // implementation("dev.fritz2:headless:$fritz2Version") // optional
-//                implementation("io.kotless:kotless-lang:0.2.0")
             }
         }
         val jvmMain by getting {
-//            apply(plugin = "io.kotless")
             dependencies {
                 implementation("io.kotless:kotless-lang:0.2.0")
                 implementation("io.kotless:kotless-lang-aws:0.2.0")
@@ -98,7 +95,6 @@ kotlin {
  * KSP support - start
  */
 dependencies {
-//    implementation("io.kotless", "kotless-lang", "0.2.0")
     "implementation"("io.kotless", "kotless-lang", "0.2.0")
     add("kspCommonMainMetadata", "dev.fritz2:lenses-annotation-processor:$fritz2Version")
 }
