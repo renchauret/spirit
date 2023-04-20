@@ -11,7 +11,7 @@ plugins {
     kotlin("multiplatform") version "1.8.20"
     id("io.kotless") version "0.2.0" apply true
     // KSP support
-    id("com.google.devtools.ksp") version "1.8.20-1.0.10"
+//    id("com.google.devtools.ksp") version "1.8.20-1.0.10"
 }
 
 repositories {
@@ -34,7 +34,7 @@ kotless {
     }
 }
 
-val fritz2Version = "1.0-RC4"
+//val fritz2Version = "1.0-RC4"
 
 kotlin {
     jvm()
@@ -45,8 +45,6 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("dev.fritz2:core:$fritz2Version")
-                implementation("dev.fritz2:headless:$fritz2Version")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
             }
         }
@@ -83,6 +81,24 @@ kotlin {
                 implementation(devNpm("css-loader", "6.7.1"))
                 implementation(devNpm("style-loader", "3.3.1"))
                 implementation(devNpm("cssnano", "5.1.13"))
+
+                // React, React DOM + Wrappers
+                implementation(enforcedPlatform("org.jetbrains.kotlin-wrappers:kotlin-wrappers-bom:1.0.0-pre.354"))
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react")
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-react-dom")
+
+                // Kotlin React Emotion (CSS)
+                implementation("org.jetbrains.kotlin-wrappers:kotlin-emotion")
+
+                // Video Player
+                implementation(npm("react-player", "2.10.1"))
+
+                // Share Buttons
+                implementation(npm("react-share", "4.4.0"))
+
+                // Coroutines & serialization
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3")
+                implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
             }
         }
     }
@@ -94,14 +110,13 @@ kotlin {
 dependencies {
     "implementation"("io.kotless", "kotless-lang", "0.2.0")
     "implementation"("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
-    add("kspCommonMainMetadata", "dev.fritz2:lenses-annotation-processor:$fritz2Version")
-    add("kspCommonMainMetadata", "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
+//    add("kspCommonMainMetadata", "org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
 }
 kotlin.sourceSets.commonMain { kotlin.srcDir("build/generated/ksp/metadata/commonMain/kotlin") }
 
-tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>>().all {
-    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
-}
+//tasks.withType<org.jetbrains.kotlin.gradle.dsl.KotlinCompile<*>>().all {
+//    if (name != "kspCommonMainKotlinMetadata") dependsOn("kspCommonMainKotlinMetadata")
+//}
 /**
  * KSP support - end
  */

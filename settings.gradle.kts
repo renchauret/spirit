@@ -1,4 +1,4 @@
-rootProject.name = "spirit-backend"
+rootProject.name = "spirit"
 
 pluginManagement {
     resolutionStrategy {
