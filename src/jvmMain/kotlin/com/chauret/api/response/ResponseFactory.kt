@@ -8,9 +8,10 @@ class ResponseFactory {
     companion object {
         fun createSessionResponse(model: Session): SessionResponse {
             return SessionResponse(
-                guid = model.guid.toString(),
+                token = model.guid.toString(),
                 username = model.username,
-                expirationTimeSeconds = model.expirationTimeSeconds
+                expirationTimeSeconds = model.expirationTimeSeconds,
+                permissions = model.permissions
             )
 
         }

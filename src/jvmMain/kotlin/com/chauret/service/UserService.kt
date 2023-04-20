@@ -64,7 +64,7 @@ object UserService {
         val user = getByUsernameAndPassword(signInRequest.username, encodePassword(signInRequest.password))
 
         // If a user is found, create and return a session
-        user.username?.let { return SessionService.createSession(it) } ?: throw Exception("username is null")
+        user.username?.let { return SessionService.createSession(it, user.permissions) } ?: throw Exception("username is null")
     }
 
     fun grantAdmin(username: String) {

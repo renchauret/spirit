@@ -46,7 +46,7 @@ kotlin {
         val commonMain by getting {
             dependencies {
                 implementation("dev.fritz2:core:$fritz2Version")
-                // implementation("dev.fritz2:headless:$fritz2Version") // optional
+                implementation("dev.fritz2:headless:$fritz2Version")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
             }
         }
@@ -74,7 +74,7 @@ kotlin {
             dependencies {
                 // tailwind
                 implementation(npm("tailwindcss", "3.2.1"))
-                // implementation(npm("@tailwindcss/forms", "0.5.3")) // optional
+                implementation(npm("@tailwindcss/forms", "0.5.3"))
 
                 // webpack
                 implementation(devNpm("postcss", "8.4.17"))
