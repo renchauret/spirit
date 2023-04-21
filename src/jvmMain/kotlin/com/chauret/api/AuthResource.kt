@@ -10,6 +10,7 @@ import com.chauret.service.UserService
 import com.chauret.model.Permissions
 import io.kotless.MimeType
 import io.kotless.dsl.app.http.RouteKey
+import io.kotless.dsl.lang.http.Get
 import io.kotless.dsl.lang.http.HttpRequestInterceptor
 import io.kotless.dsl.lang.http.Post
 import io.kotless.dsl.lang.http.Put
@@ -42,8 +43,12 @@ object AuthInterceptor: HttpRequestInterceptor {
     }
 }
 
+@Get("/")
+fun index() = "Hello, world!"
+
 @Put(ROUTE_PREFIX, MimeType.JSON)
 fun signIn() = runWithBodyAndResponse<SignInRequest> {
+    println("Signing in user ${it.username}")
     UserService.authenticateUser(it)
 }
 

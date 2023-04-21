@@ -11,7 +11,7 @@ plugins {
     kotlin("multiplatform") version "1.8.20"
     id("io.kotless") version "0.2.0" apply true
     // KSP support
-//    id("com.google.devtools.ksp") version "1.8.20-1.0.10"
+    // id("com.google.devtools.ksp") version "1.8.20-1.0.10"
 }
 
 repositories {
@@ -21,20 +21,18 @@ repositories {
     maven("https://s01.oss.sonatype.org/content/repositories/snapshots/") // new repository here
 }
 
-kotless {
-    config {
-        dsl {
-            type = DSLType.Kotless
-        }
-    }
-    extensions {
-        local {
-            port = 8081
-        }
-    }
-}
-
-//val fritz2Version = "1.0-RC4"
+//kotless {
+//    config {
+//        dsl {
+//            type = DSLType.Kotless
+//        }
+//    }
+//    extensions {
+//        local {
+//            port = 8081
+//        }
+//    }
+//}
 
 kotlin {
     jvm()
@@ -49,6 +47,18 @@ kotlin {
             }
         }
         val jvmMain by getting {
+            kotless {
+                config {
+                    dsl {
+                        type = DSLType.Kotless
+                    }
+                }
+                extensions {
+                    local {
+                        port = 8081
+                    }
+                }
+            }
             dependencies {
                 implementation("io.kotless:kotless-lang:0.2.0")
                 implementation("io.kotless:kotless-lang-aws:0.2.0")
@@ -99,6 +109,8 @@ kotlin {
                 // Coroutines & serialization
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.3")
                 implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
+
+                implementation(npm("formik", "2.2.9"))
             }
         }
     }

@@ -8,24 +8,12 @@ import com.chauret.model.recipe.Ingredient
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotless.dsl.model.HttpResponse
 
-interface ResponseType {
-    val statusCode: Int
-}
-
-enum class SuccessfulResponseType(override val statusCode: Int) : ResponseType {
-    OK(200),
-    CREATED(201)
-}
-
-enum class ErrorResponseType(override val statusCode: Int) : ResponseType {
-    BAD_REQUEST(400),
-    UNAUTHORIZED(401),
-    FORBIDDEN(403),
-    NOT_FOUND(404),
-    SERVER_ERROR(500)
-}
-
-fun headers() = hashMapOf("Content-Type" to "application/json")
+fun headers() = hashMapOf(
+    "Content-Type" to "application/json",
+    "Access-Control-Allow-Origin" to "*",
+    "Access-Control-Allow-Methods" to "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers" to "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With"
+)
 
 private fun response(responseType: ResponseType, body: Any): HttpResponse {
     if (body is String) return response(responseType, body.toString())
