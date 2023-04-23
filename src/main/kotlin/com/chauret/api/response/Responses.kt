@@ -34,17 +34,10 @@ fun headers() = hashMapOf(
 
 private fun response(responseType: ResponseType, body: Any): HttpResponse {
     if (body is String) return response(responseType, body.toString())
-    val finalBody = if (body is Collection<*>) {
-        body
-    } else {
-        body::class.simpleName?.let { bodyName ->
-            mapOf(bodyName.replaceFirstChar { it.lowercase() } to body)
-        } ?: body
-    }
     return HttpResponse(
         statusCode = responseType.statusCode,
         headers = headers(),
-        body = ObjectMapper().writeValueAsString(finalBody)
+        body = ObjectMapper().writeValueAsString(body)
     )
 }
 
