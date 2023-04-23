@@ -1,3 +1,4 @@
+import io.kotless.DSLType
 import io.kotless.plugin.gradle.dsl.kotless
 //import io.kotless.plugin.gradle.dsl.Webapp.Route53
 
@@ -31,14 +32,19 @@ dependencies {
     testImplementation(kotlin("test"))
 }
 
+kotless {
+    config {
+        dsl {
+            type = DSLType.Kotless
+        }
+    }
+    extensions {
+        local {
+            port = 8081
+        }
+    }
+}
+
 tasks.test {
     useJUnitPlatform()
 }
-
-//kotlin {
-//    jvmToolchain(8)
-//}
-//
-//application {
-////    mainClass.set("MainKt")
-//}
