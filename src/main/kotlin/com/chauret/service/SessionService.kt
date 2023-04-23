@@ -2,6 +2,7 @@ package com.chauret.service
 
 import com.chauret.db.Database
 import com.chauret.db.DynamoDatabase
+import com.chauret.model.Permissions
 import com.chauret.model.Session
 import io.kotless.PermissionLevel
 import io.kotless.dsl.cloud.aws.DynamoDBTable
@@ -24,8 +25,8 @@ object SessionService {
         database.enableTimeToLive(Session::expirationTimeSeconds.name)
     }
 
-    fun createSession(username: String): Session {
-        val session = Session(username = username)
+    fun createSession(username: String, permissions: Permissions): Session {
+        val session = Session(username = username, permissions = permissions)
         save(session)
         return session
     }

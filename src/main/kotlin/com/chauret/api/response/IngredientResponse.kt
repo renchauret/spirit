@@ -1,12 +1,13 @@
 package com.chauret.api.response
 
-import com.chauret.model.recipe.Ingredient
+import kotlinx.serialization.Serializable
 
-class IngredientResponse(model: Ingredient) {
-    val guid: String = model.guid.toString()
-    val username: String = model.username
-    val name: String = model.name
-    val imagePath: String? = model.imagePath
-    val type: String? = model.type?.name
-    val liked: Boolean = model.liked
-}
+@Serializable
+class IngredientResponse(
+    val guid: String,
+    val username: String,
+    val name: String,
+    val imagePath: String?,
+    val type: String?,
+    val liked: Boolean,
+)

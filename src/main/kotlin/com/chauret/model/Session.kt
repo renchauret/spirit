@@ -9,5 +9,6 @@ data class Session(
     @get:DynamoDbPartitionKey
     var guid: UUID = UUID.randomUUID(),
     var username: String? = null,
-    var expirationTimeSeconds: Long = System.currentTimeMillis() / 60 + (24 * 60 * 1000) // 24 hours from now
+    var expirationTimeSeconds: Long = System.currentTimeMillis() / 60 + (24 * 60 * 1000), // 24 hours from now
+    var permissions: Permissions = Permissions.USER
 )

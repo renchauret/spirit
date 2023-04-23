@@ -9,6 +9,7 @@ import com.chauret.service.DrinkService
 import com.chauret.service.SessionService
 import com.chauret.service.UserService
 import io.kotless.MimeType
+import io.kotless.dsl.lang.http.Options
 import io.kotless.dsl.lang.http.Post
 import io.kotless.dsl.lang.http.Put
 
@@ -43,3 +44,15 @@ fun createAdminDrinks() = runWithBodyAndResponse<BulkDrinkRequest>(SuccessfulRes
         DrinkService.createDrinks(it)
     }.getOrElse { throw ServerException("Error creating admin drinks") }
 }
+
+@Options("$ROUTE_PREFIX/auth/tables", MimeType.JSON)
+fun authTablesOptions() = runWithResponse { true }
+
+@Options("$ROUTE_PREFIX/drink/tables", MimeType.JSON)
+fun drinkTablesOptions() = runWithResponse { true }
+
+@Options("$ROUTE_PREFIX/admin", MimeType.JSON)
+fun giveAdminOptions() = runWithResponse { true }
+
+@Options("$ROUTE_PREFIX/admin/drink/all", MimeType.JSON)
+fun createAdminDrinksOptions() = runWithResponse { true }

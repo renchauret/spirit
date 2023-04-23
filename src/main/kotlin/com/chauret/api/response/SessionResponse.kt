@@ -1,9 +1,12 @@
 package com.chauret.api.response
 
-import com.chauret.model.Session
+import com.chauret.model.Permissions
+import kotlinx.serialization.Serializable
 
-class SessionResponse(model: Session) {
-    val guid: String = model.guid.toString()
-    val username: String? = model.username
-    val expirationTimeSeconds: Long = model.expirationTimeSeconds
-}
+@Serializable
+class SessionResponse(
+    val token: String,
+    val username: String?,
+    val expirationTimeSeconds: Long,
+    val permissions: Permissions
+)

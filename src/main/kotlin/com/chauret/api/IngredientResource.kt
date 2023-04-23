@@ -8,10 +8,8 @@ import com.chauret.api.response.SuccessfulResponseType
 import com.chauret.api.response.runWithResponse
 import com.chauret.model.Permissions
 import com.chauret.service.IngredientService
-import io.kotless.dsl.lang.http.Delete
-import io.kotless.dsl.lang.http.Get
-import io.kotless.dsl.lang.http.Post
-import io.kotless.dsl.lang.http.Put
+import io.kotless.MimeType
+import io.kotless.dsl.lang.http.*
 import java.util.UUID
 
 private const val ROUTE_PREFIX = "/ingredient"
@@ -66,3 +64,15 @@ fun getAdminIngredients() = runWithResponse(SuccessfulResponseType.OK) {
 fun getIngredients() = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
     IngredientService.getIngredientsForUser(username)
 }
+
+@Options(ROUTE_PREFIX, MimeType.JSON)
+fun ingredientOptions() = runWithResponse { true }
+
+@Options(ADMIN_ROUTE_PREFIX, MimeType.JSON)
+fun adminIngredientOptions() = runWithResponse { true }
+
+@Options("$ADMIN_ROUTE_PREFIX/all", MimeType.JSON)
+fun allIngredientOptions() = runWithResponse { true }
+
+@Options("$ROUTE_PREFIX/all", MimeType.JSON)
+fun adminAllIngredientOptions() = runWithResponse { true }

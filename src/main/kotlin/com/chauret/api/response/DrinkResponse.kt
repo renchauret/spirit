@@ -1,23 +1,24 @@
 package com.chauret.api.response
 
-import com.chauret.model.recipe.Drink
-import com.chauret.model.recipe.DrinkIngredient
+import kotlinx.serialization.Serializable
 
-class DrinkIngredientResponse(model: DrinkIngredient) {
-    val ingredientGuid: String = model.ingredientGuid.toString()
-    val amount: Float = model.amount
-    val unit: String? = model.unit
-}
+@Serializable
+class DrinkIngredientResponse(
+    val ingredientGuid: String,
+    val amount: Float,
+    val unit: String?
+)
 
-class DrinkResponse(model: Drink) {
-    val guid: String = model.guid.toString()
-    val username: String = model.username
-    val name: String = model.name
-    val ingredients: List<DrinkIngredientResponse> = model.ingredients.map { DrinkIngredientResponse(it) }
-    val instructions: List<String> = model.instructions
-    val tags: List<String> = model.tags
-    val imagePath: String? = model.imagePath
-    val glass: String? = model.glass
-    val ibaCategory: String? = model.ibaCategory
-    val liked: Boolean = model.liked
-}
+@Serializable
+class DrinkResponse(
+    val guid: String,
+    val username: String,
+    val name: String,
+    val ingredients: List<DrinkIngredientResponse>,
+    val instructions: List<String>,
+    val tags: List<String>,
+    val imagePath: String?,
+    val glass: String?,
+    val ibaCategory: String?,
+    val liked: Boolean
+)

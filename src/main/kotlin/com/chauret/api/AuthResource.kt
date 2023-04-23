@@ -5,12 +5,14 @@ import com.chauret.api.request.AUTH_HEADER
 import com.chauret.api.request.SignInRequest
 import com.chauret.api.response.response
 import com.chauret.api.request.runWithBodyAndResponse
+import com.chauret.api.response.runWithResponse
 import com.chauret.service.SessionService
 import com.chauret.service.UserService
 import com.chauret.model.Permissions
 import io.kotless.MimeType
 import io.kotless.dsl.app.http.RouteKey
 import io.kotless.dsl.lang.http.HttpRequestInterceptor
+import io.kotless.dsl.lang.http.Options
 import io.kotless.dsl.lang.http.Post
 import io.kotless.dsl.lang.http.Put
 import io.kotless.dsl.model.HttpRequest
@@ -51,3 +53,6 @@ fun signIn() = runWithBodyAndResponse<SignInRequest> {
 fun signUp(): HttpResponse = runWithBodyAndResponse<SignInRequest> {
     UserService.signUp(it)
 }
+
+@Options(ROUTE_PREFIX, MimeType.JSON)
+fun authOptions() = runWithResponse { true }
