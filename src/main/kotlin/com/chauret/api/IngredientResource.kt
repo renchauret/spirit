@@ -13,6 +13,7 @@ import io.kotless.dsl.lang.http.*
 import java.util.UUID
 
 private const val ROUTE_PREFIX = "/ingredient"
+private const val USER_ROUTE_PREFIX = "/user$ROUTE_PREFIX"
 private const val ADMIN_ROUTE_PREFIX = "/admin$ROUTE_PREFIX"
 
 @Post(ADMIN_ROUTE_PREFIX)
@@ -20,7 +21,7 @@ fun createAdminIngredient() = runWithBodyAndResponse<IngredientRequest> (Success
     IngredientService.createIngredient(body, Permissions.ADMIN.name)
 }
 
-@Post(ROUTE_PREFIX)
+@Post(USER_ROUTE_PREFIX)
 fun createIngredient() = runWithBodyAndUsernameAndResponse<IngredientRequest>(SuccessfulResponseType.CREATED) { body, username ->
     IngredientService.createIngredient(body, username)
 }
@@ -30,7 +31,7 @@ fun editAdminIngredient(guid: String) = runWithBodyAndResponse<IngredientRequest
     IngredientService.editIngredient(body, Permissions.ADMIN.name, UUID.fromString(guid))
 }
 
-@Put(ROUTE_PREFIX)
+@Put(USER_ROUTE_PREFIX)
 fun editIngredient(guid: String) = runWithBodyAndUsernameAndResponse<IngredientRequest>(SuccessfulResponseType.OK) { body, username ->
     IngredientService.editIngredient(body, username, UUID.fromString(guid))
 }
@@ -40,7 +41,7 @@ fun deleteAdminIngredient(guid: String) = runWithResponse(SuccessfulResponseType
     IngredientService.deleteIngredient(UUID.fromString(guid), Permissions.ADMIN.name)
 }
 
-@Delete(ROUTE_PREFIX)
+@Delete(USER_ROUTE_PREFIX)
 fun deleteIngredient(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
     IngredientService.deleteIngredient(UUID.fromString(guid), username)
 }
@@ -50,7 +51,7 @@ fun getAdminIngredient(guid: String) = runWithResponse(SuccessfulResponseType.OK
     IngredientService.getIngredient(UUID.fromString(guid), Permissions.ADMIN.name)
 }
 
-@Get(ROUTE_PREFIX)
+@Get(USER_ROUTE_PREFIX)
 fun getIngredient(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
     IngredientService.getIngredient(UUID.fromString(guid), username)
 }

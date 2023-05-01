@@ -65,7 +65,7 @@ fun runWithResponse(
     runCatching {
         mapToResponse(block())
     }.getOrElse {
-        println(it.message)
+        println(it)
         if (it is ExceptionResponse) {
             return response(it)
         }

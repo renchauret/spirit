@@ -10,7 +10,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import java.util.UUID
 
-const val AUTH_HEADER = "auth"
+const val AUTH_HEADER = "Authorization"
 
 inline fun <reified T> getBody() = KotlessContext.HTTP.request.body?.let {
     Json.decodeFromString<T>(it.string)

@@ -13,6 +13,7 @@ import io.kotless.dsl.lang.http.*
 import java.util.UUID
 
 private const val ROUTE_PREFIX = "/drink"
+private const val USER_ROUTE_PREFIX = "/user$ROUTE_PREFIX"
 private const val ADMIN_ROUTE_PREFIX = "/admin$ROUTE_PREFIX"
 
 @Post(ADMIN_ROUTE_PREFIX)
@@ -20,7 +21,7 @@ fun createAdminDrink() = runWithBodyAndResponse<DrinkRequest>(SuccessfulResponse
     DrinkService.createDrink(body, Permissions.ADMIN.name)
 }
 
-@Post(ROUTE_PREFIX)
+@Post(USER_ROUTE_PREFIX)
 fun createDrink() = runWithBodyAndUsernameAndResponse<DrinkRequest>(SuccessfulResponseType.CREATED) { body, username ->
     DrinkService.createDrink(body, username)
 }
@@ -30,7 +31,7 @@ fun editAdminDrink(guid: String) = runWithBodyAndResponse<DrinkRequest>(Successf
     DrinkService.editDrink(body, Permissions.ADMIN.name, UUID.fromString(guid))
 }
 
-@Put(ROUTE_PREFIX)
+@Put(USER_ROUTE_PREFIX)
 fun editDrink(guid: String) =
     runWithBodyAndUsernameAndResponse<DrinkRequest>(SuccessfulResponseType.OK) { body, username ->
         DrinkService.editDrink(body, username, UUID.fromString(guid))
@@ -41,7 +42,7 @@ fun deleteAdminDrink(guid: String) = runWithResponse(SuccessfulResponseType.OK) 
     DrinkService.deleteDrink(UUID.fromString(guid), Permissions.ADMIN.name)
 }
 
-@Delete(ROUTE_PREFIX)
+@Delete(USER_ROUTE_PREFIX)
 fun deleteDrink(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
     DrinkService.deleteDrink(UUID.fromString(guid), username)
 }
@@ -52,7 +53,7 @@ fun getAdminDrink(guid: String) = runWithResponse(SuccessfulResponseType.OK) {
     DrinkService.getDrink(UUID.fromString(guid), Permissions.ADMIN.name)
 }
 
-@Get(ROUTE_PREFIX)
+@Get(USER_ROUTE_PREFIX)
 fun getDrink(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
     DrinkService.getDrink(UUID.fromString(guid), username)
 }
