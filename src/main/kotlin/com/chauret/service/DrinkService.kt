@@ -65,8 +65,7 @@ object DrinkService {
 
     private fun uploadImage(imageRequest: ImageRequest, username: String, drinkGuid: UUID): String {
         val imagePath = "$username/$drinkGuid.${imageRequest.type.name.lowercase()}"
-        imageDatabase.create(imagePath, imageRequest.imageBase64)
-        return imagePath
+        return imageDatabase.create(imagePath, imageRequest.imageBase64)
     }
 
     fun editDrink(drinkRequest: DrinkRequest, username: String, guid: UUID): Drink {

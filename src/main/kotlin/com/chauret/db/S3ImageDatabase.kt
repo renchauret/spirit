@@ -4,8 +4,11 @@ import software.amazon.awssdk.auth.credentials.ProfileCredentialsProvider
 import software.amazon.awssdk.core.sync.RequestBody
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.S3Client
+import software.amazon.awssdk.services.s3.model.GetUrlRequest
+import software.amazon.awssdk.services.s3.model.ObjectCannedACL
 import software.amazon.awssdk.services.s3.model.PutObjectRequest
-import java.util.Base64
+import java.util.*
+
 
 open class S3ImageDatabase constructor(name: String): ImageDatabase {
 
@@ -19,6 +22,7 @@ open class S3ImageDatabase constructor(name: String): ImageDatabase {
             .build()
         )
         .build()
+
     override fun get(key: String): ByteArray? {
         client.getObject {
             it.bucket(bucketName)
@@ -28,7 +32,7 @@ open class S3ImageDatabase constructor(name: String): ImageDatabase {
         }
     }
 
-    override fun create(key: String, imageBase64: String) {
+    override fun create(key: String, imageBase64: String): String {
         val imageBytes = Base64.getDecoder().decode(imageBase64)
         client.putObject(
             PutObjectRequest.builder()
@@ -39,6 +43,8 @@ open class S3ImageDatabase constructor(name: String): ImageDatabase {
                 .build(),
             RequestBody.fromBytes(imageBytes)
         )
+        val request = GetUrlRequest.builder().bucket(bucketName).key(key).build()
+        return client.utilities().getUrl(request).toExternalForm()
     }
 
     override fun delete(key: String) {

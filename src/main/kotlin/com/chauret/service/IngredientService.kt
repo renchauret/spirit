@@ -38,8 +38,7 @@ object IngredientService {
 
     private fun uploadImage(imageRequest: ImageRequest, username: String, drinkGuid: UUID): String {
         val imagePath = "$username/$drinkGuid.${imageRequest.type.name.lowercase()}"
-        imageDatabase.create(imagePath, imageRequest.imageBase64)
-        return imagePath
+        return imageDatabase.create(imagePath, imageRequest.imageBase64)
     }
 
     fun createIngredient(ingredientRequest: IngredientRequest, username: String): Ingredient {
