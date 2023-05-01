@@ -63,19 +63,19 @@ fun getAdminDrinks() = runWithResponse(SuccessfulResponseType.OK) {
     DrinkService.getDrinksForUser(Permissions.ADMIN.name)
 }
 
-@Get("$ROUTE_PREFIX/all")
+@Get("$USER_ROUTE_PREFIX/all")
 fun getDrinks() = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
     DrinkService.getDrinksForUser(username)
 }
 
-@Options(ROUTE_PREFIX, MimeType.JSON)
+@Options(USER_ROUTE_PREFIX, MimeType.JSON)
 fun drinkOptions() = runWithResponse { true }
 
 @Options(ADMIN_ROUTE_PREFIX, MimeType.JSON)
 fun adminDrinkOptions() = runWithResponse { true }
 
-@Options("$ADMIN_ROUTE_PREFIX/all", MimeType.JSON)
+@Options("$USER_ROUTE_PREFIX/all", MimeType.JSON)
 fun allDrinksOptions() = runWithResponse { true }
 
-@Options("$ROUTE_PREFIX/all", MimeType.JSON)
+@Options("$ADMIN_ROUTE_PREFIX/all", MimeType.JSON)
 fun adminAllDrinksOptions() = runWithResponse { true }

@@ -61,12 +61,12 @@ fun getAdminIngredients() = runWithResponse(SuccessfulResponseType.OK) {
     IngredientService.getIngredientsForUser(Permissions.ADMIN.name)
 }
 
-@Get("$ROUTE_PREFIX/all")
+@Get("$USER_ROUTE_PREFIX/all")
 fun getIngredients() = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
     IngredientService.getIngredientsForUser(username)
 }
 
-@Options(ROUTE_PREFIX, MimeType.JSON)
+@Options(USER_ROUTE_PREFIX, MimeType.JSON)
 fun ingredientOptions() = runWithResponse { true }
 
 @Options(ADMIN_ROUTE_PREFIX, MimeType.JSON)
@@ -75,5 +75,5 @@ fun adminIngredientOptions() = runWithResponse { true }
 @Options("$ADMIN_ROUTE_PREFIX/all", MimeType.JSON)
 fun allIngredientOptions() = runWithResponse { true }
 
-@Options("$ROUTE_PREFIX/all", MimeType.JSON)
+@Options("$USER_ROUTE_PREFIX/all", MimeType.JSON)
 fun adminAllIngredientOptions() = runWithResponse { true }
