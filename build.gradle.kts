@@ -40,7 +40,7 @@ kotless {
     }
     extensions {
         local {
-            port = 8081
+            port = 3001
         }
     }
 }
