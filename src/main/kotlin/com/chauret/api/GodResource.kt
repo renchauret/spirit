@@ -6,6 +6,7 @@ import com.chauret.api.request.runWithBodyAndResponse
 import com.chauret.api.response.SuccessfulResponseType
 import com.chauret.api.response.runWithResponse
 import com.chauret.service.DrinkService
+import com.chauret.service.IngredientService
 import com.chauret.service.SessionService
 import com.chauret.service.UserService
 import io.kotless.MimeType
@@ -28,6 +29,7 @@ fun createAuthTables() = runWithResponse(SuccessfulResponseType.CREATED) {
 fun createDrinkTables() = runWithResponse(SuccessfulResponseType.CREATED) {
     runCatching {
         DrinkService.createTable()
+        IngredientService.createTable()
         "Tables created"
     }.getOrElse { throw ServerException("Error creating tables") }
 }
@@ -42,7 +44,8 @@ fun grantAdmin(username: String) = runWithResponse {
 fun createAdminDrinks() = runWithBodyAndResponse<BulkDrinkRequest>(SuccessfulResponseType.CREATED) {
     runCatching {
         DrinkService.createDrinks(it)
-    }.getOrElse { throw ServerException("Error creating admin drinks") }
+//    }.getOrElse { throw ServerException("Error creating admin drinks") }
+    }.getOrElse { throw it }
 }
 
 @Options("$ROUTE_PREFIX/auth/tables", MimeType.JSON)

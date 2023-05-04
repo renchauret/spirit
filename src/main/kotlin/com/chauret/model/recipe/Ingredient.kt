@@ -26,7 +26,7 @@ data class Ingredient(
     var guid: UUID = UUID.randomUUID(),
     @get:DynamoDbPartitionKey
     var username: String = Permissions.ADMIN.name,
-    var name: String = "",
+    var ingredientName: String = "",
     var liked: Boolean = false,
     var type: IngredientType? = null,
     var imagePath: String? = null

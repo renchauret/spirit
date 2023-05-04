@@ -141,14 +141,17 @@ open class DynamoDatabase<T: Any> constructor(private val type : KClass<T>): Dat
 
     override fun create(items: List<T>) {
         if (items.isEmpty()) return
-        var writeBatchBuilder = WriteBatch.builder(type.java)
-            .mappedTableResource(table)
-        items.forEach { writeBatchBuilder = writeBatchBuilder.addPutItem(it) }
-        enhancedClient.batchWriteItem(
-            BatchWriteItemEnhancedRequest.builder()
-                .addWriteBatch(writeBatchBuilder.build())
-                .build()
-        )
+        // DynamoDB has a limit of 25 items per BatchWriteItemRequest
+        items.chunked(25).forEach {
+            var writeBatchBuilder = WriteBatch.builder(type.java)
+                .mappedTableResource(table)
+            it.forEach { item -> writeBatchBuilder = writeBatchBuilder.addPutItem(item) }
+            enhancedClient.batchWriteItem(
+                BatchWriteItemEnhancedRequest.builder()
+                    .addWriteBatch(writeBatchBuilder.build())
+                    .build()
+            )
+        }
     }
 
     override fun update(item: T) {

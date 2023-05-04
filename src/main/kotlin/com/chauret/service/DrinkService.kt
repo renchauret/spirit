@@ -2,12 +2,7 @@ package com.chauret.service
 
 import com.chauret.BadRequestException
 import com.chauret.NotFoundException
-import com.chauret.api.request.BulkDrinkRequest
-import com.chauret.api.request.DrinkIngredientRequest
-import com.chauret.api.request.DrinkRequest
-import com.chauret.api.request.ImageRequest
-import com.chauret.api.request.IngredientGuidOrName
-import com.chauret.api.request.IngredientRequest
+import com.chauret.api.request.*
 import com.chauret.db.Database
 import com.chauret.db.DynamoDatabase
 import com.chauret.db.ImageDatabase
@@ -17,7 +12,8 @@ import com.chauret.model.recipe.Drink
 import com.chauret.model.recipe.DrinkIngredient
 import io.kotless.PermissionLevel
 import io.kotless.dsl.cloud.aws.DynamoDBTable
-import java.util.UUID
+import java.util.*
+
 
 @DynamoDBTable("drink", PermissionLevel.ReadWrite)
 object DrinkService {
@@ -63,15 +59,10 @@ object DrinkService {
         return drinks
     }
 
-    private fun uploadImage(imageRequest: ImageRequest, username: String, drinkGuid: UUID): String {
-        val imagePath = "$username/$drinkGuid.${imageRequest.type.name.lowercase()}"
-        return imageDatabase.create(imagePath, imageRequest.imageBase64)
-    }
-
     fun editDrink(drinkRequest: DrinkRequest, username: String, guid: UUID): Drink {
         val drink = getDrink(guid, username)
         val updatedDrink = drink.copy(
-            name = drinkRequest.name,
+            drinkName = drinkRequest.name,
             ingredients = drinkRequest.ingredients.map { it.toDrinkIngredient(username) },
             instructions = drinkRequest.instructions,
             tags = drinkRequest.tags,
@@ -80,7 +71,7 @@ object DrinkService {
             ibaCategory = drinkRequest.ibaCategory
         )
         if (drinkRequest.image != null) {
-            updatedDrink.imagePath = uploadImage(drinkRequest.image, username, drink.guid)
+            updatedDrink.imagePath = ImageService.processImage(drinkRequest.image, username, drink.guid, imageDatabase)
         }
         database.update(drink)
         return updatedDrink
@@ -96,17 +87,17 @@ object DrinkService {
     private fun DrinkIngredientRequest.toDrinkIngredient(username: String) = DrinkIngredient(
         ingredientGuid = UUID.fromString(
             // ensure ingredient exists
-            if (ingredientGuidOrName is IngredientGuidOrName.Guid)
-                IngredientService.getIngredient(UUID.fromString(ingredientGuidOrName.guid), username).guid.toString()
+            if (ingredientIdentifier is IngredientIdentifier.Guid)
+                IngredientService.getIngredient(UUID.fromString(ingredientIdentifier.guid), username).guid.toString()
             // if just a name, check if it exists and create it if it doesn't
             else runCatching {
                 IngredientService.getIngredientByName(
-                    (ingredientGuidOrName as IngredientGuidOrName.Name).name, username
+                    (ingredientIdentifier as IngredientIdentifier.Name).name, username
                 ).guid.toString()
             }.getOrElse {
                 if (it is NotFoundException) {
                     IngredientService.createIngredient(
-                        IngredientRequest(name = (ingredientGuidOrName as IngredientGuidOrName.Name).name),
+                        IngredientRequest(name = (ingredientIdentifier as IngredientIdentifier.Name).name),
                         username
                     ).guid.toString()
                 } else {
@@ -121,7 +112,7 @@ object DrinkService {
     private fun DrinkRequest.toDrink(username: String): Drink {
         val drink = Drink(
             username = username,
-            name = name,
+            drinkName = name,
             ingredients = ingredients.map { it.toDrinkIngredient(username) },
             instructions = instructions,
             tags = tags,
@@ -130,7 +121,7 @@ object DrinkService {
             ibaCategory = ibaCategory
         )
         if (image != null) {
-            drink.imagePath = uploadImage(image, username, drink.guid)
+            drink.imagePath = ImageService.processImage(image, username, drink.guid, imageDatabase)
         }
         return drink
     }

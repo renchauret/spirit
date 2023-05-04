@@ -19,7 +19,7 @@ class ResponseFactory {
             return IngredientResponse(
                 guid = model.guid.toString(),
                 username = model.username,
-                name = model.name,
+                name = model.ingredientName,
                 imagePath = model.imagePath,
                 type = model.type?.name,
                 liked = model.liked
@@ -30,7 +30,7 @@ class ResponseFactory {
             return DrinkResponse(
                 guid = model.guid.toString(),
                 username = model.username,
-                name = model.name,
+                name = model.drinkName,
                 imagePath = model.imagePath,
                 ingredients = model.ingredients.map {
                     DrinkIngredientResponse(
