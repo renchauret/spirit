@@ -12,10 +12,6 @@ import com.chauret.model.recipe.Drink
 import com.chauret.model.recipe.DrinkIngredient
 import io.kotless.PermissionLevel
 import io.kotless.dsl.cloud.aws.DynamoDBTable
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.net.URL
-import java.net.URLConnection
 import java.util.*
 
 
@@ -66,7 +62,7 @@ object DrinkService {
     fun editDrink(drinkRequest: DrinkRequest, username: String, guid: UUID): Drink {
         val drink = getDrink(guid, username)
         val updatedDrink = drink.copy(
-            name = drinkRequest.name,
+            drinkName = drinkRequest.name,
             ingredients = drinkRequest.ingredients.map { it.toDrinkIngredient(username) },
             instructions = drinkRequest.instructions,
             tags = drinkRequest.tags,
@@ -91,17 +87,17 @@ object DrinkService {
     private fun DrinkIngredientRequest.toDrinkIngredient(username: String) = DrinkIngredient(
         ingredientGuid = UUID.fromString(
             // ensure ingredient exists
-            if (ingredientGuidOrName is IngredientGuidOrName.Guid)
-                IngredientService.getIngredient(UUID.fromString(ingredientGuidOrName.guid), username).guid.toString()
+            if (ingredientIdentifier is IngredientIdentifier.Guid)
+                IngredientService.getIngredient(UUID.fromString(ingredientIdentifier.guid), username).guid.toString()
             // if just a name, check if it exists and create it if it doesn't
             else runCatching {
                 IngredientService.getIngredientByName(
-                    (ingredientGuidOrName as IngredientGuidOrName.Name).name, username
+                    (ingredientIdentifier as IngredientIdentifier.Name).name, username
                 ).guid.toString()
             }.getOrElse {
                 if (it is NotFoundException) {
                     IngredientService.createIngredient(
-                        IngredientRequest(name = (ingredientGuidOrName as IngredientGuidOrName.Name).name),
+                        IngredientRequest(name = (ingredientIdentifier as IngredientIdentifier.Name).name),
                         username
                     ).guid.toString()
                 } else {
@@ -116,7 +112,7 @@ object DrinkService {
     private fun DrinkRequest.toDrink(username: String): Drink {
         val drink = Drink(
             username = username,
-            name = name,
+            drinkName = name,
             ingredients = ingredients.map { it.toDrinkIngredient(username) },
             instructions = instructions,
             tags = tags,

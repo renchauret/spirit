@@ -9,7 +9,7 @@ import java.util.UUID
 @DynamoDbBean
 data class DrinkIngredient(
     override var ingredientGuid: UUID = UUID.fromString("00000000-0000-0000-0000-000000000000"),
-    override var amount: Float = 0f,
+    override var amount: Float? = null,
     override var unit: String? = null
 ): RecipeIngredient
 
@@ -19,7 +19,7 @@ data class Drink (
     override var username: String = Permissions.ADMIN.name,
     @get:DynamoDbSortKey
     override var guid: UUID = UUID.randomUUID(),
-    override var name: String = "",
+    override var drinkName: String = "",
     override var ingredients: List<DrinkIngredient> = emptyList(),
     override var instructions: List<String> = emptyList(),
     override var tags: List<String> = emptyList(),

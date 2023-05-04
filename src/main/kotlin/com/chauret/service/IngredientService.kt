@@ -63,7 +63,7 @@ object IngredientService {
     fun editIngredient(ingredientRequest: IngredientRequest, username: String, guid: UUID): Ingredient {
         val ingredient = getIngredient(guid, username)
         val updatedIngredient = ingredient.copy(
-            name = ingredientRequest.name,
+            ingredientName = ingredientRequest.name,
             liked = ingredientRequest.liked,
             type = ingredientRequest.type,
         )
@@ -89,7 +89,7 @@ object IngredientService {
     private fun IngredientRequest.toIngredient(username: String): Ingredient {
         val ingredient = Ingredient(
             username = username,
-            name = name,
+            ingredientName = name,
             liked = liked,
             type = type
         )
@@ -100,6 +100,6 @@ object IngredientService {
     }
 
     fun getIngredientByName(name: String, username: String): Ingredient {
-        return database.get(username, mapOf("name" to name)) ?: throw NotFoundException("Ingredient not found")
+        return database.get(username, mapOf("ingredientName" to name)) ?: throw NotFoundException("Ingredient not found")
     }
 }

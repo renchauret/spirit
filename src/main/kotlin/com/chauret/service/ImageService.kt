@@ -48,10 +48,10 @@ object ImageService {
             byteArrayOutputStream.write(buffer, 0, read)
         }
         byteArrayOutputStream.flush()
-        val imageBase64 = Base64.getUrlEncoder().encodeToString(byteArrayOutputStream.toByteArray())
+        val imageBase64 = Base64.getEncoder().encodeToString(byteArrayOutputStream.toByteArray())
         return ImageRequest.ImageBase64(
             imageBase64 = imageBase64,
-            type = ImageType.valueOf(url.split(".").last())
+            type = ImageType.valueOf(url.split(".").last().uppercase())
         )
     }
 }

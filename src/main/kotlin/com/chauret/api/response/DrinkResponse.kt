@@ -5,7 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 class DrinkIngredientResponse(
     val ingredientGuid: String,
-    val amount: Float,
+    val amount: Float?,
     val unit: String?
 )
 

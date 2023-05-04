@@ -42,21 +42,22 @@ object UserService {
             encodedPassword = encodePassword(signInRequest.password),
             permissions = if (signInRequest.username == "ren") Permissions.GOD else Permissions.USER
         ))
-        runCatching {
-            IngredientService.initializeUserIngredients(signInRequest.username)
-            DrinkService.initializeUserDrinks(signInRequest.username)
-        }.onFailure { drinkInitError ->
-            val initDrinksFailedMessage = "Failed to initialize drinks for user ${signInRequest.username}"
-            println("$initDrinksFailedMessage; deleting user. Error: ${drinkInitError.stackTraceToString()}")
-            runCatching {
-                database.delete(signInRequest.username)
-            }.onFailure {
-                val message = "Failed to delete user ${signInRequest.username} after drink initialization failure"
-                println("$message. Error: ${it.message}")
-                throw ServerException(message)
-            }
-            throw ServerException(initDrinksFailedMessage)
-        }
+        // Users will pick their drinks from the admin drinks list instead of just copying all
+//        runCatching {
+//            IngredientService.initializeUserIngredients(signInRequest.username)
+//            DrinkService.initializeUserDrinks(signInRequest.username)
+//        }.onFailure { drinkInitError ->
+//            val initDrinksFailedMessage = "Failed to initialize drinks for user ${signInRequest.username}"
+//            println("$initDrinksFailedMessage; deleting user. Error: ${drinkInitError.stackTraceToString()}")
+//            runCatching {
+//                database.delete(signInRequest.username)
+//            }.onFailure {
+//                val message = "Failed to delete user ${signInRequest.username} after drink initialization failure"
+//                println("$message. Error: ${it.message}")
+//                throw ServerException(message)
+//            }
+//            throw ServerException(initDrinksFailedMessage)
+//        }
     }
 
     fun authenticateUser(signInRequest: SignInRequest): Session {

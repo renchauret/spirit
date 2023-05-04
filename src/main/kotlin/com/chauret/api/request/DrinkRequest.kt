@@ -1,19 +1,22 @@
 package com.chauret.api.request
 
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonContentPolymorphicSerializer
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.jsonObject
 
-@Serializable
-sealed class IngredientGuidOrName {
-    data class Guid(val guid: String) : IngredientGuidOrName()
-    data class Name(val name: String) : IngredientGuidOrName()
+@Serializable(with = IngredientIdentifierDeserializer::class)
+sealed class IngredientIdentifier {
+    @Serializable
+    data class Guid(val guid: String) : IngredientIdentifier()
+    @Serializable
+    data class Name(val name: String) : IngredientIdentifier()
 }
 
 @Serializable
 data class DrinkIngredientRequest(
-    // TODO:  one of ingredientGuid or name should be required
-    val ingredientGuidOrName: IngredientGuidOrName,
-//    val ingredientGuid: String,
-    val amount: Float,
+    val ingredientIdentifier: IngredientIdentifier,
+    val amount: Float? = null,
     val unit: String? = null
 )
 
@@ -33,3 +36,10 @@ data class DrinkRequest(
 data class BulkDrinkRequest(
     val drinks: List<DrinkRequest>
 )
+
+object IngredientIdentifierDeserializer : JsonContentPolymorphicSerializer<IngredientIdentifier>(IngredientIdentifier::class) {
+    override fun selectDeserializer(element: JsonElement) = when {
+        "name" in element.jsonObject -> IngredientIdentifier.Name.serializer()
+        else -> IngredientIdentifier.Guid.serializer()
+    }
+}
