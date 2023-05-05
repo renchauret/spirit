@@ -28,6 +28,9 @@ data class Ingredient(
     var username: String = Permissions.ADMIN.name,
     var ingredientName: String = "",
     var liked: Boolean = false,
-    var type: IngredientType? = null,
-    var imagePath: String? = null
+    var description: String? = null,
+    var type: String? = null,
+    var imageUrl: String? = null,
+    var alcoholic: Boolean? = null,
+    var abv: Float? = null
 )

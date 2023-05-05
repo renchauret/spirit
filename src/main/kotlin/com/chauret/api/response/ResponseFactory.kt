@@ -21,9 +21,12 @@ class ResponseFactory {
                 guid = model.guid.toString(),
                 username = model.username,
                 name = model.ingredientName,
-                imagePath = model.imagePath,
-                type = model.type?.name,
-                liked = model.liked
+                description = model.description,
+                imageUrl = model.imageUrl,
+                type = model.type,
+                liked = model.liked,
+                alcoholic = model.alcoholic,
+                abv = model.abv
             )
         }
 
@@ -32,7 +35,7 @@ class ResponseFactory {
                 guid = model.guid.toString(),
                 username = model.username,
                 name = model.drinkName,
-                imagePath = model.imagePath,
+                imageUrl = model.imageUrl,
                 ingredients = model.ingredients.map {
                     DrinkIngredientResponse(
                         ingredientGuid = it.ingredientGuid.toString(),
@@ -42,6 +45,7 @@ class ResponseFactory {
                 },
                 liked = model.liked,
                 instructions = model.instructions,
+                description = model.description,
                 tags = model.tags,
                 glass = model.glass,
                 ibaCategory = model.ibaCategory
@@ -53,20 +57,24 @@ class ResponseFactory {
                 guid = model.guid.toString(),
                 username = model.username,
                 name = model.drinkName,
-                imagePath = model.imagePath,
+                imageUrl = model.imageUrl,
                 ingredients = model.ingredients.map {
                     FullDrinkIngredientResponse(
                         ingredientGuid = it.ingredientGuid.toString(),
                         amount = it.amount,
                         unit = it.unit,
                         ingredientName = it.ingredientName,
+                        description = it.description,
                         liked = it.liked,
                         type = it.type,
-                        imagePath = it.imagePath
+                        imageUrl = it.imageUrl,
+                        alcoholic = it.alcoholic,
+                        abv = it.abv
                     )
                 },
                 liked = model.liked,
                 instructions = model.instructions,
+                description = model.description,
                 tags = model.tags,
                 glass = model.glass,
                 ibaCategory = model.ibaCategory
