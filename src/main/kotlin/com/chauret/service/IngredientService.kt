@@ -103,6 +103,6 @@ object IngredientService {
     }
 
     fun getIngredientByName(name: String, username: String): Ingredient {
-        return database.get(username, mapOf("ingredientName" to name)) ?: throw NotFoundException("Ingredient not found")
+        return database.get(username, mapOf("ingredientName" to name.lowercase())) ?: throw NotFoundException("Ingredient not found")
     }
 }
