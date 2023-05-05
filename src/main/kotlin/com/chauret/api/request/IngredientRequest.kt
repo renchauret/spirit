@@ -7,8 +7,11 @@ import kotlinx.serialization.Serializable
 data class IngredientRequest(
     val name: String,
     val liked: Boolean = false,
+    val description: String? = null,
     val type: IngredientType? = null,
-    val image: ImageRequest? = null
+    val image: ImageRequest? = null,
+    val alcoholic: Boolean? = null,
+    val abv: Float? = null
 )
 
 @Serializable

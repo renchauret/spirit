@@ -68,7 +68,7 @@ object IngredientService {
             type = ingredientRequest.type,
         )
         if (ingredientRequest.image != null) {
-            ingredient.imagePath =
+            ingredient.imageUrl =
                 ImageService.processImage(ingredientRequest.image, username, ingredient.guid, imageDatabase)
         }
         database.update(ingredient)
@@ -90,11 +90,14 @@ object IngredientService {
         val ingredient = Ingredient(
             username = username,
             ingredientName = name,
+            description = description,
             liked = liked,
-            type = type
+            type = type,
+            alcoholic = alcoholic,
+            abv = abv
         )
         if (image != null) {
-            ingredient.imagePath = ImageService.processImage(image, username, ingredient.guid, imageDatabase)
+            ingredient.imageUrl = ImageService.processImage(image, username, ingredient.guid, imageDatabase)
         }
         return ingredient
     }

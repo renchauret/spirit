@@ -24,7 +24,8 @@ data class Drink (
     override var instructions: List<String> = emptyList(),
     override var tags: List<String> = emptyList(),
     override var liked: Boolean = false,
-    override var imagePath: String? = null,
+    override var imageUrl: String? = null,
+    override var description: String? = null,
     var glass: String? = null,
     var ibaCategory: String? = null
 ): Recipe

@@ -9,9 +9,12 @@ data class FullDrinkIngredientResponse(
     val amount: Float?,
     val unit: String?,
     val ingredientName: String = "",
+    val description: String?,
     val liked: Boolean = false,
     val type: IngredientType? = null,
-    val imagePath: String? = null
+    val imagePath: String? = null,
+    val alcoholic: Boolean? = null,
+    val abv: Float? = null
 )
 
 @Serializable
@@ -22,7 +25,8 @@ data class FullDrinkResponse(
     val ingredients: List<FullDrinkIngredientResponse>,
     val instructions: List<String>,
     val tags: List<String>,
-    val imagePath: String?,
+    val imageUrl: String?,
+    val description: String?,
     val glass: String?,
     val ibaCategory: String?,
     val liked: Boolean

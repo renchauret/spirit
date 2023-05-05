@@ -36,7 +36,7 @@ object DrinkService {
                 ingredientName = ingredient.ingredientName,
                 type = ingredient.type,
                 liked = ingredient.liked,
-                imagePath = ingredient.imagePath
+                imagePath = ingredient.imageUrl
             )
         }
         return FullDrink(
@@ -47,7 +47,7 @@ object DrinkService {
             instructions = drink.instructions,
             tags = drink.tags,
             liked = drink.liked,
-            imagePath = drink.imagePath,
+            imageUrl = drink.imageUrl,
             glass = drink.glass,
             ibaCategory = drink.ibaCategory
         )
@@ -101,7 +101,7 @@ object DrinkService {
             ibaCategory = drinkRequest.ibaCategory
         )
         if (drinkRequest.image != null) {
-            updatedDrink.imagePath = ImageService.processImage(drinkRequest.image, username, drink.guid, imageDatabase)
+            updatedDrink.imageUrl = ImageService.processImage(drinkRequest.image, username, drink.guid, imageDatabase)
         }
         database.update(drink)
         return updatedDrink
@@ -145,13 +145,14 @@ object DrinkService {
             drinkName = name,
             ingredients = ingredients.map { it.toDrinkIngredient(username) },
             instructions = instructions,
+            description = description,
             tags = tags,
             liked = liked,
             glass = glass,
             ibaCategory = ibaCategory
         )
         if (image != null) {
-            drink.imagePath = ImageService.processImage(image, username, drink.guid, imageDatabase)
+            drink.imageUrl = ImageService.processImage(image, username, drink.guid, imageDatabase)
         }
         return drink
     }

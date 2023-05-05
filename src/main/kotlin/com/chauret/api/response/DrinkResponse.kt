@@ -17,7 +17,8 @@ data class DrinkResponse(
     val ingredients: List<DrinkIngredientResponse>,
     val instructions: List<String>,
     val tags: List<String>,
-    val imagePath: String?,
+    val imageUrl: String?,
+    val description: String?,
     val glass: String?,
     val ibaCategory: String?,
     val liked: Boolean
