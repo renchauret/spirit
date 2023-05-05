@@ -50,12 +50,12 @@ fun deleteDrink(guid: String) = runWithUsernameAndResponse(SuccessfulResponseTyp
 
 @Get(ADMIN_ROUTE_PREFIX)
 fun getAdminDrink(guid: String) = runWithResponse(SuccessfulResponseType.OK) {
-    DrinkService.getDrink(UUID.fromString(guid), Permissions.ADMIN.name)
+    DrinkService.getFullDrink(UUID.fromString(guid), Permissions.ADMIN.name)
 }
 
 @Get(USER_ROUTE_PREFIX)
 fun getDrink(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
-    DrinkService.getDrink(UUID.fromString(guid), username)
+    DrinkService.getFullDrink(UUID.fromString(guid), username)
 }
 
 @Get("$ADMIN_ROUTE_PREFIX/all")

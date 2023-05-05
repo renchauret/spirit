@@ -10,6 +10,8 @@ import com.chauret.db.S3ImageDatabase
 import com.chauret.model.Permissions
 import com.chauret.model.recipe.Drink
 import com.chauret.model.recipe.DrinkIngredient
+import com.chauret.model.recipe.FullDrink
+import com.chauret.model.recipe.FullDrinkIngredient
 import io.kotless.PermissionLevel
 import io.kotless.dsl.cloud.aws.DynamoDBTable
 import java.util.*
@@ -22,6 +24,34 @@ object DrinkService {
 
     fun getDrink(guid: UUID, username: String = Permissions.ADMIN.name) =
         database.get(username, guid.toString()) ?: throw NotFoundException("Drink not found")
+
+    fun getFullDrink(guid: UUID, username: String = Permissions.ADMIN.name): FullDrink {
+        val drink = getDrink(guid, username)
+        val fullIngredients: List<FullDrinkIngredient> = drink.ingredients.map { drinkIngredient ->
+            val ingredient = IngredientService.getIngredient(drinkIngredient.ingredientGuid, username)
+            FullDrinkIngredient(
+                ingredientGuid = ingredient.guid,
+                amount = drinkIngredient.amount,
+                unit = drinkIngredient.unit,
+                ingredientName = ingredient.ingredientName,
+                type = ingredient.type,
+                liked = ingredient.liked,
+                imagePath = ingredient.imagePath
+            )
+        }
+        return FullDrink(
+            username = drink.username,
+            guid = drink.guid,
+            drinkName = drink.drinkName,
+            ingredients = fullIngredients,
+            instructions = drink.instructions,
+            tags = drink.tags,
+            liked = drink.liked,
+            imagePath = drink.imagePath,
+            glass = drink.glass,
+            ibaCategory = drink.ibaCategory
+        )
+    }
 
     fun getDrinksForUser(username: String = Permissions.ADMIN.name): List<Drink> =
         database.getAllForKey(username)

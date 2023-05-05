@@ -4,7 +4,7 @@ import com.chauret.model.Permissions
 import kotlinx.serialization.Serializable
 
 @Serializable
-class SessionResponse(
+data class SessionResponse(
     val token: String,
     val username: String?,
     val expirationTimeSeconds: Long,

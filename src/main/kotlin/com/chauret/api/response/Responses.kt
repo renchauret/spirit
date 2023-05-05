@@ -4,6 +4,7 @@ import com.chauret.ExceptionResponse
 import com.chauret.ServerException
 import com.chauret.model.Session
 import com.chauret.model.recipe.Drink
+import com.chauret.model.recipe.FullDrink
 import com.chauret.model.recipe.Ingredient
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.kotless.dsl.model.HttpResponse
@@ -77,8 +78,9 @@ fun mapToResponse(model: Any): Any {
     if (model is Collection<*>) return mapToResponse(model)
     return when (model::class) {
         Drink::class -> ResponseFactory.createDrinkResponse(model as Drink)
-        Session::class -> ResponseFactory.createSessionResponse(model as Session)
+        FullDrink::class -> ResponseFactory.createFullDrinkResponse(model as FullDrink)
         Ingredient::class -> ResponseFactory.createIngredientResponse(model as Ingredient)
+        Session::class -> ResponseFactory.createSessionResponse(model as Session)
         else -> model
     }
 }
