@@ -23,8 +23,15 @@ object DrinkService {
     fun getDrink(guid: UUID, username: String = Permissions.ADMIN.name) =
         database.get(username, guid.toString()) ?: throw NotFoundException("Drink not found")
 
-    fun getDrinksForUser(username: String = Permissions.ADMIN.name): List<Drink> =
-        database.getAllForKey(username)
+    fun getDrinksForUser(
+        username: String = Permissions.ADMIN.name,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): List<Drink> =
+        if (page == null) database.getAllForKey(username) else if (pageSize == null) database.getAllForKey(
+            username,
+            page
+        ) else database.getAllForKey(username, page, pageSize)
 
     fun getDrinksByIngredient(ingredientGuid: UUID, username: String = Permissions.ADMIN.name): List<Drink> =
         getDrinksForUser(username).filter { drink ->

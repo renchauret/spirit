@@ -59,13 +59,13 @@ fun getDrink(guid: String) = runWithUsernameAndResponse(SuccessfulResponseType.O
 }
 
 @Get("$ADMIN_ROUTE_PREFIX/all")
-fun getAdminDrinks() = runWithResponse(SuccessfulResponseType.OK) {
-    DrinkService.getDrinksForUser(Permissions.ADMIN.name)
+fun getAdminDrinks(page: Int?, pageSize: Int?) = runWithResponse(SuccessfulResponseType.OK) {
+    DrinkService.getDrinksForUser(Permissions.ADMIN.name, page, pageSize)
 }
 
 @Get("$USER_ROUTE_PREFIX/all")
-fun getDrinks() = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
-    DrinkService.getDrinksForUser(username)
+fun getDrinks(page: Int?, pageSize: Int?) = runWithUsernameAndResponse(SuccessfulResponseType.OK) { username ->
+    DrinkService.getDrinksForUser(username, page, pageSize)
 }
 
 @Options(USER_ROUTE_PREFIX, MimeType.JSON)

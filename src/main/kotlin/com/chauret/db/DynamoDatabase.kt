@@ -118,6 +118,15 @@ open class DynamoDatabase<T: Any> constructor(private val type : KClass<T>): Dat
             )
         ).items().stream().toList()
 
+    override fun getAllForKey(key: String, page: Int, pageSize: Int): List<T> =
+        table.query(
+            QueryConditional.keyEqualTo(
+                Key.builder()
+                    .partitionValue(key)
+                    .build()
+            )
+        ).items().stream().toList().chunked(pageSize).getOrNull(page - 1) ?: emptyList()
+
     override fun delete(key: String, secondaryKey: String?) {
         if (secondaryKey == null) {
             table.deleteItem(

@@ -5,6 +5,7 @@ interface Database<T> {
     fun get(queryArguments: Map<String, Any>): T?
     fun get(key: String, queryArguments: Map<String, Any>): T?
     fun getAllForKey(key: String): List<T>
+    fun getAllForKey(key: String, page: Int, pageSize: Int = 50): List<T>
     fun getAllForKeyAndSecondaryKeys(key: String, secondaryKeys: List<String>): List<T>
     fun create(item: T)
     fun create(items: List<T>)
