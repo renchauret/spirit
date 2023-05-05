@@ -29,7 +29,7 @@ data class Ingredient(
     var ingredientName: String = "",
     var liked: Boolean = false,
     var description: String? = null,
-    var type: IngredientType? = null,
+    var type: String? = null,
     var imageUrl: String? = null,
     var alcoholic: Boolean? = null,
     var abv: Float? = null

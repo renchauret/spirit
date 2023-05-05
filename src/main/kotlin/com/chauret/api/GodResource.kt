@@ -2,6 +2,7 @@ package com.chauret.api
 
 import com.chauret.ServerException
 import com.chauret.api.request.BulkDrinkRequest
+import com.chauret.api.request.BulkIngredientRequest
 import com.chauret.api.request.runWithBodyAndResponse
 import com.chauret.api.response.SuccessfulResponseType
 import com.chauret.api.response.runWithResponse
@@ -44,7 +45,14 @@ fun grantAdmin(username: String) = runWithResponse {
 fun createAdminDrinks() = runWithBodyAndResponse<BulkDrinkRequest>(SuccessfulResponseType.CREATED) {
     runCatching {
         DrinkService.createDrinks(it)
-//    }.getOrElse { throw ServerException("Error creating admin drinks") }
+    }.getOrElse { throw ServerException("Error creating admin drinks") }
+}
+
+@Post("$ROUTE_PREFIX/admin/ingredient/all", MimeType.JSON)
+fun createAdminIngredients() = runWithBodyAndResponse<BulkIngredientRequest>(SuccessfulResponseType.CREATED) {
+    runCatching {
+        IngredientService.createIngredients(it)
+//    }.getOrElse { throw ServerException("Error creating admin ingredients") }
     }.getOrElse { throw it }
 }
 
@@ -59,3 +67,6 @@ fun giveAdminOptions() = runWithResponse { true }
 
 @Options("$ROUTE_PREFIX/admin/drink/all", MimeType.JSON)
 fun createAdminDrinksOptions() = runWithResponse { true }
+
+@Options("$ROUTE_PREFIX/admin/ingredient/all", MimeType.JSON)
+fun createAdminIngredientsOptions() = runWithResponse { true }

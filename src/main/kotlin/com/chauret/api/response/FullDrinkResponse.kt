@@ -1,6 +1,5 @@
 package com.chauret.api.response
 
-import com.chauret.model.recipe.IngredientType
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -11,8 +10,8 @@ data class FullDrinkIngredientResponse(
     val ingredientName: String = "",
     val description: String?,
     val liked: Boolean = false,
-    val type: IngredientType? = null,
-    val imagePath: String? = null,
+    val type: String? = null,
+    val imageUrl: String? = null,
     val alcoholic: Boolean? = null,
     val abv: Float? = null
 )

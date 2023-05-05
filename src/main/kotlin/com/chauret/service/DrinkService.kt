@@ -36,7 +36,7 @@ object DrinkService {
                 ingredientName = ingredient.ingredientName,
                 type = ingredient.type,
                 liked = ingredient.liked,
-                imagePath = ingredient.imageUrl
+                imageUrl = ingredient.imageUrl
             )
         }
         return FullDrink(
@@ -142,14 +142,14 @@ object DrinkService {
     private fun DrinkRequest.toDrink(username: String): Drink {
         val drink = Drink(
             username = username,
-            drinkName = name,
+            drinkName = name.lowercase(),
             ingredients = ingredients.map { it.toDrinkIngredient(username) },
             instructions = instructions,
             description = description,
-            tags = tags,
+            tags = tags.map { it.lowercase() },
             liked = liked,
-            glass = glass,
-            ibaCategory = ibaCategory
+            glass = glass?.lowercase(),
+            ibaCategory = ibaCategory?.lowercase()
         )
         if (image != null) {
             drink.imageUrl = ImageService.processImage(image, username, drink.guid, imageDatabase)

@@ -10,8 +10,8 @@ data class FullDrinkIngredient(
     val ingredientName: String = "",
     val description: String? = null,
     val liked: Boolean = false,
-    val type: IngredientType? = null,
-    val imagePath: String? = null,
+    val type: String? = null,
+    val imageUrl: String? = null,
     val alcoholic: Boolean? = null,
     val abv: Float? = null
 ) : RecipeIngredient

@@ -23,7 +23,7 @@ class ResponseFactory {
                 name = model.ingredientName,
                 description = model.description,
                 imageUrl = model.imageUrl,
-                type = model.type?.name,
+                type = model.type,
                 liked = model.liked,
                 alcoholic = model.alcoholic,
                 abv = model.abv
@@ -67,7 +67,7 @@ class ResponseFactory {
                         description = it.description,
                         liked = it.liked,
                         type = it.type,
-                        imagePath = it.imagePath,
+                        imageUrl = it.imageUrl,
                         alcoholic = it.alcoholic,
                         abv = it.abv
                     )

@@ -89,10 +89,10 @@ object IngredientService {
     private fun IngredientRequest.toIngredient(username: String): Ingredient {
         val ingredient = Ingredient(
             username = username,
-            ingredientName = name,
+            ingredientName = name.lowercase(),
             description = description,
             liked = liked,
-            type = type,
+            type = type?.lowercase(),
             alcoholic = alcoholic,
             abv = abv
         )
