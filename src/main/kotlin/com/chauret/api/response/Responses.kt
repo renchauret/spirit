@@ -64,7 +64,9 @@ fun runWithResponse(
 ) = response(
     expectedResponseType,
     runCatching {
-        mapToResponse(block())
+        val response = mapToResponse(block())
+        println(response)
+        response
     }.getOrElse {
         println(it)
         if (it is ExceptionResponse) {
