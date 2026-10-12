@@ -232,7 +232,7 @@ function linkFromInput(text: string): string | null {
 	}
 }
 
-async function withDuplicate(db: Db, draft: RecipeDraft | null): Promise<ImportOutcome> {
+async function importOutcome(db: Db, draft: RecipeDraft | null): Promise<ImportOutcome> {
 	if (!draft) return { ok: false, error: NO_RECIPE };
 	return { ok: true, draft, duplicate: await findDuplicateRecipe(db, draft.name, draft.source) };
 }
@@ -244,10 +244,10 @@ export async function importRecipe(
 	text: string
 ): Promise<ImportOutcome> {
 	const link = linkFromInput(text);
-	if (!link) return withDuplicate(db, await importPastedText(reader, db, text));
+	if (!link) return importOutcome(db, await importPastedText(reader, db, text));
 
 	const page = await fetchPage(fetch, link);
 	if (!page) return { ok: false, error: CANNOT_OPEN };
 
-	return withDuplicate(db, await readSource(reader, db, pageSource(page), link));
+	return importOutcome(db, await readSource(reader, db, pageSource(page), link));
 }

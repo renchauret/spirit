@@ -4,7 +4,7 @@ import type { LineAmount } from '../amounts.ts';
 import { cardSubtitle, compareNames, familyOf, placeholderGlass } from '../browse.ts';
 import { INGREDIENT_TYPES, type FamilyTag, type Glass } from '../domain.ts';
 import { EMPTY_FILTER, isSearching, type FilterSection, type RecipeFilter } from '../filter.ts';
-import { foldName, nameTakenMessage, type IngredientOption } from '../ingredient-search.ts';
+import { foldName, nameTakenMessage, sameIngredientName, type IngredientOption } from '../ingredient-search.ts';
 import { filterAndRank, matchedLineIndexes } from '../ranking.ts';
 import type { DuplicateRecipe, RecipeChanges } from '../recipe-draft.ts';
 import { suggest, type Suggestion } from '../search.ts';
@@ -243,9 +243,8 @@ export async function findDuplicateRecipe(db: Db, name: string, source: string):
 		.select({ id: recipe.id, name: recipe.name, source: recipe.source })
 		.from(recipe)
 		.orderBy(asc(recipe.id));
-	const folded = foldName(name);
 	const match =
-		(folded ? recipes.find((r) => foldName(r.name) === folded) : undefined) ??
+		(foldName(name) ? recipes.find((r) => sameIngredientName(r.name, name)) : undefined) ??
 		(source ? recipes.find((r) => r.source === source) : undefined);
 	return match ? { id: match.id, name: match.name } : null;
 }
