@@ -7,16 +7,22 @@ const { values, positionals } = parseArgs({
 	allowPositionals: true,
 	options: {
 		out: { type: 'string' },
-		replace: { type: 'boolean', default: false }
+		replace: { type: 'boolean', default: false },
+		additive: { type: 'boolean', default: false }
 	}
 });
 
 if (positionals.length !== 1 || !values.out) {
-	console.error('Usage: node scripts/seed-sql.ts <seed.json> --out <file.sql> [--replace]');
+	console.error('Usage: node scripts/seed-sql.ts <seed.json> --out <file.sql> [--replace | --additive]');
+	process.exit(1);
+}
+
+if (values.replace && values.additive) {
+	console.error('Use either --replace or --additive, not both.');
 	process.exit(1);
 }
 
 const seed = parseSeed(JSON.parse(readFileSync(positionals[0], 'utf8')));
 mkdirSync(dirname(values.out), { recursive: true });
-writeFileSync(values.out, seedStatements(seed, { replace: values.replace }).join(';\n') + ';\n');
+writeFileSync(values.out, seedStatements(seed, { replace: values.replace, additive: values.additive }).join(';\n') + ';\n');
 console.log(`Wrote ${seed.recipes.length} Recipes and ${seed.ingredients.length} Ingredients to ${values.out}`);

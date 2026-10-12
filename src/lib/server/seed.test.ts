@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { isFamilyTag } from '../domain';
-import { getRecipe, listRecipeCards } from './recipes';
+import { getRecipe, listIngredientOptions, listRecipeCards } from './recipes';
 import { parseSeed, seedStatements, type Seed } from './seed';
 import { createLocalD1, type LocalD1 } from './testing/local-d1';
 
@@ -150,6 +150,129 @@ describe('seed loader', () => {
 		const cards = await listRecipeCards(local.db);
 		expect(cards).toHaveLength(cocktails.recipes.length);
 		expect(cards.find((c) => c.name === 'Daiquiri')).toMatchObject({ family: 'sour', subtitle: 'white rum · sour' });
+	});
+});
+
+describe('additive seed loading', () => {
+	let local: LocalD1;
+
+	const additive: Seed = parseSeed({
+		ingredients: [
+			{ name: 'WHITE RUM', type: 'pantry' },
+			{ name: 'lime juice', type: 'juice' },
+			{ name: 'mezcal', type: 'spirit' },
+			{ name: 'espadín mezcal', parent: 'mezcal' }
+		],
+		recipes: [
+			{
+				name: 'Naked and Famous',
+				tags: ['sour'],
+				lines: [
+					{ ingredient: 'WHITE RUM', amount: 1, unit: 'oz' },
+					{ ingredient: 'lime juice', amount: 0.5, unit: 'oz' },
+					{ ingredient: 'espadín mezcal', amount: 1, unit: 'oz' }
+				]
+			}
+		]
+	});
+
+	beforeEach(async () => {
+		local = await createLocalD1();
+		await load(local, seedStatements(seed));
+	});
+
+	afterEach(async () => {
+		await local.dispose();
+	});
+
+	it('reuses an existing Ingredient, ignoring case, and keeps its type and parent', async () => {
+		await load(local, seedStatements(additive, { additive: true }));
+
+		const options = await listIngredientOptions(local.db);
+		expect(options.filter((i) => i.name.toLowerCase() === 'white rum')).toEqual([
+			{ id: expect.any(Number), name: 'white rum', parent: 'rum', type: 'spirit' }
+		]);
+	});
+
+	it('inserts new Ingredients with any new Parent Ingredients they need', async () => {
+		await load(local, seedStatements(additive, { additive: true }));
+
+		const options = await listIngredientOptions(local.db);
+		expect(options.find((i) => i.name === 'mezcal')).toMatchObject({ type: 'spirit', parent: null });
+		expect(options.find((i) => i.name === 'espadín mezcal')).toMatchObject({ type: 'spirit', parent: 'mezcal' });
+	});
+
+	it('reuses an existing Tag instead of duplicating it', async () => {
+		await load(local, seedStatements(additive, { additive: true }));
+
+		const daiquiri = (await listRecipeCards(local.db)).find((c) => c.name === 'Daiquiri')!;
+		const added = (await listRecipeCards(local.db)).find((c) => c.name === 'Naked and Famous')!;
+		expect((await getRecipe(local.db, daiquiri.id))!.tags).toEqual(['sour']);
+		expect((await getRecipe(local.db, added.id))!.tags).toEqual(['sour']);
+	});
+
+	it('adds new Recipes alongside the existing ones', async () => {
+		const before = await listRecipeCards(local.db);
+		await load(local, seedStatements(additive, { additive: true }));
+
+		const cards = await listRecipeCards(local.db);
+		expect(cards).toHaveLength(before.length + 1);
+		const added = cards.find((c) => c.name === 'Naked and Famous')!;
+		expect(await getRecipe(local.db, added.id)).toMatchObject({
+			name: 'Naked and Famous',
+			tags: ['sour'],
+			lines: [
+				{ ingredient: 'white rum', amountMin: 1, unit: 'oz' },
+				{ ingredient: 'lime juice', amountMin: 0.5, unit: 'oz' },
+				{ ingredient: 'espadín mezcal', amountMin: 1, unit: 'oz' }
+			].map((line) => ({ ingredientId: expect.any(Number), amountMax: null, note: null, ...line }))
+		});
+	});
+
+	it('refuses the whole load and writes nothing when a seeded Recipe name already exists', async () => {
+		const before = await listRecipeCards(local.db);
+		const beforeIngredients = await listIngredientOptions(local.db);
+		const clash: Seed = parseSeed({
+			ingredients: [
+				{ name: 'mezcal', type: 'spirit' },
+				{ name: 'lime juice', type: 'juice' }
+			],
+			recipes: [
+				{ name: 'Naked and Famous', lines: [{ ingredient: 'mezcal', amount: 1, unit: 'oz' }] },
+				{ name: 'mojito', lines: [{ ingredient: 'lime juice', amount: 1, unit: 'oz' }] }
+			]
+		});
+
+		await expect(load(local, seedStatements(clash, { additive: true }))).rejects.toThrow();
+
+		expect(await listRecipeCards(local.db)).toEqual(before);
+		expect(await listIngredientOptions(local.db)).toEqual(beforeIngredients);
+	});
+
+	it('leaves pre-existing Recipes untouched', async () => {
+		const mojito = (await listRecipeCards(local.db)).find((c) => c.name === 'Mojito')!;
+		const before = await getRecipe(local.db, mojito.id);
+
+		await load(local, seedStatements(additive, { additive: true }));
+
+		expect(await getRecipe(local.db, mojito.id)).toEqual(before);
+	});
+
+	it('refuses a seed with duplicate Recipe names, but only in additive mode', () => {
+		const duplicates: Seed = parseSeed({
+			ingredients: [{ name: 'mezcal', type: 'spirit' }],
+			recipes: [
+				{ name: 'Naked and Famous', lines: [{ ingredient: 'mezcal', amount: 1, unit: 'oz' }] },
+				{ name: 'naked and famous', lines: [{ ingredient: 'mezcal', amount: 1, unit: 'oz' }] }
+			]
+		});
+
+		expect(() => seedStatements(duplicates, { additive: true })).toThrow();
+		expect(() => seedStatements(duplicates)).not.toThrow();
+	});
+
+	it('refuses to replace and add at the same time', () => {
+		expect(() => seedStatements(seed, { replace: true, additive: true })).toThrow();
 	});
 });
 
