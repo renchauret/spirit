@@ -1,5 +1,6 @@
 import { GLASSES, INGREDIENT_TYPES, UNITS, type Glass, type IngredientType, type Unit } from '../domain.ts';
 import type { IngredientOption } from '../ingredient-search.ts';
+import { isAmount, isText, isTextList } from '../validation.ts';
 
 export type RecipeReaderInput = {
 	text: string;
@@ -45,7 +46,7 @@ Follow these rules exactly:
 - Transcribe faithfully. Keep ranges as ranges.
 - When the source lists variations, record only the main recipe.
 - Give an optional line the note "optional".
-- Reuse an Ingredient from the catalog only when it fits at the same level of detail as the source. Never choose an Ingredient more specific than the source says. If nothing in the catalog fits, set that line's ingredientId to null.
+- Match every line to an Ingredient id from the catalog. Reuse an existing Ingredient only when it fits at the same level of detail as the source. Never choose an Ingredient more specific than the source says. If nothing fits exactly, use the closest catalog Ingredient that is no more specific than the source.
 - Scale "parts" so the main pour is 2 oz.
 - Record an egg white as 1 whole with the note "white". Record a splash as the unit "top" or "to taste".
 - Whenever you convert an amount, keep the source's own wording in that line's note.
@@ -106,15 +107,11 @@ function promptFor(input: RecipeReaderInput): string {
 	].join('\n');
 }
 
-const isText = (value: unknown): value is string => typeof value === 'string';
-const isNumberOrNull = (value: unknown): value is number | null => value === null || typeof value === 'number';
-const isTextList = (value: unknown): value is string[] => Array.isArray(value) && value.every(isText);
-
 function parseLine(value: unknown): ReadRecipeLine | null {
 	if (typeof value !== 'object' || value === null) return null;
 	const { ingredientId, amountMin, amountMax, unit, note } = value as Record<string, unknown>;
-	if (!isNumberOrNull(ingredientId) || (ingredientId !== null && !Number.isSafeInteger(ingredientId))) return null;
-	if (!isNumberOrNull(amountMin) || !isNumberOrNull(amountMax)) return null;
+	if (!isAmount(ingredientId) || (ingredientId !== null && !Number.isSafeInteger(ingredientId))) return null;
+	if (!isAmount(amountMin) || !isAmount(amountMax)) return null;
 	if (!isText(unit) || !isText(note)) return null;
 	return { ingredientId, amountMin, amountMax, unit, note };
 }

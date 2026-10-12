@@ -64,3 +64,15 @@ export const FAMILY_DEFAULT_GLASS: Record<FamilyTag, Glass> = {
 export function isFamilyTag(tag: string): tag is FamilyTag {
 	return (FAMILY_TAGS as readonly string[]).includes(tag);
 }
+
+export function isGlass(value: unknown): value is Glass {
+	return (GLASSES as readonly unknown[]).includes(value);
+}
+
+export function isUnit(value: unknown): value is Unit {
+	return (UNITS as readonly unknown[]).includes(value);
+}
+
+export function isIngredientType(value: unknown): value is IngredientType {
+	return (INGREDIENT_TYPES as readonly unknown[]).includes(value);
+}

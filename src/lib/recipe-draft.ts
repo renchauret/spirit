@@ -1,6 +1,7 @@
-import { GLASSES, INGREDIENT_TYPES, UNITS, UNITS_WITHOUT_AMOUNT, type Glass, type IngredientType, type Unit } from './domain.ts';
+import { isGlass, isIngredientType, isUnit, UNITS_WITHOUT_AMOUNT, type Glass, type IngredientType, type Unit } from './domain.ts';
 import { foldName } from './ingredient-search.ts';
 import { isValidAmount } from './recipe-lines.ts';
+import { isAmount, isText, isTextList } from './validation.ts';
 
 export type DraftLine = {
 	ingredientId: number;
@@ -125,10 +126,6 @@ export function normalizeTag(tag: string): string {
 	return singleLine(tag.replace(/^\s*#+/, '')).toLowerCase();
 }
 
-const isText = (value: unknown): value is string => typeof value === 'string';
-const isTextList = (value: unknown): value is string[] => Array.isArray(value) && value.every(isText);
-const isAmount = (value: unknown): value is number | null => value === null || typeof value === 'number';
-
 function isDraftLine(value: unknown): value is DraftLine {
 	if (typeof value !== 'object' || value === null) return false;
 	const line = value as Record<string, unknown>;
@@ -136,7 +133,7 @@ function isDraftLine(value: unknown): value is DraftLine {
 		Number.isSafeInteger(line.ingredientId) &&
 		isAmount(line.amountMin) &&
 		isAmount(line.amountMax) &&
-		(UNITS as readonly unknown[]).includes(line.unit) &&
+		isUnit(line.unit) &&
 		isText(line.note)
 	);
 }
@@ -148,7 +145,7 @@ function isNewIngredient(value: unknown): value is NewIngredient {
 		Number.isSafeInteger(created.id) &&
 		(created.id as number) < 0 &&
 		isText(created.name) &&
-		(INGREDIENT_TYPES as readonly unknown[]).includes(created.type) &&
+		isIngredientType(created.type) &&
 		(created.parentId === null || Number.isSafeInteger(created.parentId))
 	);
 }
@@ -229,8 +226,7 @@ export function parseRecipeDraft(input: unknown): ParsedDraft {
 	checked(name, NAME_LENGTH, 'the name');
 
 	const glassText = draft.glass as string;
-	const glass =
-		glassText === '' ? null : (GLASSES as readonly string[]).includes(glassText) ? (glassText as Glass) : undefined;
+	const glass = glassText === '' ? null : isGlass(glassText) ? glassText : undefined;
 	if (glass === undefined) errors.push('Choose a glass from the list.');
 
 	const [garnish, iceServe, source] = SINGLE_LINE_FIELDS.map(([field, label]) =>

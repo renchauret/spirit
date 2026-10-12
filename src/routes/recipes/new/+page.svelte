@@ -15,7 +15,8 @@
 	let text = $state(formData()?.text ?? '');
 	let reading = $state(false);
 	let error = $state<string | null>(formData()?.errors?.[0] ?? null);
-	let attempt = 0;
+	let readingRequest = 0;
+	let readingAbort: AbortController | null = null;
 
 	function startFromScratch() {
 		draft = emptyDraft();
@@ -24,16 +25,20 @@
 	}
 
 	function cancelReading() {
-		attempt += 1;
+		readingAbort?.abort();
+		readingAbort = null;
+		readingRequest += 1;
 		reading = false;
 	}
 
-	const importRecipe: SubmitFunction = () => {
-		const token = ++attempt;
+	const importRecipe: SubmitFunction = ({ controller }) => {
+		const token = ++readingRequest;
+		readingAbort = controller;
 		reading = true;
 		error = null;
 		return async ({ result, update }) => {
-			if (token !== attempt) return;
+			if (token !== readingRequest) return;
+			readingAbort = null;
 			reading = false;
 			if (result.type === 'failure') {
 				error = (result.data as { errors?: string[] } | undefined)?.errors?.[0] ?? 'That Import could not be read.';

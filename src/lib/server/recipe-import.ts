@@ -1,4 +1,4 @@
-import { GLASSES, INGREDIENT_TYPES, UNITS, isFamilyTag, type Glass, type Unit } from '../domain.ts';
+import { GLASSES, INGREDIENT_TYPES, UNITS, isFamilyTag, isGlass, isUnit, type Unit } from '../domain.ts';
 import { normalizeTag, type DraftLine, type RecipeDraft } from '../recipe-draft.ts';
 import type { IngredientOption } from '../ingredient-search.ts';
 import type { Db } from './db/index.ts';
@@ -15,7 +15,7 @@ function toDraft(answer: RecipeReaderAnswer, catalog: IngredientOption[], usedTa
 	const lines: DraftLine[] = [];
 	for (const line of answer.lines) {
 		if (line.ingredientId === null || !known.has(line.ingredientId)) return null;
-		if (!(UNITS as readonly string[]).includes(line.unit)) return null;
+		if (!isUnit(line.unit)) return null;
 		lines.push({
 			ingredientId: line.ingredientId,
 			amountMin: line.amountMin,
@@ -25,7 +25,7 @@ function toDraft(answer: RecipeReaderAnswer, catalog: IngredientOption[], usedTa
 		});
 	}
 
-	const glass = (GLASSES as readonly string[]).includes(answer.glass ?? '') ? (answer.glass as Glass) : '';
+	const glass = isGlass(answer.glass) ? answer.glass : '';
 	const used = new Set(usedTags.map(normalizeTag));
 	const tags: string[] = [];
 	for (const tag of answer.tags) {
