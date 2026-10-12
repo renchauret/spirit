@@ -31,7 +31,7 @@
 		}
 	],
 	"secrets": {
-		"required": ["BETTER_AUTH_SECRET"]
+		"required": ["BETTER_AUTH_SECRET", "ANTHROPIC_API_KEY"]
 	},
 	"observability": {
 		"enabled": true

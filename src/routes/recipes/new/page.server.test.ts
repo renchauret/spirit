@@ -1,7 +1,10 @@
 import { isHttpError, isRedirect } from '@sveltejs/kit';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { GLASSES, INGREDIENT_TYPES, UNITS } from '#lib/domain.ts';
 import { emptyDraft, type RecipeDraft } from '#lib/recipe-draft.ts';
-import { ingredient, recipe } from '#lib/server/db/schema.ts';
+import { ingredient, recipe, recipeTag, tag } from '#lib/server/db/schema.ts';
+import { MAX_IMPORT_TEXT, NO_RECIPE } from '#lib/server/recipe-import.ts';
+import type { ReadRecipe, RecipeReader, RecipeReaderAnswer, RecipeReaderInput } from '#lib/server/recipe-reader.ts';
 import { getRecipe, listFilterSections, listRecipeCards } from '#lib/server/recipes.ts';
 import { createLocalD1, type LocalD1 } from '#lib/server/testing/local-d1.ts';
 import { jpeg, photoForm, webp } from '#lib/server/testing/photos.ts';
@@ -234,6 +237,139 @@ describe('/recipes/new', () => {
 			expect(result).toMatchObject({ status: 400 });
 			expect(await storedPhotos()).toEqual([]);
 			expect(await local.db.select().from(recipe)).toEqual([]);
+		});
+	});
+
+	describe('import', () => {
+		let lime: number;
+		let answer: ReadRecipe;
+
+		beforeEach(async () => {
+			[{ id: lime }] = await local.db.insert(ingredient).values({ name: 'lime juice', type: 'juice' }).returning();
+			const [existing] = await local.db.insert(recipe).values({ name: 'Existing' }).returning();
+			const [tiki] = await local.db.insert(tag).values({ name: 'tiki' }).returning();
+			await local.db.insert(recipeTag).values({ recipeId: existing.id, tagId: tiki.id, position: 0 });
+			answer = {
+				name: 'Daiquiri',
+				glass: 'coupe',
+				garnish: 'Lime wheel',
+				iceServe: 'Straight up',
+				description: 'A rum sour from Cuba.',
+				method: ['Shake with ice.', 'Strain.'],
+				tags: ['sour'],
+				lines: [
+					{ ingredientId: rum, amountMin: 2, amountMax: null, unit: 'oz', note: '' },
+					{ ingredientId: lime, amountMin: 0.75, amountMax: null, unit: 'oz', note: 'fresh' }
+				]
+			};
+		});
+
+		const importFrom = (who: App.Locals['owner'], text: string, modelAnswer: RecipeReaderAnswer = answer) => {
+			const seen: RecipeReaderInput[] = [];
+			const recipeReader: RecipeReader = async (input) => {
+				seen.push(input);
+				return modelAnswer;
+			};
+			const result = actions.import({
+				locals: { owner: who, db: local.db, recipeReader },
+				request: new Request(`${origin}/recipes/new?/import`, {
+					method: 'POST',
+					body: new URLSearchParams({ text })
+				})
+			} as never) as Promise<{ draft: RecipeDraft } | { status: number; data: { text: string; errors: string[] } }>;
+			return { seen, result };
+		};
+
+		it('rejects a Visitor with 401 and reads nothing', async () => {
+			const { seen, result } = importFrom(null, 'Daiquiri');
+
+			expect(isHttpError(await thrown(result), 401)).toBe(true);
+			expect(seen).toEqual([]);
+		});
+
+		it('reads the pasted text with the catalog, existing Tags and fixed lists', async () => {
+			const { seen, result } = importFrom(owner, 'Daiquiri: 2 oz rum, 0.75 oz lime juice');
+			await result;
+
+			expect(seen).toHaveLength(1);
+			expect(seen[0]).toEqual({
+				text: 'Daiquiri: 2 oz rum, 0.75 oz lime juice',
+				catalog: [
+					{ id: lime, name: 'lime juice', parent: null, type: 'juice' },
+					{ id: rum, name: 'rum', parent: null, type: 'spirit' }
+				],
+				tags: ['tiki'],
+				glasses: GLASSES,
+				units: UNITS,
+				ingredientTypes: INGREDIENT_TYPES
+			});
+		});
+
+		it('turns the answer into a draft with the existing Ingredient ids and the details', async () => {
+			const { result } = importFrom(owner, 'Daiquiri');
+
+			expect(((await result) as { draft: RecipeDraft }).draft).toEqual({
+				name: 'Daiquiri',
+				glass: 'coupe',
+				garnish: 'Lime wheel',
+				iceServe: 'Straight up',
+				description: 'A rum sour from Cuba.',
+				source: '',
+				ownerNotes: '',
+				method: ['Shake with ice.', 'Strain.'],
+				tags: ['sour'],
+				lines: [
+					{ ingredientId: rum, amountMin: 2, amountMax: null, unit: 'oz', note: '' },
+					{ ingredientId: lime, amountMin: 0.75, amountMax: null, unit: 'oz', note: 'fresh' }
+				],
+				newIngredients: []
+			});
+		});
+
+		it('caps the pasted text before the reader sees it', async () => {
+			const { seen, result } = importFrom(owner, 'x'.repeat(MAX_IMPORT_TEXT + 50));
+			await result;
+
+			expect(seen[0].text).toHaveLength(MAX_IMPORT_TEXT);
+		});
+
+		it('reports no recipe and keeps the input when the model finds none', async () => {
+			const { result } = importFrom(owner, 'not a recipe', 'no recipe');
+
+			expect(await result).toMatchObject({ status: 400, data: { text: 'not a recipe', errors: [NO_RECIPE] } });
+		});
+
+		it('reports no recipe when a line has no Ingredient in the catalog', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ...answer.lines[0], ingredientId: 9999 }]
+			});
+
+			expect(await result).toMatchObject({ status: 400, data: { errors: [NO_RECIPE] } });
+		});
+
+		it('reports no recipe when a line names a unit outside Spirit’s list', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ...answer.lines[0], unit: 'bucket' }]
+			});
+
+			expect(await result).toMatchObject({ status: 400, data: { errors: [NO_RECIPE] } });
+		});
+
+		it('drops a glass outside Spirit’s list', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', { ...answer, glass: 'tiki mug' });
+
+			expect(((await result) as { draft: RecipeDraft }).draft.glass).toBe('');
+		});
+
+		it('keeps Family Tags and Tags already in use, and drops the rest', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				tags: ['Sour', 'Tiki', 'brunch', 'sour']
+			});
+
+			expect(((await result) as { draft: RecipeDraft }).draft.tags).toEqual(['sour', 'tiki']);
 		});
 	});
 });
