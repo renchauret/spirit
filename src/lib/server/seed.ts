@@ -192,9 +192,14 @@ function insert(table: string, row: Record<string, string | number | boolean | n
 	return `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${columns.map((c) => sql(row[c])).join(', ')})`;
 }
 
-export function seedStatements(seed: Seed, options: { replace?: boolean } = {}): string[] {
+export function seedStatements(seed: Seed, options: { replace?: boolean; additive?: boolean } = {}): string[] {
+	if (options.replace && options.additive) fail('options', 'cannot replace and add at the same time');
+	return options.additive ? additiveStatements(seed) : insertStatements(seed, options.replace === true);
+}
+
+function insertStatements(seed: Seed, replace: boolean): string[] {
 	const statements: string[] = [];
-	if (options.replace) {
+	if (replace) {
 		for (const table of ['recipe_tag', 'recipe_line', 'recipe', 'tag', 'ingredient']) {
 			statements.push(`DELETE FROM ${table}`);
 		}
@@ -253,6 +258,67 @@ export function seedStatements(seed: Seed, options: { replace?: boolean } = {}):
 			);
 		});
 	});
+
+	return statements;
+}
+
+function additiveStatements(seed: Seed): string[] {
+	const statements: string[] = [];
+
+	const seen = new Set<string>();
+	for (const recipe of seed.recipes) {
+		const key = recipe.name.toLowerCase();
+		if (seen.has(key)) fail(`recipe ${recipe.name}`, 'appears more than once');
+		seen.add(key);
+	}
+
+	const seededNames = seed.recipes.map((recipe) => `lower(${sql(recipe.name)})`);
+	if (seededNames.length) {
+		statements.push(
+			`INSERT INTO recipe (name) SELECT NULL WHERE EXISTS (SELECT 1 FROM recipe WHERE lower(name) IN (${seededNames.join(', ')}))`
+		);
+	}
+
+	for (const name of new Set(seed.recipes.flatMap((recipe) => recipe.tags))) {
+		statements.push(`INSERT INTO tag (name) VALUES (${sql(name)}) ON CONFLICT (name) DO NOTHING`);
+	}
+
+	for (const ingredient of seed.ingredients) {
+		const parent =
+			ingredient.parent === null
+				? 'NULL'
+				: `(SELECT id FROM ingredient WHERE lower(name) = lower(${sql(ingredient.parent)}))`;
+		statements.push(
+			`INSERT INTO ingredient (name, parent_id, type) SELECT ${sql(ingredient.name)}, ${parent}, ${sql(ingredient.type)} WHERE NOT EXISTS (SELECT 1 FROM ingredient WHERE lower(name) = lower(${sql(ingredient.name)}))`
+		);
+	}
+
+	for (const recipe of seed.recipes) {
+		statements.push(
+			`INSERT INTO recipe (name, method, glass, garnish, ice_serve, description, source, favorite) VALUES (${[
+				sql(recipe.name),
+				sql(JSON.stringify(recipe.method)),
+				sql(recipe.glass),
+				sql(recipe.garnish),
+				sql(recipe.iceServe),
+				sql(recipe.description),
+				sql(recipe.source),
+				sql(recipe.favorite)
+			].join(', ')})`
+		);
+
+		const recipeId = `(SELECT id FROM recipe WHERE name = ${sql(recipe.name)})`;
+		recipe.tags.forEach((name, position) => {
+			statements.push(
+				`INSERT INTO recipe_tag (recipe_id, tag_id, position) SELECT ${recipeId}, id, ${position} FROM tag WHERE name = ${sql(name)}`
+			);
+		});
+		recipe.lines.forEach((line, position) => {
+			statements.push(
+				`INSERT INTO recipe_line (recipe_id, position, ingredient_id, amount_min, amount_max, unit, note) SELECT ${recipeId}, ${position}, id, ${sql(line.amountMin)}, ${sql(line.amountMax)}, ${sql(line.unit)}, ${sql(line.note)} FROM ingredient WHERE lower(name) = lower(${sql(line.ingredient)})`
+			);
+		});
+	}
 
 	return statements;
 }
