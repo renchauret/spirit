@@ -10,6 +10,12 @@ const rule = (text: string, selector: string) => {
 	return text.slice(start, text.indexOf('}', start));
 };
 
+const brandSizePx = () => {
+	const match = rule(css, ':root').match(/--brand-size:\s*([\d.]+)rem;/);
+	expect(match, '--brand-size in rem').not.toBeNull();
+	return Number(match?.[1]) * 16;
+};
+
 describe('page header', () => {
 	it('sizes the shared page header and the regular buttons to one control height', () => {
 		expect(rule(css, ':root')).toContain('--control-h: 45px;');
@@ -21,8 +27,10 @@ describe('page header', () => {
 		expect(rule(css, '.btn')).toContain('min-height: var(--control-h);');
 	});
 
-	it('sizes the Spirit wordmark between its old size and the control height', () => {
-		expect(rule(css, ':root')).toContain('--brand-size: 2rem;');
+	it('sizes the Spirit wordmark between 1.7rem and the 45px control height', () => {
+		expect(brandSizePx()).toBe(32);
+		expect(brandSizePx()).toBeGreaterThan(1.7 * 16);
+		expect(brandSizePx()).toBeLessThan(45);
 
 		const h1 = rule(css, '.page-header h1');
 
