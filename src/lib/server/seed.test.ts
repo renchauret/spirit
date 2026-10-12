@@ -1,12 +1,25 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { FAMILY_DEFAULT_GLASS, isFamilyTag } from '../domain';
+import { foldName } from '../ingredient-search';
 import { getRecipe, listIngredientOptions, listRecipeCards } from './recipes';
 import { parseSeed, seedStatements, type Seed } from './seed';
 import { createLocalD1, type LocalD1 } from './testing/local-d1';
 
 function readSeed(path: string): Seed {
 	return parseSeed(JSON.parse(readFileSync(path, 'utf8')));
+}
+
+const fold = (name: string) => foldName(name).replace(/[^a-z0-9]/g, '');
+const findRecipe = (seed: Seed, name: string) => seed.recipes.find((r) => r.name === name)!;
+const findLine = (seed: Seed, recipeName: string, ingredient: string) =>
+	findRecipe(seed, recipeName).lines.find((l) => l.ingredient === ingredient)!;
+
+function expectEveryIngredientUsed(seed: Seed) {
+	const used = new Set(seed.recipes.flatMap((r) => r.lines.map((l) => l.ingredient)));
+	const parents = new Set(seed.ingredients.map((i) => i.parent));
+	const unused = seed.ingredients.filter((i) => !used.has(i.name) && !parents.has(i.name));
+	expect(unused).toEqual([]);
 }
 
 const seed: Seed = parseSeed({
@@ -278,9 +291,8 @@ describe('additive seed loading', () => {
 
 describe('the Cocktails doc import', () => {
 	const cocktails = readSeed('seed/cocktails.json');
-	const recipe = (name: string) => cocktails.recipes.find((r) => r.name === name)!;
-	const line = (recipeName: string, ingredient: string) =>
-		recipe(recipeName).lines.find((l) => l.ingredient === ingredient)!;
+	const recipe = (name: string) => findRecipe(cocktails, name);
+	const line = (recipeName: string, ingredient: string) => findLine(cocktails, recipeName, ingredient);
 
 	it('gives every Recipe exactly one family Tag', () => {
 		for (const r of cocktails.recipes) {
@@ -301,10 +313,7 @@ describe('the Cocktails doc import', () => {
 	});
 
 	it('uses every catalog Ingredient in a Recipe line or as a Parent Ingredient', () => {
-		const used = new Set(cocktails.recipes.flatMap((r) => r.lines.map((l) => l.ingredient)));
-		const parents = new Set(cocktails.ingredients.map((i) => i.parent));
-		const unused = cocktails.ingredients.filter((i) => !used.has(i.name) && !parents.has(i.name));
-		expect(unused).toEqual([]);
+		expectEveryIngredientUsed(cocktails);
 	});
 
 	it('turns Gin/Vodka into gin, and Alcohol and Whisk(e)y into whiskey', () => {
@@ -367,15 +376,8 @@ describe('the Cocktails doc import', () => {
 describe('the IBA import', () => {
 	const iba = readSeed('seed/iba.json');
 	const cocktails = readSeed('seed/cocktails.json');
-	const recipe = (name: string) => iba.recipes.find((r) => r.name === name)!;
-	const line = (recipeName: string, ingredient: string) =>
-		recipe(recipeName).lines.find((l) => l.ingredient === ingredient)!;
-	const fold = (name: string) =>
-		name
-			.normalize('NFD')
-			.replace(/[\u0300-\u036f]/g, '')
-			.toLowerCase()
-			.replace(/[^a-z0-9]/g, '');
+	const recipe = (name: string) => findRecipe(iba, name);
+	const line = (recipeName: string, ingredient: string) => findLine(iba, recipeName, ingredient);
 
 	it('holds 64 uniquely named Recipes, each sourced from IBA and not a favorite', () => {
 		expect(iba.recipes).toHaveLength(64);
@@ -409,10 +411,7 @@ describe('the IBA import', () => {
 	});
 
 	it('uses every catalog Ingredient in a Recipe line or as a Parent Ingredient', () => {
-		const used = new Set(iba.recipes.flatMap((r) => r.lines.map((l) => l.ingredient)));
-		const parents = new Set(iba.ingredients.map((i) => i.parent));
-		const unused = iba.ingredients.filter((i) => !used.has(i.name) && !parents.has(i.name));
-		expect(unused).toEqual([]);
+		expectEveryIngredientUsed(iba);
 	});
 
 	it('imports Bloody Mary, Irish Coffee and Sherry Cobbler without a Family Tag', () => {
@@ -421,7 +420,7 @@ describe('the IBA import', () => {
 		}
 	});
 
-	it('files the tiki and sparkling drinks as asked', () => {
+	it('files the tiki and sparkling Recipes as asked', () => {
 		const tiki = [
 			'Zombie',
 			'Jungle Bird',
@@ -471,7 +470,8 @@ describe('the IBA import', () => {
 				expect(r.glass, `${r.name} has no family and needs a glass`).not.toBeNull();
 				continue;
 			}
-			const family = r.tags[0] as keyof typeof FAMILY_DEFAULT_GLASS;
+			const family = r.tags[0];
+			if (!isFamilyTag(family)) continue;
 			if (r.glass !== null) expect(r.glass, r.name).not.toBe(FAMILY_DEFAULT_GLASS[family]);
 		}
 		expect(recipe('Bellini').glass).toBeNull();
