@@ -3,7 +3,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { GLASSES, INGREDIENT_TYPES, UNITS } from '#lib/domain.ts';
 import { emptyDraft, type RecipeDraft } from '#lib/recipe-draft.ts';
 import { ingredient, recipe, recipeTag, tag } from '#lib/server/db/schema.ts';
-import { MAX_IMPORT_TEXT, NO_RECIPE } from '#lib/server/recipe-import.ts';
+import { CANNOT_OPEN, MAX_IMPORT_JSONLD, MAX_IMPORT_TEXT, MAX_IMPORT_TITLE, NO_RECIPE } from '#lib/server/recipe-import.ts';
 import type { ReadRecipe, RecipeReader, RecipeReaderAnswer, RecipeReaderInput } from '#lib/server/recipe-reader.ts';
 import { getRecipe, listFilterSections, listIngredientOptions, listRecipeCards } from '#lib/server/recipes.ts';
 import { createLocalD1, type LocalD1 } from '#lib/server/testing/local-d1.ts';
@@ -281,6 +281,36 @@ describe('/recipes/new', () => {
 			return { seen, result };
 		};
 
+		const html = (body: string) => new Response(body, { headers: { 'content-type': 'text/html; charset=utf-8' } });
+
+		const importFromLink = (
+			who: App.Locals['owner'],
+			text: string,
+			modelAnswer: RecipeReaderAnswer,
+			page: Response | Error
+		) => {
+			const seen: RecipeReaderInput[] = [];
+			const fetched: string[] = [];
+			const recipeReader: RecipeReader = async (input) => {
+				seen.push(input);
+				return modelAnswer;
+			};
+			const pageFetch = async (url: string) => {
+				fetched.push(url);
+				if (page instanceof Error) throw page;
+				return page;
+			};
+			const result = actions.import({
+				locals: { owner: who, db: local.db, recipeReader },
+				request: new Request(`${origin}/recipes/new?/import`, {
+					method: 'POST',
+					body: new URLSearchParams({ text })
+				}),
+				fetch: pageFetch
+			} as never) as Promise<{ draft: RecipeDraft } | { status: number; data: { text: string; errors: string[] } }>;
+			return { seen, fetched, result };
+		};
+
 		it('rejects a Visitor with 401 and reads nothing', async () => {
 			const { seen, result } = importFrom(null, 'Daiquiri');
 
@@ -499,6 +529,117 @@ describe('/recipes/new', () => {
 				type: 'spirit',
 				parent: 'white rum'
 			});
+		});
+
+		it('fetches a single link and gives the reader its title, JSON-LD and readable text', async () => {
+			const page = `<html><head><title>Daiquiri Cocktail</title>
+				<script type="application/ld+json">{"@type":"BreadcrumbList"}</script>
+				<script type="application/ld+json">{"@type":"Recipe","recipeYield":"1"}</script>
+				<script>track()</script><style>.x { color: red }</style></head>
+				<body><header><h1>Daiquiri</h1></header>
+				<nav><a href="/">Home</a></nav>
+				<article><p>2 oz rum &amp; 0.75 oz lime juice</p></article>
+				<footer><a href="/about">About</a></footer><aside>An ad</aside></body></html>`;
+			const { seen, fetched, result } = importFromLink(owner, '  https://example.com/daiquiri  ', answer, html(page));
+
+			expect(((await result) as { draft: RecipeDraft }).draft.source).toBe('https://example.com/daiquiri');
+			expect(fetched).toEqual(['https://example.com/daiquiri']);
+			expect(seen[0]).toEqual({
+				text: '2 oz rum & 0.75 oz lime juice',
+				title: 'Daiquiri Cocktail',
+				jsonLd: ['{"@type":"BreadcrumbList"}', '{"@type":"Recipe","recipeYield":"1"}'],
+				catalog: [
+					{ id: lime, name: 'lime juice', parent: null, type: 'juice' },
+					{ id: rum, name: 'rum', parent: null, type: 'spirit' }
+				],
+				tags: ['tiki'],
+				glasses: GLASSES,
+				units: UNITS,
+				ingredientTypes: INGREDIENT_TYPES
+			});
+		});
+
+		it('keeps the link as the Source exactly as pasted', async () => {
+			const { result } = importFromLink(owner, '  https://example.com  ', answer, html('<p>x</p>'));
+
+			expect(((await result) as { draft: RecipeDraft }).draft.source).toBe('https://example.com');
+		});
+
+		it('treats anything that is not a single http link as pasted text and never fetches it', async () => {
+			for (const text of ['2 oz rum\n0.75 oz lime juice', 'http://one.example/a and more', 'ftp://example.com/recipe']) {
+				const { seen, fetched, result } = importFromLink(owner, text, answer, html('<p>ignored</p>'));
+				await result;
+
+				expect(fetched).toEqual([]);
+				expect(seen[0].text).toBe(text);
+				expect(seen[0].title).toBeUndefined();
+				expect(seen[0].jsonLd).toBeUndefined();
+			}
+		});
+
+		it('reads a text response as the recipe text', async () => {
+			const { seen, result } = importFromLink(
+				owner,
+				'https://example.com/daiquiri',
+				answer,
+				new Response('Daiquiri: 2 oz rum', { headers: { 'content-type': 'text/plain' } })
+			);
+			await result;
+
+			expect(seen[0].text).toBe('Daiquiri: 2 oz rum');
+			expect(seen[0].title).toBeUndefined();
+		});
+
+		it('shows the page-could-not-be-opened error and keeps the link in the box', async () => {
+			const pages = [
+				new Error('offline'),
+				new Response('nope', { status: 403 }),
+				new Response('{}', { headers: { 'content-type': 'application/json' } })
+			];
+			for (const page of pages) {
+				const { seen, result } = importFromLink(owner, 'https://example.com/daiquiri', answer, page);
+
+				expect(await result).toMatchObject({
+					status: 400,
+					data: { text: 'https://example.com/daiquiri', errors: [CANNOT_OPEN] }
+				});
+				expect(seen).toEqual([]);
+			}
+		});
+
+		it('shows the no-recipe error when the fetched page holds no recipe', async () => {
+			const { result } = importFromLink(owner, 'https://example.com/daiquiri', 'no recipe', html('<p>A blog</p>'));
+
+			expect(await result).toMatchObject({
+				status: 400,
+				data: { text: 'https://example.com/daiquiri', errors: [NO_RECIPE] }
+			});
+		});
+
+		it('caps the fetched page content before the reader sees it', async () => {
+			const jsonLd = JSON.stringify({ '@type': 'Recipe', text: 'j'.repeat(MAX_IMPORT_JSONLD + 100) });
+			const page = `<title>${'t'.repeat(MAX_IMPORT_TITLE + 50)}</title>
+				<script type="application/ld+json">${jsonLd}</script>
+				<body>${'b'.repeat(MAX_IMPORT_TEXT + 100)}</body>`;
+			const { seen, result } = importFromLink(owner, 'https://example.com/daiquiri', answer, html(page));
+			await result;
+
+			expect(seen[0].title).toHaveLength(MAX_IMPORT_TITLE);
+			expect(seen[0].jsonLd).toEqual([jsonLd.slice(0, MAX_IMPORT_JSONLD)]);
+			expect(seen[0].text).toHaveLength(MAX_IMPORT_TEXT);
+		});
+
+		it('rejects a Visitor with 401 and fetches nothing', async () => {
+			const { seen, fetched, result } = importFromLink(
+				null,
+				'https://example.com/daiquiri',
+				answer,
+				html('<p>x</p>')
+			);
+
+			expect(isHttpError(await thrown(result), 401)).toBe(true);
+			expect(fetched).toEqual([]);
+			expect(seen).toEqual([]);
 		});
 	});
 });

@@ -1,6 +1,6 @@
 import { fail, redirect } from '@sveltejs/kit';
 import { requireOwner } from '#lib/server/auth/guard.ts';
-import { importPastedText, NO_RECIPE } from '#lib/server/recipe-import.ts';
+import { importRecipe } from '#lib/server/recipe-import.ts';
 import { readRecipeForm } from '#lib/server/recipe-form.ts';
 import { createRecipe, listIngredientOptions, listTagNames, saveProblemMessage } from '#lib/server/recipes.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -22,11 +22,11 @@ export const actions: Actions = {
 		redirect(303, `/recipes/${result.id}`);
 	},
 
-	import: async ({ locals, request }) => {
+	import: async ({ locals, request, fetch }) => {
 		requireOwner(locals);
 		const text = String((await request.formData()).get('text') ?? '');
-		const draft = await importPastedText(locals.recipeReader, locals.db, text);
-		if (!draft) return fail(400, { text, errors: [NO_RECIPE] });
-		return { draft };
+		const outcome = await importRecipe(locals.recipeReader, locals.db, fetch, text);
+		if (!outcome.ok) return fail(400, { text, errors: [outcome.error] });
+		return { draft: outcome.draft };
 	}
 };
