@@ -10,7 +10,7 @@ import { actions, load } from './+page.server';
 const origin = 'https://spirit.renchauret.com';
 const owner = { id: 'owner', email: 'owner@example.com' };
 
-const fields: Omit<RecipeDraft, 'lines'> = {
+const fields: Omit<RecipeDraft, 'lines' | 'newIngredients'> = {
 	name: 'Improved Tom Collins',
 	glass: 'collins',
 	garnish: 'Lemon twist',
@@ -60,7 +60,8 @@ describe('/recipes/[id]', () => {
 			lines: [
 				{ ingredientId: gin, amountMin: 2, amountMax: null, unit: 'oz', note: '' },
 				{ ingredientId: soda, amountMin: null, amountMax: null, unit: 'top', note: '' }
-			]
+			],
+			newIngredients: []
 		};
 	});
 
@@ -126,10 +127,10 @@ describe('/recipes/[id]', () => {
 				ownerNotes: 'Secret: cheap gin',
 				tagSuggestions: ['highball'],
 				ingredients: [
-					{ id: soda, name: 'club soda', parent: null },
-					{ id: gin, name: 'gin', parent: null },
-					{ id: expect.any(Number), name: 'rum', parent: null },
-					{ id: expect.any(Number), name: 'white rum', parent: 'rum' }
+					{ id: soda, name: 'club soda', parent: null, type: 'mixer' },
+					{ id: gin, name: 'gin', parent: null, type: 'spirit' },
+					{ id: expect.any(Number), name: 'rum', parent: null, type: 'spirit' },
+					{ id: expect.any(Number), name: 'white rum', parent: 'rum', type: 'spirit' }
 				]
 			});
 		});
@@ -181,6 +182,34 @@ describe('/recipes/[id]', () => {
 			expect(result).toMatchObject({
 				status: 400,
 				data: { errors: ['An Ingredient in the Recipe lines is no longer in the catalog.'] }
+			});
+			expect((await getRecipe(local.db, id))?.name).toBe('Tom Collins');
+		});
+
+		it('creates a new Ingredient a Recipe line uses', async () => {
+			await save(owner, {
+				...draft,
+				lines: [...draft.lines, { ...draft.lines[0], ingredientId: -1, amountMin: 0.25 }],
+				newIngredients: [{ id: -1, name: 'maraschino liqueur', type: 'liqueur', parentId: null }]
+			});
+
+			expect((await getRecipe(local.db, id))?.lines.map((l) => l.ingredient)).toEqual([
+				'gin',
+				'club soda',
+				'maraschino liqueur'
+			]);
+		});
+
+		it('refuses a new Ingredient whose name is already in the catalog', async () => {
+			const result = await save(owner, {
+				...draft,
+				lines: [{ ...draft.lines[0], ingredientId: -1 }],
+				newIngredients: [{ id: -1, name: 'Club Soda', type: 'mixer', parentId: null }]
+			});
+
+			expect(result).toMatchObject({
+				status: 400,
+				data: { errors: ['There is already an Ingredient called club soda. Pick it from the search instead.'] }
 			});
 			expect((await getRecipe(local.db, id))?.name).toBe('Tom Collins');
 		});

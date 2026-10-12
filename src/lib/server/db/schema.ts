@@ -1,4 +1,15 @@
-import { type AnySQLiteColumn, index, integer, primaryKey, real, sqliteTable, text, unique } from 'drizzle-orm/sqlite-core';
+import { sql } from 'drizzle-orm';
+import {
+	type AnySQLiteColumn,
+	index,
+	integer,
+	primaryKey,
+	real,
+	sqliteTable,
+	text,
+	unique,
+	uniqueIndex
+} from 'drizzle-orm/sqlite-core';
 import { GLASSES, INGREDIENT_TYPES, UNITS } from '../../domain.ts';
 
 export const ingredient = sqliteTable(
@@ -9,7 +20,10 @@ export const ingredient = sqliteTable(
 		parentId: integer('parent_id').references((): AnySQLiteColumn => ingredient.id),
 		type: text('type', { enum: INGREDIENT_TYPES }).notNull()
 	},
-	(t) => [index('ingredient_parent_idx').on(t.parentId)]
+	(t) => [
+		index('ingredient_parent_idx').on(t.parentId),
+		uniqueIndex('ingredient_name_lower_unique').on(sql`lower(${t.name})`)
+	]
 );
 
 export const recipe = sqliteTable('recipe', {

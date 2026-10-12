@@ -2,11 +2,19 @@
 	import { tick } from 'svelte';
 	import { formatLineAmountAsWritten } from '#lib/amounts.ts';
 	import type { IngredientOption } from '#lib/ingredient-search.ts';
-	import type { DraftLine } from '#lib/recipe-draft.ts';
+	import type { DraftLine, NewIngredient } from '#lib/recipe-draft.ts';
 	import { dropIndex, moveLine } from '#lib/recipe-lines.ts';
 	import RecipeLineSheet from './RecipeLineSheet.svelte';
 
-	let { lines = $bindable(), ingredients }: { lines: DraftLine[]; ingredients: IngredientOption[] } = $props();
+	let {
+		lines = $bindable(),
+		ingredients,
+		oncreate
+	}: {
+		lines: DraftLine[];
+		ingredients: IngredientOption[];
+		oncreate: (ingredient: Omit<NewIngredient, 'id'>) => number;
+	} = $props();
 
 	let list = $state<HTMLUListElement>();
 	let dragging = $state<number | null>(null);
@@ -112,6 +120,7 @@
 		line={sheet.editing === null ? null : lines[sheet.editing]}
 		{ingredients}
 		onsave={save}
+		{oncreate}
 		onclose={() => (sheet = null)}
 	/>
 {/if}

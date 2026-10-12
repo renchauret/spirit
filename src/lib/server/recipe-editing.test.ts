@@ -4,7 +4,7 @@ import { ingredient, recipe, recipeLine, recipeTag, tag } from './db/schema';
 import { getOwnerNotes, getRecipe, listIngredientOptions, listTagNames, updateRecipe } from './recipes';
 import { createLocalD1, type LocalD1 } from './testing/local-d1';
 
-const fields: Omit<RecipeChanges, 'lines'> = {
+const fields: Omit<RecipeChanges, 'lines' | 'newIngredients'> = {
 	name: 'Improved Tom Collins',
 	glass: 'collins',
 	garnish: 'Lemon twist',
@@ -52,7 +52,7 @@ describe('Editing a Recipe', () => {
 			amountMin: 2,
 			unit: 'oz'
 		});
-		changes = { ...fields, lines: [{ ingredientId: gin, amountMin: 2, amountMax: null, unit: 'oz', note: null }] };
+		changes = { ...fields, newIngredients: [], lines: [{ ingredientId: gin, amountMin: 2, amountMax: null, unit: 'oz', note: null }] };
 		const [sour, highball] = await local.db
 			.insert(tag)
 			.values([{ name: 'sour' }, { name: 'highball' }])
@@ -172,11 +172,11 @@ describe('Editing a Recipe', () => {
 
 	it('lists the Ingredient catalog A–Z with each Parent Ingredient', async () => {
 		expect(await listIngredientOptions(local.db)).toEqual([
-			{ id: expect.any(Number), name: 'aged rum', parent: 'rum' },
-			{ id: soda, name: 'club soda', parent: null },
-			{ id: gin, name: 'gin', parent: null },
-			{ id: lemon, name: 'lemon juice', parent: null },
-			{ id: expect.any(Number), name: 'rum', parent: null }
+			{ id: expect.any(Number), name: 'aged rum', parent: 'rum', type: 'spirit' },
+			{ id: soda, name: 'club soda', parent: null, type: 'mixer' },
+			{ id: gin, name: 'gin', parent: null, type: 'spirit' },
+			{ id: lemon, name: 'lemon juice', parent: null, type: 'juice' },
+			{ id: expect.any(Number), name: 'rum', parent: null, type: 'spirit' }
 		]);
 	});
 

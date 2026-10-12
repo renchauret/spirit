@@ -1,14 +1,23 @@
 <script lang="ts">
-	import { searchIngredients, type IngredientOption } from '#lib/ingredient-search.ts';
+	import { canCreateIngredient, searchIngredients, type IngredientOption } from '#lib/ingredient-search.ts';
 
 	let {
 		ingredients,
 		label,
-		onpick
-	}: { ingredients: IngredientOption[]; label: string; onpick: (ingredient: IngredientOption) => void } = $props();
+		typed = $bindable(''),
+		onpick,
+		oncreate
+	}: {
+		ingredients: IngredientOption[];
+		label: string;
+		typed?: string;
+		onpick: (ingredient: IngredientOption) => void;
+		oncreate?: (name: string) => void;
+	} = $props();
 
-	let typed = $state('');
 	const matches = $derived(searchIngredients(ingredients, typed));
+	const newName = $derived(typed.trim().replace(/\s+/g, ' '));
+	const creatable = $derived(oncreate !== undefined && canCreateIngredient(ingredients, newName));
 
 	function focus(input: HTMLInputElement) {
 		input.focus();
@@ -35,8 +44,16 @@
 			</button>
 		</li>
 	{:else}
-		{#if typed.trim()}<li class="muted small none">No Ingredient called “{typed.trim()}”.</li>{/if}
+		{#if typed.trim() && !creatable}<li class="muted small none">No Ingredient called “{typed.trim()}”.</li>{/if}
 	{/each}
+	{#if creatable}
+		<li>
+			<button type="button" onclick={() => oncreate?.(newName)}>
+				<span>Create “{newName}”</span>
+				<span class="parent">new Ingredient</span>
+			</button>
+		</li>
+	{/if}
 </ul>
 
 <style>

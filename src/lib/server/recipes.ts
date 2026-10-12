@@ -1,10 +1,10 @@
-import { asc, eq, inArray, notInArray, sql } from 'drizzle-orm';
+import { asc, eq, notInArray, sql, type SQL } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import type { LineAmount } from '../amounts.ts';
 import { cardSubtitle, compareNames, familyOf, placeholderGlass } from '../browse.ts';
 import { INGREDIENT_TYPES, type FamilyTag, type Glass } from '../domain.ts';
 import { EMPTY_FILTER, isSearching, type FilterSection, type RecipeFilter } from '../filter.ts';
-import type { IngredientOption } from '../ingredient-search.ts';
+import { foldName, type IngredientOption } from '../ingredient-search.ts';
 import { filterAndRank, matchedLineIndexes } from '../ranking.ts';
 import type { RecipeChanges } from '../recipe-draft.ts';
 import { suggest, type Suggestion } from '../search.ts';
@@ -254,36 +254,48 @@ function deleteUnusedTags(db: Db) {
 export async function listIngredientOptions(db: Db): Promise<IngredientOption[]> {
 	const parent = alias(ingredient, 'parent');
 	const rows = await db
-		.select({ id: ingredient.id, name: ingredient.name, parent: parent.name })
+		.select({ id: ingredient.id, name: ingredient.name, parent: parent.name, type: ingredient.type })
 		.from(ingredient)
 		.leftJoin(parent, eq(parent.id, ingredient.parentId));
 	return rows.sort((a, b) => compareNames(a.name, b.name));
 }
 
-export type UpdateResult = 'saved' | 'missing recipe' | 'missing ingredient';
+export type SaveProblem = 'missing ingredient' | { taken: string };
+export type UpdateResult = 'saved' | 'missing recipe' | SaveProblem;
+export type CreateResult = { id: number } | SaveProblem;
 
-export async function updateRecipe(
-	db: Db,
-	id: number,
-	changes: RecipeChanges,
-	photo: PhotoKeys | null = null
-): Promise<UpdateResult> {
-	const { tags, lines, ...fields } = changes;
-	const ingredientIds = [...new Set(lines.map((l) => l.ingredientId))];
-	const [found, known] = await db.batch([
-		db.select({ id: recipe.id }).from(recipe).where(eq(recipe.id, id)),
-		db.select({ id: ingredient.id }).from(ingredient).where(inArray(ingredient.id, ingredientIds))
-	]);
-	if (!found.length) return 'missing recipe';
-	if (known.length !== ingredientIds.length) return 'missing ingredient';
+async function checkIngredients(db: Db, { lines, newIngredients }: RecipeChanges): Promise<SaveProblem | null> {
+	const catalog = await db.select({ id: ingredient.id, name: ingredient.name }).from(ingredient);
+	const known = new Set(catalog.map((i) => i.id));
+	const referenced = [...lines.map((l) => l.ingredientId), ...newIngredients.map((i) => i.parentId)];
+	if (referenced.some((id) => id !== null && id > 0 && !known.has(id))) return 'missing ingredient';
 
-	await db.batch([
+	const byName = new Map(catalog.map((i) => [foldName(i.name), i.name]));
+	for (const { name } of newIngredients) {
+		const taken = byName.get(foldName(name));
+		if (taken) return { taken };
+	}
+	return null;
+}
+
+function recipeWrites(db: Db, id: number | SQL<number>, changes: RecipeChanges, photo: PhotoKeys | null = null) {
+	const { tags, lines, newIngredients, ...fields } = changes;
+	const names = new Map(newIngredients.map((i) => [i.id, i.name]));
+	const ingredientRef = (ingredientId: number) =>
+		ingredientId > 0 ? ingredientId : sql<number>`(select ${ingredient.id} from ${ingredient} where ${ingredient.name} = ${names.get(ingredientId)})`;
+
+	return [
 		db
 			.update(recipe)
 			.set(photo ? { ...fields, cardPhotoKey: photo.card, pagePhotoKey: photo.page } : fields)
 			.where(eq(recipe.id, id)),
+		...newIngredients.map(({ name, type, parentId }) =>
+			db.insert(ingredient).values({ name, type, parentId: parentId === null ? null : ingredientRef(parentId) })
+		),
 		db.delete(recipeLine).where(eq(recipeLine.recipeId, id)),
-		...lines.map((line, position) => db.insert(recipeLine).values({ ...line, recipeId: id, position })),
+		...lines.map((line, position) =>
+			db.insert(recipeLine).values({ ...line, ingredientId: ingredientRef(line.ingredientId), recipeId: id, position })
+		),
 		db.delete(recipeTag).where(eq(recipeTag.recipeId, id)),
 		...tags.flatMap((name, position) => [
 			db.insert(tag).values({ name }).onConflictDoNothing(),
@@ -299,8 +311,49 @@ export async function updateRecipe(
 			)
 		]),
 		deleteUnusedTags(db)
-	]);
-	return 'saved';
+	] as const;
+}
+
+async function saving<T>(db: Db, changes: RecipeChanges, write: () => Promise<T>): Promise<T | SaveProblem> {
+	const problem = await checkIngredients(db, changes);
+	if (problem) return problem;
+	try {
+		return await write();
+	} catch (cause) {
+		const raced = await checkIngredients(db, changes);
+		if (raced) return raced;
+		throw cause;
+	}
+}
+
+export async function updateRecipe(
+	db: Db,
+	id: number,
+	changes: RecipeChanges,
+	photo: PhotoKeys | null = null
+): Promise<UpdateResult> {
+	const [found] = await db.select({ id: recipe.id }).from(recipe).where(eq(recipe.id, id));
+	if (!found) return 'missing recipe';
+	return saving(db, changes, async () => {
+		await db.batch(recipeWrites(db, id, changes, photo));
+		return 'saved' as const;
+	});
+}
+
+export async function createRecipe(db: Db, changes: RecipeChanges): Promise<CreateResult> {
+	const created = sql<number>`(select max(${recipe.id}) from ${recipe})`;
+	return saving(db, changes, async () => {
+		const [[{ id }]] = await db.batch([
+			db.insert(recipe).values({ name: changes.name }).returning({ id: recipe.id }),
+			...recipeWrites(db, created, changes)
+		]);
+		return { id };
+	});
+}
+
+export function saveProblemMessage(problem: SaveProblem): string {
+	if (problem === 'missing ingredient') return 'An Ingredient in the Recipe lines is no longer in the catalog.';
+	return `There is already an Ingredient called ${problem.taken}. Pick it from the search instead.`;
 }
 
 export async function setFavorite(db: Db, id: number, favorite: boolean): Promise<boolean> {

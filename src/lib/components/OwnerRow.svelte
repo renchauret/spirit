@@ -4,7 +4,7 @@
 
 {#if signedIn}
 	<nav class="owner-row" aria-label="Owner">
-		<span aria-disabled="true">+ New Recipe</span>
+		<a href="/recipes/new">+ New Recipe</a>
 		<span aria-hidden="true">·</span>
 		<a href="/ingredients">Ingredients</a>
 		<span aria-hidden="true">·</span>
@@ -24,11 +24,8 @@
 		border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
 	}
 
-	[aria-disabled='true'] {
-		opacity: 0.5;
-	}
-
 	a {
+		color: inherit;
 		text-decoration: underline;
 	}
 

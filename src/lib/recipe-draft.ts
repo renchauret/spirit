@@ -1,4 +1,5 @@
-import { GLASSES, UNITS, UNITS_WITHOUT_AMOUNT, type Glass, type Unit } from './domain.ts';
+import { GLASSES, INGREDIENT_TYPES, UNITS, UNITS_WITHOUT_AMOUNT, type Glass, type IngredientType, type Unit } from './domain.ts';
+import { foldName } from './ingredient-search.ts';
 import { isValidAmount } from './recipe-lines.ts';
 
 export type DraftLine = {
@@ -11,6 +12,13 @@ export type DraftLine = {
 
 export type LineChanges = Omit<DraftLine, 'note'> & { note: string | null };
 
+export type NewIngredient = {
+	id: number;
+	name: string;
+	type: IngredientType;
+	parentId: number | null;
+};
+
 export type RecipeDraft = {
 	name: string;
 	glass: Glass | '';
@@ -22,6 +30,7 @@ export type RecipeDraft = {
 	method: string[];
 	tags: string[];
 	lines: DraftLine[];
+	newIngredients: NewIngredient[];
 };
 
 export type RecipeChanges = {
@@ -35,6 +44,7 @@ export type RecipeChanges = {
 	method: string[];
 	tags: string[];
 	lines: LineChanges[];
+	newIngredients: NewIngredient[];
 };
 
 export type ParsedDraft = { ok: true; changes: RecipeChanges } | { ok: false; errors: string[] };
@@ -47,6 +57,7 @@ const TAG_LENGTH = 40;
 const MAX_STEPS = 40;
 const MAX_TAGS = 20;
 const MAX_LINES = 40;
+const INGREDIENT_NAME_LENGTH = 80;
 
 const SINGLE_LINE_FIELDS = [
 	['garnish', 'Garnish'],
@@ -61,7 +72,23 @@ const MULTI_LINE_FIELDS = [
 
 const unreadable: ParsedDraft = { ok: false, errors: ['That edit could not be read.'] };
 
-export function draftFrom(recipe: RecipeChanges): RecipeDraft {
+export function emptyDraft(): RecipeDraft {
+	return {
+		name: '',
+		glass: '',
+		garnish: '',
+		iceServe: '',
+		description: '',
+		source: '',
+		ownerNotes: '',
+		method: [],
+		tags: [],
+		lines: [],
+		newIngredients: []
+	};
+}
+
+export function draftFrom(recipe: Omit<RecipeChanges, 'newIngredients'>): RecipeDraft {
 	return {
 		name: recipe.name,
 		glass: recipe.glass ?? '',
@@ -78,7 +105,8 @@ export function draftFrom(recipe: RecipeChanges): RecipeDraft {
 			amountMax,
 			unit,
 			note: note ?? ''
-		}))
+		})),
+		newIngredients: []
 	};
 }
 
@@ -113,6 +141,52 @@ function isDraftLine(value: unknown): value is DraftLine {
 	);
 }
 
+function isNewIngredient(value: unknown): value is NewIngredient {
+	if (typeof value !== 'object' || value === null) return false;
+	const created = value as Record<string, unknown>;
+	return (
+		Number.isSafeInteger(created.id) &&
+		(created.id as number) < 0 &&
+		isText(created.name) &&
+		(INGREDIENT_TYPES as readonly unknown[]).includes(created.type) &&
+		(created.parentId === null || Number.isSafeInteger(created.parentId))
+	);
+}
+
+function parseNewIngredients(
+	created: NewIngredient[],
+	lines: readonly LineChanges[],
+	errors: string[]
+): NewIngredient[] | null {
+	const byId = new Map<number, NewIngredient>();
+	for (const ingredient of created) {
+		const parent = ingredient.parentId;
+		if (byId.has(ingredient.id) || (parent !== null && parent < 0 && !byId.has(parent))) return null;
+		byId.set(ingredient.id, ingredient);
+	}
+
+	const used = new Set<number>();
+	for (const { ingredientId } of lines) {
+		for (let id: number | null = ingredientId; id !== null && id < 0 && !used.has(id); id = byId.get(id)?.parentId ?? null) {
+			if (!byId.has(id)) return null;
+			used.add(id);
+		}
+	}
+
+	const kept = created
+		.filter((ingredient) => used.has(ingredient.id))
+		.map(({ id, name, type, parentId }) => ({ id, name: singleLine(name), type, parentId }));
+	const seen = new Set<string>();
+	for (const { name } of kept) {
+		if (!name) errors.push('Give each new Ingredient a name.');
+		else if (name.length > INGREDIENT_NAME_LENGTH) {
+			errors.push(`Keep each Ingredient name under ${INGREDIENT_NAME_LENGTH} characters.`);
+		} else if (seen.has(foldName(name))) errors.push(`${name} is being created twice.`);
+		seen.add(foldName(name));
+	}
+	return kept;
+}
+
 function parseLines(lines: DraftLine[], errors: string[]): LineChanges[] {
 	if (!lines.length) errors.push('Add at least one Recipe line.');
 	if (lines.length > MAX_LINES) errors.push(`Keep the Recipe under ${MAX_LINES} Recipe lines.`);
@@ -142,6 +216,7 @@ export function parseRecipeDraft(input: unknown): ParsedDraft {
 	if (!textFields.every((field) => isText(draft[field]))) return unreadable;
 	if (!isTextList(draft.method) || !isTextList(draft.tags)) return unreadable;
 	if (!Array.isArray(draft.lines) || !draft.lines.every(isDraftLine)) return unreadable;
+	if (!Array.isArray(draft.newIngredients) || !draft.newIngredients.every(isNewIngredient)) return unreadable;
 
 	const errors: string[] = [];
 	const checked = (text: string, limit: number, label: string) => {
@@ -176,11 +251,13 @@ export function parseRecipeDraft(input: unknown): ParsedDraft {
 	if (tags.some((tag) => tag.length > TAG_LENGTH)) errors.push(`Keep each Tag under ${TAG_LENGTH} characters.`);
 
 	const lines = parseLines(draft.lines, errors);
+	const newIngredients = parseNewIngredients(draft.newIngredients, lines, errors);
+	if (newIngredients === null) return unreadable;
 
 	if (errors.length || glass === undefined) return { ok: false, errors };
 	return {
 		ok: true,
-		changes: { name, glass, garnish, iceServe, description, source, ownerNotes, method, tags, lines }
+		changes: { name, glass, garnish, iceServe, description, source, ownerNotes, method, tags, lines, newIngredients }
 	};
 }
 
@@ -188,4 +265,12 @@ export function suggestTags(existing: readonly string[], current: readonly strin
 	const query = normalizeTag(typed);
 	const taken = new Set(current.map(normalizeTag));
 	return existing.filter((tag) => !taken.has(normalizeTag(tag)) && normalizeTag(tag).includes(query));
+}
+
+export function readRecipeDraft(form: FormData): ParsedDraft {
+	try {
+		return parseRecipeDraft(JSON.parse(String(form.get('recipe') ?? '')));
+	} catch {
+		return unreadable;
+	}
 }

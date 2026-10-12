@@ -3,10 +3,10 @@
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { familyOf, placeholderGlass } from '#lib/browse.ts';
 	import { GLASSES, GLASS_LABELS } from '#lib/domain.ts';
-	import type { IngredientOption } from '#lib/ingredient-search.ts';
+	import { catalogWith, type IngredientOption } from '#lib/ingredient-search.ts';
 	import type { ResizedPhoto } from '#lib/photo-resize.ts';
 	import { PHOTO_VARIANTS } from '#lib/photos.ts';
-	import type { RecipeDraft } from '#lib/recipe-draft.ts';
+	import type { NewIngredient, RecipeDraft } from '#lib/recipe-draft.ts';
 	import Editable from './Editable.svelte';
 	import GlassPlaceholder from './GlassPlaceholder.svelte';
 	import PhotoPicker from './PhotoPicker.svelte';
@@ -18,6 +18,7 @@
 		ingredients,
 		existingTags,
 		action,
+		heading = 'Editing',
 		photo = null,
 		photoUpload = false,
 		oncancel,
@@ -27,10 +28,11 @@
 		ingredients: IngredientOption[];
 		existingTags: string[];
 		action: string;
+		heading?: string;
 		photo?: string | null;
 		photoUpload?: boolean;
 		oncancel: () => void;
-		onsaved: () => void;
+		onsaved?: () => void;
 	} = $props();
 
 	let saving = $state(false);
@@ -41,6 +43,13 @@
 
 	const family = $derived(familyOf(draft.tags));
 	const familyGlass = $derived(placeholderGlass(null, family));
+	const catalog = $derived(catalogWith(ingredients, draft.newIngredients));
+
+	function createIngredient(ingredient: Omit<NewIngredient, 'id'>) {
+		const id = Math.min(0, ...draft.newIngredients.map((i) => i.id)) - 1;
+		draft.newIngredients.push({ id, ...ingredient });
+		return id;
+	}
 
 	async function addStep(at = draft.method.length) {
 		draft.method.splice(at, 0, '');
@@ -76,7 +85,7 @@
 				errors = [result.error?.message ?? 'That edit could not be saved.'];
 			} else {
 				await update();
-				if (result.type === 'success') onsaved();
+				if (result.type === 'success') onsaved?.();
 			}
 		};
 	};
@@ -85,7 +94,7 @@
 <form class="mode" method="POST" {action} use:enhance={save}>
 	<input type="hidden" name="recipe" value={JSON.stringify(draft)} />
 	<button type="button" class="btn" disabled={saving} onclick={oncancel}>Cancel</button>
-	<strong>Editing</strong>
+	<strong>{heading}</strong>
 	<button type="submit" class="btn primary" disabled={saving}>{saving ? 'Saving…' : 'Done'}</button>
 </form>
 
@@ -119,7 +128,7 @@
 
 	<section class="stack section">
 		<h2>Recipe lines</h2>
-		<RecipeLineEditor bind:lines={draft.lines} {ingredients} />
+		<RecipeLineEditor bind:lines={draft.lines} ingredients={catalog} oncreate={createIngredient} />
 	</section>
 
 	<section class="stack section">

@@ -1,0 +1,1 @@
+CREATE UNIQUE INDEX `ingredient_name_lower_unique` ON `ingredient` (lower("name"));

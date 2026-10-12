@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { draftFrom, normalizeTag, parseRecipeDraft, suggestTags, type RecipeDraft } from './recipe-draft';
+import { draftFrom, emptyDraft, normalizeTag, parseRecipeDraft, suggestTags, type RecipeDraft } from './recipe-draft';
 
 const draft: RecipeDraft = {
 	name: 'Improved Tom Collins',
@@ -15,7 +15,8 @@ const draft: RecipeDraft = {
 		{ ingredientId: 3, amountMin: 1, amountMax: null, unit: 'oz', note: ' fresh ' },
 		{ ingredientId: 1, amountMin: 2, amountMax: null, unit: 'oz', note: '' },
 		{ ingredientId: 9, amountMin: null, amountMax: null, unit: 'top', note: '' }
-	]
+	],
+	newIngredients: []
 };
 
 const line = draft.lines[0];
@@ -38,7 +39,8 @@ describe('parseRecipeDraft', () => {
 					{ ingredientId: 3, amountMin: 1, amountMax: null, unit: 'oz', note: 'fresh' },
 					{ ingredientId: 1, amountMin: 2, amountMax: null, unit: 'oz', note: null },
 					{ ingredientId: 9, amountMin: null, amountMax: null, unit: 'top', note: null }
-				]
+				],
+				newIngredients: []
 			}
 		});
 	});
@@ -233,8 +235,107 @@ describe('draftFrom', () => {
 			ownerNotes: 'Stir longer',
 			method: ['Stir.'],
 			tags: ['old fashioned'],
-			lines: [{ ingredientId: 4, amountMin: 1, amountMax: null, unit: 'oz', note: '' }]
+			lines: [{ ingredientId: 4, amountMin: 1, amountMax: null, unit: 'oz', note: '' }],
+			newIngredients: []
 		});
+	});
+});
+
+describe('emptyDraft', () => {
+	it('starts a new Recipe with nothing filled in', () => {
+		expect(emptyDraft()).toEqual({
+			name: '',
+			glass: '',
+			garnish: '',
+			iceServe: '',
+			description: '',
+			source: '',
+			ownerNotes: '',
+			method: [],
+			tags: [],
+			lines: [],
+			newIngredients: []
+		});
+	});
+
+	it('cannot be saved until it has a name and a Recipe line', () => {
+		expect(parseRecipeDraft(emptyDraft())).toEqual({
+			ok: false,
+			errors: ['Give the Recipe a name.', 'Add at least one Recipe line.']
+		});
+	});
+});
+
+describe('parseRecipeDraft with new Ingredients', () => {
+	const falernum = { id: -1, name: '  velvet   falernum ', type: 'liqueur', parentId: null };
+	const withNew = (newIngredients: unknown[], lines = [{ ...line, ingredientId: -1 }]) =>
+		parseRecipeDraft({ ...draft, lines, newIngredients });
+
+	it('creates a new Ingredient that a Recipe line uses, tidying its name', () => {
+		expect(withNew([falernum])).toMatchObject({
+			ok: true,
+			changes: {
+				lines: [{ ingredientId: -1 }],
+				newIngredients: [{ id: -1, name: 'velvet falernum', type: 'liqueur', parentId: null }]
+			}
+		});
+	});
+
+	it('keeps a new Parent Ingredient, created before its child', () => {
+		const jamaican = { id: -1, name: 'Jamaican rum', type: 'spirit', parentId: 6 };
+		const smith = { id: -2, name: 'Smith & Cross', type: 'spirit', parentId: -1 };
+
+		expect(withNew([jamaican, smith], [{ ...line, ingredientId: -2 }])).toMatchObject({
+			ok: true,
+			changes: { newIngredients: [{ id: -1, parentId: 6 }, { id: -2, parentId: -1 }] }
+		});
+	});
+
+	it('drops a new Ingredient that no Recipe line uses any more', () => {
+		const orgeat = { id: -2, name: 'orgeat', type: 'syrup', parentId: null };
+
+		expect(withNew([falernum, orgeat])).toMatchObject({
+			ok: true,
+			changes: { newIngredients: [{ id: -1 }] }
+		});
+	});
+
+	it('needs a name for a new Ingredient', () => {
+		expect(withNew([{ ...falernum, name: '  ' }])).toEqual({
+			ok: false,
+			errors: ['Give each new Ingredient a name.']
+		});
+	});
+
+	it('rejects a new Ingredient name that is too long', () => {
+		expect(withNew([{ ...falernum, name: 'x'.repeat(81) }])).toEqual({
+			ok: false,
+			errors: ['Keep each Ingredient name under 80 characters.']
+		});
+	});
+
+	it('creates each new Ingredient once, ignoring case', () => {
+		const again = { ...falernum, id: -2, name: 'Velvet Falernum' };
+
+		expect(withNew([falernum, again], [{ ...line, ingredientId: -1 }, { ...line, ingredientId: -2 }])).toEqual({
+			ok: false,
+			errors: ['Velvet Falernum is being created twice.']
+		});
+	});
+
+	it.each([
+		['a type not on the list', [{ ...falernum, type: 'amaro' }]],
+		['an id that is not new', [{ ...falernum, id: 3 }]],
+		['no name', [{ ...falernum, name: undefined }]],
+		['a Parent Ingredient that is not an id', [{ ...falernum, parentId: 'rum' }]],
+		['a new Parent Ingredient that does not come first', [{ ...falernum, parentId: -2 }, { ...falernum, id: -2, name: 'x' }]],
+		['two new Ingredients with the same id', [falernum, { ...falernum, name: 'orgeat' }]]
+	])('cannot read a new Ingredient with %s', (_, newIngredients) => {
+		expect(withNew(newIngredients)).toEqual({ ok: false, errors: ['That edit could not be read.'] });
+	});
+
+	it('cannot read a Recipe line using a new Ingredient that is not there', () => {
+		expect(withNew([])).toEqual({ ok: false, errors: ['That edit could not be read.'] });
 	});
 });
 

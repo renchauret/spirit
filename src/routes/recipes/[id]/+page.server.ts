@@ -1,6 +1,6 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { parseFilter } from '#lib/filter.ts';
-import { parseRecipeDraft } from '#lib/recipe-draft.ts';
+import { readRecipeDraft } from '#lib/recipe-draft.ts';
 import { requireOwner } from '#lib/server/auth/guard.ts';
 import { putPhoto, readPhotoUpload } from '#lib/server/photos.ts';
 import {
@@ -10,6 +10,7 @@ import {
 	listIngredientOptions,
 	listTagNames,
 	matchedLines,
+	saveProblemMessage,
 	setFavorite,
 	updateRecipe
 } from '#lib/server/recipes.ts';
@@ -19,14 +20,6 @@ function recipeId(param: string): number {
 	const id = Number(param);
 	if (!Number.isSafeInteger(id) || id <= 0) error(404, 'Recipe not found');
 	return id;
-}
-
-function readJson(text: string): unknown {
-	try {
-		return JSON.parse(text);
-	} catch {
-		return null;
-	}
 }
 
 export const load: PageServerLoad = async ({ params, url, locals: { db, owner } }) => {
@@ -49,7 +42,7 @@ export const actions: Actions = {
 		requireOwner(locals);
 		const id = recipeId(params.id);
 		const form = await request.formData();
-		const parsed = parseRecipeDraft(readJson(String(form.get('recipe') ?? '')));
+		const parsed = readRecipeDraft(form);
 		const photo = await readPhotoUpload(form);
 		const errors = [...(parsed.ok ? [] : parsed.errors), ...(photo.ok ? [] : [photo.error])];
 		if (!parsed.ok || !photo.ok) return fail(400, { errors });
@@ -57,9 +50,7 @@ export const actions: Actions = {
 		const keys = photo.upload ? await putPhoto(locals.photos, id, photo.upload) : null;
 		const result = await updateRecipe(locals.db, id, parsed.changes, keys);
 		if (result === 'missing recipe') error(404, 'Recipe not found');
-		if (result === 'missing ingredient') {
-			return fail(400, { errors: ['An Ingredient in the Recipe lines is no longer in the catalog.'] });
-		}
+		if (result !== 'saved') return fail(400, { errors: [saveProblemMessage(result)] });
 		return { saved: true };
 	},
 
