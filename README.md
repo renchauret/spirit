@@ -137,7 +137,7 @@ Server code that writes data must call `requireOwner(locals)` from `src/lib/serv
 npm run deploy
 ```
 
-This builds the app, applies pending migrations to the production D1 database, and deploys the Worker. Wrangler attaches the `spirit.renchauret.com` custom domain on deploy, creating its DNS record and certificate.
+This builds the app, applies pending migrations to the production D1 database, and deploys the Worker. The Cloudflare API sometimes fails a migration request once, so `npm run db:migrate:remote` runs it through [`scripts/retry.ts`](scripts/retry.ts): up to 3 attempts, waiting 5 then 10 seconds between them. It retries any failure, because Wrangler reports a bad migration and a flaky request the same way. If every attempt fails, the deploy stops with Wrangler's last error and nothing is deployed. Wrangler attaches the `spirit.renchauret.com` custom domain on deploy, creating its DNS record and certificate.
 
 You must be signed in to Wrangler (`npx wrangler login`), or set `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
 

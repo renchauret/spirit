@@ -15,7 +15,7 @@
 		"cf-typegen": "rm -rf .svelte-kit/cloudflare && wrangler types",
 		"db:generate": "drizzle-kit generate",
 		"db:migrate:local": "wrangler d1 migrations apply spirit --local",
-		"db:migrate:remote": "wrangler d1 migrations apply spirit --remote",
+		"db:migrate:remote": "node scripts/retry.ts wrangler d1 migrations apply spirit --remote",
 		"db:seed:local": "node scripts/seed-sql.ts seed/fixture.json --replace --out .wrangler/seed/fixture.sql && wrangler d1 execute spirit --local --file .wrangler/seed/fixture.sql",
 		"deploy": "npm run build && npm run db:migrate:remote && wrangler deploy",
 		"owner": "node scripts/owner.ts"
