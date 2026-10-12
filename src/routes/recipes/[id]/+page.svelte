@@ -1,16 +1,24 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
-	import { formatLineAmount } from '#lib/amounts.ts';
 	import GlassPlaceholder from '#lib/components/GlassPlaceholder.svelte';
 	import OwnerRow from '#lib/components/OwnerRow.svelte';
+	import RecipeEditor from '#lib/components/RecipeEditor.svelte';
+	import RecipeLines from '#lib/components/RecipeLines.svelte';
 	import UnitToggle from '#lib/components/UnitToggle.svelte';
 	import { GLASS_LABELS } from '#lib/domain.ts';
-	import { getUnitPreference } from '#lib/units.svelte.ts';
+	import { draftFrom, type RecipeDraft } from '#lib/recipe-draft.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
 	const recipe = $derived(data.recipe);
-	const units = getUnitPreference();
+
+	let draft = $state<RecipeDraft | null>(null);
+
+	function startEditing() {
+		if (!data.editor) return;
+		draft = draftFrom({ ...recipe, ownerNotes: data.editor.ownerNotes });
+		scrollTo({ top: 0 });
+	}
 
 	let cameFromList = false;
 	afterNavigate(({ from }) => {
@@ -38,69 +46,80 @@
 </svelte:head>
 
 <main class="stack">
-	<div class="top">
-		<a class="btn" href="/" onclick={back}>‹ Back</a>
-		<UnitToggle />
-	</div>
-	<OwnerRow signedIn={data.signedIn} />
-
-	<GlassPlaceholder glass={recipe.placeholderGlass} family={recipe.family} hero />
-
-	<h1>
-		{recipe.name}
-		{#if recipe.favorite}<span class="fav" aria-label="House favorite">★</span>{/if}
-	</h1>
-
-	{#if recipe.tags.length || recipe.favorite}
-		<div class="chips">
-			{#each recipe.tags as tag (tag)}
-				<span class="chip">#{tag}</span>
-			{/each}
-			{#if recipe.favorite}<span class="chip">★ House favorite</span>{/if}
+	{#if draft && data.editor}
+		<RecipeEditor
+			bind:draft
+			lines={recipe.lines}
+			existingTags={data.editor.tagSuggestions}
+			action="?/save"
+			oncancel={() => (draft = null)}
+			onsaved={() => (draft = null)}
+		/>
+	{:else}
+		<div class="top">
+			<a class="btn" href="/" onclick={back}>‹ Back</a>
+			<div class="row">
+				{#if data.editor}<button type="button" class="btn primary" onclick={startEditing}>Edit</button>{/if}
+				<UnitToggle />
+			</div>
 		</div>
-	{/if}
+		<OwnerRow signedIn={data.signedIn} />
 
-	{#if recipe.description}
-		<p class="description">{recipe.description}</p>
-	{/if}
+		<GlassPlaceholder glass={recipe.placeholderGlass} family={recipe.family} hero />
 
-	<section class="stack section">
-		<h2>Recipe lines</h2>
-		<ul class="lines">
-			{#each recipe.lines as line, i (i)}
-				<li class:hit={data.highlighted.includes(i)}>
-					<span class="amt">{formatLineAmount(line, units.system)}</span>
-					<span>
-						{line.ingredient}
-						{#if line.note}<span class="muted small">· {line.note}</span>{/if}
-					</span>
-				</li>
-			{/each}
-		</ul>
-	</section>
+		<h1>
+			{recipe.name}
+			{#if recipe.favorite}<span class="fav" aria-label="House favorite">★</span>{/if}
+		</h1>
 
-	{#if recipe.method.length}
+		{#if recipe.tags.length || recipe.favorite}
+			<div class="chips">
+				{#each recipe.tags as tag (tag)}
+					<span class="chip">#{tag}</span>
+				{/each}
+				{#if recipe.favorite}<span class="chip">★ House favorite</span>{/if}
+			</div>
+		{/if}
+
+		{#if recipe.description}
+			<p class="description">{recipe.description}</p>
+		{/if}
+
 		<section class="stack section">
-			<h2>Method</h2>
-			{#if recipe.method.length === 1}
-				<p class="method-one">{recipe.method[0]}</p>
-			{:else}
-				<ol class="method">
-					{#each recipe.method as instruction, i (i)}
-						<li>{instruction}</li>
-					{/each}
-				</ol>
-			{/if}
+			<h2>Recipe lines</h2>
+			<RecipeLines lines={recipe.lines} highlighted={data.highlighted} />
 		</section>
-	{/if}
 
-	{#if details.length}
-		<dl class="kv">
-			{#each details as [label, value] (label)}
-				<dt>{label}</dt>
-				<dd>{value}</dd>
-			{/each}
-		</dl>
+		{#if recipe.method.length}
+			<section class="stack section">
+				<h2>Method</h2>
+				{#if recipe.method.length === 1}
+					<p class="method-one">{recipe.method[0]}</p>
+				{:else}
+					<ol class="method">
+						{#each recipe.method as instruction, i (i)}
+							<li>{instruction}</li>
+						{/each}
+					</ol>
+				{/if}
+			</section>
+		{/if}
+
+		{#if details.length}
+			<dl class="kv">
+				{#each details as [label, value] (label)}
+					<dt>{label}</dt>
+					<dd>{value}</dd>
+				{/each}
+			</dl>
+		{/if}
+
+		{#if data.editor?.ownerNotes}
+			<section class="stack section">
+				<h2>Owner notes</h2>
+				<p class="notes">{data.editor.ownerNotes}</p>
+			</section>
+		{/if}
 	{/if}
 </main>
 
@@ -119,36 +138,16 @@
 
 	.description {
 		margin: 0;
+		white-space: pre-line;
+	}
+
+	.notes {
+		margin: 0;
+		white-space: pre-line;
 	}
 
 	.section {
 		gap: 6px;
-	}
-
-	.lines {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-	}
-
-	.lines li {
-		display: grid;
-		grid-template-columns: 6rem 1fr;
-		gap: 10px;
-		padding: 9px 0;
-		border-bottom: 1px solid var(--line);
-	}
-
-	.lines li.hit {
-		background: var(--soft);
-		border-radius: 8px;
-		padding-inline: 6px;
-	}
-
-	.amt {
-		font-family: var(--mono);
-		font-variant-numeric: tabular-nums;
-		color: var(--muted);
 	}
 
 	.method-one {

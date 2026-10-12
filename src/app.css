@@ -90,7 +90,9 @@ h2 {
 }
 
 button,
-input {
+input,
+select,
+textarea {
 	font: inherit;
 	color: inherit;
 }
@@ -178,5 +180,46 @@ a {
 	background: var(--surface);
 	border-radius: 10px;
 	padding: 10px 14px;
+	min-height: 44px;
+}
+
+.btn.primary {
+	background: var(--accent);
+	color: var(--accent-ink);
+	border-color: var(--accent);
+	font-weight: 700;
+}
+
+.btn.ghost {
+	background: transparent;
+	border-color: transparent;
+	color: var(--accent);
+	font-weight: 700;
+	padding-inline: 6px;
+}
+
+.btn:disabled {
+	opacity: 0.6;
+	cursor: default;
+}
+
+.icon-btn {
+	border: 1px solid var(--line);
+	background: var(--surface);
+	border-radius: 10px;
+	width: 44px;
+	height: 44px;
+	display: grid;
+	place-items: center;
+	flex: none;
+	font-size: 1.05rem;
+}
+
+.field {
+	width: 100%;
+	border: 1px solid var(--line);
+	background: var(--surface);
+	border-radius: 10px;
+	padding: 10px 12px;
 	min-height: 44px;
 }

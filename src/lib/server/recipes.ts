@@ -1,9 +1,10 @@
-import { asc, eq } from 'drizzle-orm';
+import { asc, eq, notInArray, sql } from 'drizzle-orm';
 import type { LineAmount } from '../amounts.ts';
 import { cardSubtitle, compareNames, familyOf, placeholderGlass } from '../browse.ts';
 import { INGREDIENT_TYPES, type FamilyTag, type Glass } from '../domain.ts';
 import { EMPTY_FILTER, type FilterSection, type RecipeFilter } from '../filter.ts';
 import { filterAndRank, matchedLineIndexes } from '../ranking.ts';
+import type { RecipeChanges } from '../recipe-draft.ts';
 import type { Db } from './db/index.ts';
 import { ingredient, recipe, recipeLine, recipeTag, tag } from './db/schema.ts';
 
@@ -198,4 +199,44 @@ export async function getRecipe(db: Db, id: number): Promise<RecipeView | null> 
 		source: r.source,
 		lines
 	};
+}
+
+export async function getOwnerNotes(db: Db, id: number): Promise<string | null> {
+	const [found] = await db.select({ ownerNotes: recipe.ownerNotes }).from(recipe).where(eq(recipe.id, id));
+	return found?.ownerNotes ?? null;
+}
+
+export async function listTagNames(db: Db): Promise<string[]> {
+	const rows = await db
+		.selectDistinct({ name: tag.name })
+		.from(tag)
+		.innerJoin(recipeTag, eq(recipeTag.tagId, tag.id))
+		.orderBy(asc(tag.name));
+	return rows.map((t) => t.name);
+}
+
+export async function updateRecipe(db: Db, id: number, changes: RecipeChanges): Promise<boolean> {
+	const [found] = await db.select({ id: recipe.id }).from(recipe).where(eq(recipe.id, id));
+	if (!found) return false;
+
+	const { tags, ...fields } = changes;
+	await db.batch([
+		db.update(recipe).set(fields).where(eq(recipe.id, id)),
+		db.delete(recipeTag).where(eq(recipeTag.recipeId, id)),
+		...tags.flatMap((name, position) => [
+			db.insert(tag).values({ name }).onConflictDoNothing(),
+			db.insert(recipeTag).select(
+				db
+					.select({
+						recipeId: sql<number>`${id}`.as('recipe_id'),
+						tagId: tag.id,
+						position: sql<number>`${position}`.as('position')
+					})
+					.from(tag)
+					.where(eq(tag.name, name))
+			)
+		]),
+		db.delete(tag).where(notInArray(tag.id, db.select({ tagId: recipeTag.tagId }).from(recipeTag)))
+	]);
+	return true;
 }

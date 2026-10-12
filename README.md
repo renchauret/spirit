@@ -19,7 +19,7 @@ Cloudflare configuration is in [`wrangler.jsonc`](wrangler.jsonc):
 | custom domain | Workers route | `spirit.renchauret.com` on the renchauret.com zone |
 | `BETTER_AUTH_SECRET` | Worker secret | signs Owner session cookies |
 
-Server code reads bindings with `import { env } from 'cloudflare:workers'`.
+Server code reads bindings with `import { env } from 'cloudflare:workers'`. Routes get the Drizzle database from `locals.db`, set in `src/hooks.server.ts`, so their `load` functions and actions can be tested against a local D1 database.
 
 ### Why Wrangler and not the `cf` CLI
 
