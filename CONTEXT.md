@@ -47,7 +47,7 @@ _Avoid_: Like, liked
 ## People
 
 **Owner**:
-The single person who can sign in and edit recipes and ingredients.
+The single account that can sign in and edit Recipes and Ingredients; it may be shared by more than one person.
 _Avoid_: Admin, user, god
 
 **Visitor**:
