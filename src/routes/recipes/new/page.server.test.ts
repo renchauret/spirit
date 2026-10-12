@@ -404,10 +404,13 @@ describe('/recipes/new', () => {
 
 		it('fetches a single link and gives the reader its title, JSON-LD and readable text', async () => {
 			const page = `<html><head><title>Daiquiri Cocktail</title>
+				<script type="application/ld+json">{"@type":"BreadcrumbList"}</script>
 				<script type="application/ld+json">{"@type":"Recipe","recipeYield":"1"}</script>
 				<script>track()</script><style>.x { color: red }</style></head>
-				<body><nav><a href="/">Home</a></nav>
-				<p>2 oz rum &amp; 0.75 oz lime juice</p></body></html>`;
+				<body><header><h1>Daiquiri</h1></header>
+				<nav><a href="/">Home</a></nav>
+				<article><p>2 oz rum &amp; 0.75 oz lime juice</p></article>
+				<footer><a href="/about">About</a></footer><aside>An ad</aside></body></html>`;
 			const { seen, fetched, result } = importFromLink(owner, '  https://example.com/daiquiri  ', answer, html(page));
 
 			expect(((await result) as { draft: RecipeDraft }).draft.source).toBe('https://example.com/daiquiri');
@@ -415,7 +418,7 @@ describe('/recipes/new', () => {
 			expect(seen[0]).toEqual({
 				text: '2 oz rum & 0.75 oz lime juice',
 				title: 'Daiquiri Cocktail',
-				jsonLd: ['{"@type":"Recipe","recipeYield":"1"}'],
+				jsonLd: ['{"@type":"BreadcrumbList"}', '{"@type":"Recipe","recipeYield":"1"}'],
 				catalog: [
 					{ id: lime, name: 'lime juice', parent: null, type: 'juice' },
 					{ id: rum, name: 'rum', parent: null, type: 'spirit' }
@@ -425,6 +428,12 @@ describe('/recipes/new', () => {
 				units: UNITS,
 				ingredientTypes: INGREDIENT_TYPES
 			});
+		});
+
+		it('keeps the link as the Source exactly as pasted', async () => {
+			const { result } = importFromLink(owner, '  https://example.com  ', answer, html('<p>x</p>'));
+
+			expect(((await result) as { draft: RecipeDraft }).draft.source).toBe('https://example.com');
 		});
 
 		it('treats anything that is not a single http link as pasted text and never fetches it', async () => {

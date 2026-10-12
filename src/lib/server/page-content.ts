@@ -1,4 +1,4 @@
-const OMITTED = /<(script|style|nav|head)\b[^>]*>[\s\S]*?<\/\1\s*>/gi;
+const OMITTED = /<(script|style|head|nav|header|footer|aside|menu)\b[^>]*>[\s\S]*?<\/\1\s*>/gi;
 const JSON_LD = /<script\b[^>]*\btype\s*=\s*["']?application\/ld\+json["']?[^>]*>([\s\S]*?)<\/script\s*>/gi;
 const TITLE = /<title\b[^>]*>([\s\S]*?)<\/title\s*>/i;
 const COMMENT = /<!--[\s\S]*?-->/g;

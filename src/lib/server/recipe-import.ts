@@ -16,7 +16,7 @@ export type ImportOutcome = { ok: true; draft: RecipeDraft } | { ok: false; erro
 
 export type PageFetch = (url: string, init?: RequestInit) => Promise<Response>;
 
-type ReaderSource = Pick<RecipeReaderInput, 'text' | 'title' | 'jsonLd'>;
+type ReaderContent = Pick<RecipeReaderInput, 'text' | 'title' | 'jsonLd'>;
 
 function toDraft(
 	answer: RecipeReaderAnswer,
@@ -65,17 +65,22 @@ function toDraft(
 	};
 }
 
-async function readSource(reader: RecipeReader, db: Db, source: ReaderSource, link: string): Promise<RecipeDraft | null> {
+async function readSource(
+	reader: RecipeReader,
+	db: Db,
+	content: ReaderContent,
+	source: string
+): Promise<RecipeDraft | null> {
 	const [catalog, tags] = await Promise.all([listIngredientOptions(db), listTagNames(db)]);
 	const answer = await reader({
-		...source,
+		...content,
 		catalog,
 		tags,
 		glasses: GLASSES,
 		units: UNITS,
 		ingredientTypes: INGREDIENT_TYPES
 	});
-	return toDraft(answer, catalog, tags, link);
+	return toDraft(answer, catalog, tags, source);
 }
 
 export function importPastedText(reader: RecipeReader, db: Db, text: string): Promise<RecipeDraft | null> {
@@ -94,7 +99,7 @@ function capJsonLd(blocks: string[]): string[] {
 	return kept;
 }
 
-function pageSource(page: PageContent): ReaderSource {
+function pageSource(page: PageContent): ReaderContent {
 	return {
 		text: page.text.slice(0, MAX_IMPORT_TEXT),
 		...(page.title ? { title: page.title.slice(0, MAX_IMPORT_TITLE) } : {}),
@@ -135,7 +140,7 @@ function linkFromInput(text: string): string | null {
 	if (!trimmed || /\s/.test(trimmed)) return null;
 	try {
 		const url = new URL(trimmed);
-		return url.protocol === 'http:' || url.protocol === 'https:' ? url.href : null;
+		return url.protocol === 'http:' || url.protocol === 'https:' ? trimmed : null;
 	} catch {
 		return null;
 	}
