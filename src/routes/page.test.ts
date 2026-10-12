@@ -13,13 +13,13 @@ const browse = (signedIn: boolean) =>
 	);
 
 describe('browse page header', () => {
-	it('shows Filter, Create and Ingredients as matching pills in that order for the Owner', () => {
+	it('keeps Filter a chip and gives Create and Ingredients the shared button class, in that order', () => {
 		const html = browse(true);
 
 		expect(html).toMatch(/<button[^>]*class="chip[^"]*"[^>]*>Filter<\/button>/);
-		expect(html).toMatch(/<a class="chip[^"]*" href="\/recipes\/new"[^>]*>Create<\/a>/);
-		expect(html).toMatch(/<a class="chip[^"]*" href="\/ingredients"[^>]*>Ingredients<\/a>/);
-		expect(html).not.toMatch(/class="chip[^"]*\bsel\b[^"]*"[^>]*>(Create|Ingredients)</);
+		expect(html).toMatch(/<a class="btn" href="\/recipes\/new"[^>]*>Create<\/a>/);
+		expect(html).toMatch(/<a class="btn" href="\/ingredients"[^>]*>Ingredients<\/a>/);
+		expect(html).not.toMatch(/class="btn[^"]*\bprimary\b[^"]*"[^>]*>(Create|Ingredients)</);
 
 		const order = ['>Filter<', '>Create<', '>Ingredients<'].map((needle) => html.indexOf(needle));
 		expect(order.every((at) => at >= 0)).toBe(true);
