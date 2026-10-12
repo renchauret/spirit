@@ -21,11 +21,21 @@ describe('New Recipe page', () => {
 
 	it('shows the editor filled with the imported draft', () => {
 		const draft = { ...emptyDraft(), name: 'Daiquiri', tags: ['sour'] };
-		const html = clean(render(Page, { props: { params: {}, data, form: { draft } } }).body);
+		const html = clean(render(Page, { props: { params: {}, data, form: { draft, duplicate: null } } }).body);
 
 		expect(html).toContain('Daiquiri');
 		expect(html).toMatch(/action="\?\/create"/);
 		expect(html).not.toContain('Paste a link or the recipe text');
+	});
+
+	it('shows the duplicate warning with a link to the existing Recipe', () => {
+		const draft = { ...emptyDraft(), name: 'Negroni' };
+		const form = { draft, duplicate: { id: 7, name: 'Negroni' } };
+		const html = clean(render(Page, { props: { params: {}, data, form } }).body);
+
+		expect(html).toContain('You already have');
+		expect(html).toMatch(/<a[^>]*href="\/recipes\/7"[^>]*>Negroni<\/a>/);
+		expect(html).toMatch(/action="\?\/create"/);
 	});
 
 	it('shows an Import error on the prompt with the input kept', () => {

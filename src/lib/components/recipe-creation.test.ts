@@ -88,6 +88,27 @@ describe('RecipeEditor Tags in Edit mode', () => {
 	});
 });
 
+describe('RecipeEditor duplicate warning', () => {
+	it('links to the existing Recipe and still offers to save', () => {
+		const html = text(
+			render(RecipeEditor, {
+				props: {
+					draft: { ...emptyDraft(), name: 'Negroni' },
+					ingredients: catalog,
+					existingTags: [],
+					action: '?/create',
+					oncancel: noop,
+					duplicate: { id: 7, name: 'Negroni' }
+				}
+			}).body
+		);
+
+		expect(html).toContain('You already have');
+		expect(html).toMatch(/<a[^>]*href="\/recipes\/7"[^>]*>Negroni<\/a>/);
+		expect(html).toMatch(/<button[^>]*type="submit"[^>]*>Done<\/button>/);
+	});
+});
+
 describe('RecipeEditor on a new Recipe', () => {
 	it('opens the same editor, empty, posting to the create action', () => {
 		const html = text(

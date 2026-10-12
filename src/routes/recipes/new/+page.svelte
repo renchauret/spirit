@@ -3,15 +3,17 @@
 	import type { SubmitFunction } from '$app/forms';
 	import ImportPrompt from '#lib/components/ImportPrompt.svelte';
 	import RecipeEditor from '#lib/components/RecipeEditor.svelte';
-	import { emptyDraft, type RecipeDraft } from '#lib/recipe-draft.ts';
+	import { emptyDraft, type DuplicateRecipe, type RecipeDraft } from '#lib/recipe-draft.ts';
 	import type { PageProps } from './$types';
 
 	let { data, form }: PageProps = $props();
 
-	const formData = () => form as { draft?: RecipeDraft; text?: string; errors?: string[] } | null;
+	const formData = () =>
+		form as { draft?: RecipeDraft; duplicate?: DuplicateRecipe | null; text?: string; errors?: string[] } | null;
 
 	let mode = $state<'prompt' | 'editor'>(formData()?.draft ? 'editor' : 'prompt');
 	let draft = $state<RecipeDraft>(formData()?.draft ?? emptyDraft());
+	let duplicate = $state<DuplicateRecipe | null>(formData()?.duplicate ?? null);
 	let text = $state(formData()?.text ?? '');
 	let reading = $state(false);
 	let error = $state<string | null>(formData()?.errors?.[0] ?? null);
@@ -20,6 +22,7 @@
 
 	function startFromScratch() {
 		draft = emptyDraft();
+		duplicate = null;
 		error = null;
 		mode = 'editor';
 	}
@@ -46,6 +49,7 @@
 				error = 'That Import could not be read.';
 			} else if (result.type === 'success') {
 				draft = (result.data as { draft: RecipeDraft }).draft;
+				duplicate = (result.data as { duplicate?: DuplicateRecipe | null }).duplicate ?? null;
 				mode = 'editor';
 			}
 			await update();
@@ -65,6 +69,7 @@
 			existingTags={data.tagSuggestions}
 			action="?/create"
 			heading="New Recipe"
+			{duplicate}
 			oncancel={() => goto('/')}
 		/>
 	{:else}

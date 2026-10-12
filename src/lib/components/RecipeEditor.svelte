@@ -6,7 +6,7 @@
 	import { catalogWith, type IngredientOption } from '#lib/ingredient-search.ts';
 	import type { ResizedPhoto } from '#lib/photo-resize.ts';
 	import { PHOTO_VARIANTS } from '#lib/photos.ts';
-	import type { NewIngredient, RecipeDraft } from '#lib/recipe-draft.ts';
+	import type { DuplicateRecipe, NewIngredient, RecipeDraft } from '#lib/recipe-draft.ts';
 	import Editable from './Editable.svelte';
 	import PhotoPicker from './PhotoPicker.svelte';
 	import RecipeLineEditor from './RecipeLineEditor.svelte';
@@ -20,7 +20,8 @@
 		heading = 'Editing',
 		photo = null,
 		oncancel,
-		onsaved
+		onsaved,
+		duplicate = null
 	}: {
 		draft: RecipeDraft;
 		ingredients: IngredientOption[];
@@ -30,6 +31,7 @@
 		photo?: string | null;
 		oncancel: () => void;
 		onsaved?: () => void;
+		duplicate?: DuplicateRecipe | null;
 	} = $props();
 
 	let saving = $state(false);
@@ -94,6 +96,12 @@
 	<strong>{heading}</strong>
 	<button type="submit" class="btn primary" disabled={saving}>{saving ? 'Saving…' : 'Done'}</button>
 </form>
+
+{#if duplicate}
+	<div class="warning" role="status">
+		<p>You already have <a href={`/recipes/${duplicate.id}`}>{duplicate.name}</a>.</p>
+	</div>
+{/if}
 
 {#if errors.length}
 	<div class="errors" role="alert">
@@ -200,6 +208,17 @@
 	}
 
 	.errors p {
+		margin: 0;
+	}
+
+	.warning {
+		border: 1px solid var(--line);
+		background: var(--soft);
+		border-radius: 10px;
+		padding: 8px 12px;
+	}
+
+	.warning p {
 		margin: 0;
 	}
 
