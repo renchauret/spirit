@@ -14,17 +14,23 @@ describe('compareNames', () => {
 
 describe('familyOf', () => {
 	it('is the first family Tag on the Recipe', () => {
-		expect(familyOf(['tiki', 'flip', 'sour'])).toBe('flip');
+		expect(familyOf(['summer', 'flip', 'sour'])).toBe('flip');
+	});
+
+	it('resolves the tiki and sparkling families', () => {
+		expect(familyOf(['tiki'])).toBe('tiki');
+		expect(familyOf(['sparkling'])).toBe('sparkling');
 	});
 
 	it('is null when no Tag is a family Tag', () => {
-		expect(familyOf(['tiki'])).toBeNull();
+		expect(familyOf(['summer'])).toBeNull();
 	});
 });
 
 describe('placeholderGlass', () => {
 	it('uses the Recipe glass when set', () => {
 		expect(placeholderGlass('flute', 'sour')).toBe('flute');
+		expect(placeholderGlass('hurricane', 'sparkling')).toBe('hurricane');
 	});
 
 	it.each([
@@ -33,7 +39,9 @@ describe('placeholderGlass', () => {
 		['flip', 'coupe'],
 		['highball', 'collins'],
 		['old fashioned', 'rocks'],
-		['martini', 'cocktail']
+		['martini', 'cocktail'],
+		['tiki', 'hurricane'],
+		['sparkling', 'flute']
 	] as const)('falls back to the %s family default, %s', (family, glass) => {
 		expect(placeholderGlass(null, family)).toBe(glass);
 	});
@@ -46,6 +54,8 @@ describe('placeholderGlass', () => {
 describe('cardSubtitle', () => {
 	it('joins spirits and the family Tag', () => {
 		expect(cardSubtitle(['rye whiskey', 'cognac'], 'martini')).toBe('rye whiskey, cognac · martini');
+		expect(cardSubtitle(['white rum'], 'tiki')).toBe('white rum · tiki');
+		expect(cardSubtitle(['prosecco'], 'sparkling')).toBe('prosecco · sparkling');
 	});
 
 	it('shows whichever part exists', () => {

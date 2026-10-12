@@ -49,7 +49,7 @@ export const INGREDIENT_TYPES = [
 ] as const;
 export type IngredientType = (typeof INGREDIENT_TYPES)[number];
 
-export const FAMILY_TAGS = ['sour', 'daisy', 'highball', 'old fashioned', 'martini', 'flip'] as const;
+export const FAMILY_TAGS = ['sour', 'daisy', 'highball', 'old fashioned', 'martini', 'flip', 'tiki', 'sparkling'] as const;
 export type FamilyTag = (typeof FAMILY_TAGS)[number];
 
 export const FAMILY_DEFAULT_GLASS: Record<FamilyTag, Glass> = {
@@ -58,7 +58,9 @@ export const FAMILY_DEFAULT_GLASS: Record<FamilyTag, Glass> = {
 	flip: 'coupe',
 	highball: 'collins',
 	'old fashioned': 'rocks',
-	martini: 'cocktail'
+	martini: 'cocktail',
+	tiki: 'hurricane',
+	sparkling: 'flute'
 };
 
 export function isFamilyTag(tag: string): tag is FamilyTag {

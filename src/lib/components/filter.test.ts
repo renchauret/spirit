@@ -42,9 +42,19 @@ describe('FilterSheet', () => {
 
 	it('has a house-favorites toggle, family Tags and Ingredient sections in the fixed order', () => {
 		expect(html).toContain('★ House favorites');
-		const order = ['Family', 'sour', 'daisy', 'highball', 'old fashioned', 'martini', 'flip', 'spirit', 'juice'].map((s) =>
-			html.indexOf(`>${s}<`)
-		);
+		const order = [
+			'Family',
+			'sour',
+			'daisy',
+			'highball',
+			'old fashioned',
+			'martini',
+			'flip',
+			'tiki',
+			'sparkling',
+			'spirit',
+			'juice'
+		].map((s) => html.indexOf(`>${s}<`));
 		expect(order.every((at) => at >= 0)).toBe(true);
 		expect(order).toEqual([...order].sort((a, b) => a - b));
 	});
@@ -63,6 +73,16 @@ describe('FilterSheet', () => {
 	it('keeps the search text in its links', () => {
 		const searching = text(render(FilterSheet, { props: { open: true, filter: { ...filter, query: 'neg' }, sections, count: 1 } }).body);
 		expect(searching).toContain('href="/?q=neg&amp;i=2&amp;i=1&amp;tag=sour"');
+	});
+
+	it('filters by the tiki and sparkling families', () => {
+		expect(html).toContain('href="/?i=2&amp;tag=sour&amp;tag=tiki"');
+		expect(html).toContain('href="/?i=2&amp;tag=sour&amp;tag=sparkling"');
+	});
+
+	it('marks an active tiki family chip', () => {
+		const tiki = text(render(FilterSheet, { props: { open: true, filter: { ...EMPTY_FILTER, tags: ['tiki'] }, sections, count: 1 } }).body);
+		expect(tiki).toMatch(/aria-current="true"[^>]*>\s*tiki/);
 	});
 
 	it('marks the active choices', () => {

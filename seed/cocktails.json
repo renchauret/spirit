@@ -322,7 +322,7 @@
 		},
 		{
 			"name": "Mai Tai",
-			"tags": ["daisy"],
+			"tags": ["tiki"],
 			"method": ["Shake."],
 			"lines": [
 				{ "ingredient": "simple syrup", "amount": 0.25, "unit": "oz" },
@@ -334,7 +334,7 @@
 		},
 		{
 			"name": "Piña Colada",
-			"tags": ["flip"],
+			"tags": ["tiki"],
 			"method": ["Blend with 1 cup of ice."],
 			"garnish": "pineapple and candied cherry",
 			"lines": [
@@ -601,7 +601,7 @@
 		},
 		{
 			"name": "Mimosa",
-			"tags": ["highball"],
+			"tags": ["sparkling"],
 			"method": ["Stir."],
 			"lines": [
 				{ "ingredient": "orange juice", "amount": 3, "unit": "oz" },
@@ -610,7 +610,7 @@
 		},
 		{
 			"name": "Poinsettia",
-			"tags": ["highball"],
+			"tags": ["sparkling"],
 			"method": ["Stir."],
 			"lines": [
 				{ "ingredient": "cranberry juice", "amount": 3, "unit": "oz" },
