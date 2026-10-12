@@ -111,7 +111,7 @@ export function draftFrom(recipe: Omit<RecipeChanges, 'newIngredients'>): Recipe
 	};
 }
 
-const singleLine = (text: string) => text.replace(/\s+/g, ' ').trim();
+export const singleLine = (text: string) => text.replace(/\s+/g, ' ').trim();
 
 const multiLine = (text: string) =>
 	text

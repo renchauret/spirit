@@ -11,6 +11,13 @@ export type RecipeReaderInput = {
 	ingredientTypes: readonly IngredientType[];
 };
 
+export type ReadNewIngredient = {
+	id: number;
+	name: string;
+	type: string;
+	parentId: number | null;
+};
+
 export type ReadRecipeLine = {
 	ingredientId: number | null;
 	amountMin: number | null;
@@ -28,6 +35,7 @@ export type ReadRecipe = {
 	method: string[];
 	tags: string[];
 	lines: ReadRecipeLine[];
+	newIngredients: ReadNewIngredient[];
 };
 
 export type RecipeReaderAnswer = ReadRecipe | 'no recipe';
@@ -46,7 +54,9 @@ Follow these rules exactly:
 - Transcribe faithfully. Keep ranges as ranges.
 - When the source lists variations, record only the main recipe.
 - Give an optional line the note "optional".
-- Match every line to an Ingredient id from the catalog. Reuse an existing Ingredient only when it fits at the same level of detail as the source. Never choose an Ingredient more specific than the source says. If nothing fits exactly, use the closest catalog Ingredient that is no more specific than the source.
+- Match every line to an Ingredient from the catalog, or to a new Ingredient you propose.
+- Reuse an existing Ingredient only when it fits at exactly the same level of detail as the source. Never choose an Ingredient more specific than the source says: record "gin" as gin, never as "London dry gin".
+- When nothing in the catalog fits at that level of detail, propose a new Ingredient: give it a temporary negative id, a name, an Ingredient type from the list, and a Parent Ingredient that is either an existing catalog id, the negative id of another new Ingredient you proposed, or null. Put every proposed Ingredient in newIngredients and refer to it from a line by its negative id.
 - Scale "parts" so the main pour is 2 oz.
 - Record an egg white as 1 whole with the note "white". Record a splash as the unit "top" or "to taste".
 - Whenever you convert an amount, keep the source's own wording in that line's note.
@@ -77,13 +87,30 @@ const RECIPE_TOOL = {
 				items: {
 					type: 'object',
 					properties: {
-						ingredientId: { anyOf: [{ type: 'integer' }, { type: 'null' }] },
+						ingredientId: {
+							anyOf: [{ type: 'integer' }, { type: 'null' }],
+							description:
+								'An existing catalog id, or the negative id of a proposed new Ingredient in newIngredients.'
+						},
 						amountMin: { anyOf: [{ type: 'number' }, { type: 'null' }] },
 						amountMax: { anyOf: [{ type: 'number' }, { type: 'null' }] },
 						unit: { type: 'string', enum: [...UNITS] },
 						note: { type: 'string' }
 					},
 					required: ['ingredientId', 'amountMin', 'amountMax', 'unit', 'note']
+				}
+			},
+			newIngredients: {
+				type: 'array',
+				items: {
+					type: 'object',
+					properties: {
+						id: { type: 'integer', description: 'A temporary negative id, unique within this answer.' },
+						name: { type: 'string' },
+						type: { type: 'string', enum: [...INGREDIENT_TYPES] },
+						parentId: { anyOf: [{ type: 'integer' }, { type: 'null' }] }
+					},
+					required: ['id', 'name', 'type', 'parentId']
 				}
 			}
 		},
@@ -116,6 +143,15 @@ function parseLine(value: unknown): ReadRecipeLine | null {
 	return { ingredientId, amountMin, amountMax, unit, note };
 }
 
+function parseNewIngredient(value: unknown): ReadNewIngredient | null {
+	if (typeof value !== 'object' || value === null) return null;
+	const { id, name, type, parentId } = value as Record<string, unknown>;
+	if (!Number.isSafeInteger(id)) return null;
+	if (!isText(name) || !isText(type)) return null;
+	if (!isAmount(parentId) || (parentId !== null && !Number.isSafeInteger(parentId))) return null;
+	return { id: id as number, name, type, parentId };
+}
+
 function parseAnswer(body: unknown): RecipeReaderAnswer {
 	if (typeof body !== 'object' || body === null) return 'no recipe';
 	const content = (body as { content?: unknown }).content;
@@ -128,12 +164,19 @@ function parseAnswer(body: unknown): RecipeReaderAnswer {
 	if (!toolUse) return 'no recipe';
 	const input = (toolUse as { input?: unknown }).input;
 	if (typeof input !== 'object' || input === null) return 'no recipe';
-	const { found, name, glass, garnish, iceServe, description, method, tags, lines } = input as Record<string, unknown>;
+	const { found, name, glass, garnish, iceServe, description, method, tags, lines, newIngredients } = input as Record<
+		string,
+		unknown
+	>;
 	if (found !== true) return 'no recipe';
 	if (!isText(name) || !isText(garnish) || !isText(iceServe) || !isText(description)) return 'no recipe';
 	if (glass !== null && !isText(glass)) return 'no recipe';
 	if (!isTextList(method) || !isTextList(tags)) return 'no recipe';
 	if (!Array.isArray(lines)) return 'no recipe';
+	const created = newIngredients === undefined ? [] : newIngredients;
+	if (!Array.isArray(created)) return 'no recipe';
+	const parsedNew = created.map(parseNewIngredient);
+	if (parsedNew.includes(null)) return 'no recipe';
 	const parsed = lines.map(parseLine);
 	if (parsed.includes(null)) return 'no recipe';
 	return {
@@ -144,7 +187,8 @@ function parseAnswer(body: unknown): RecipeReaderAnswer {
 		description,
 		method,
 		tags,
-		lines: parsed as ReadRecipeLine[]
+		lines: parsed as ReadRecipeLine[],
+		newIngredients: parsedNew as ReadNewIngredient[]
 	};
 }
 

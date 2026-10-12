@@ -5,7 +5,7 @@ import { emptyDraft, type RecipeDraft } from '#lib/recipe-draft.ts';
 import { ingredient, recipe, recipeTag, tag } from '#lib/server/db/schema.ts';
 import { MAX_IMPORT_TEXT, NO_RECIPE } from '#lib/server/recipe-import.ts';
 import type { ReadRecipe, RecipeReader, RecipeReaderAnswer, RecipeReaderInput } from '#lib/server/recipe-reader.ts';
-import { getRecipe, listFilterSections, listRecipeCards } from '#lib/server/recipes.ts';
+import { getRecipe, listFilterSections, listIngredientOptions, listRecipeCards } from '#lib/server/recipes.ts';
 import { createLocalD1, type LocalD1 } from '#lib/server/testing/local-d1.ts';
 import { jpeg, photoForm, webp } from '#lib/server/testing/photos.ts';
 import { actions, load } from './+page.server';
@@ -260,7 +260,8 @@ describe('/recipes/new', () => {
 				lines: [
 					{ ingredientId: rum, amountMin: 2, amountMax: null, unit: 'oz', note: '' },
 					{ ingredientId: lime, amountMin: 0.75, amountMax: null, unit: 'oz', note: 'fresh' }
-				]
+				],
+				newIngredients: []
 			};
 		});
 
@@ -370,6 +371,134 @@ describe('/recipes/new', () => {
 			});
 
 			expect(((await result) as { draft: RecipeDraft }).draft.tags).toEqual(['sour', 'tiki']);
+		});
+
+		it('proposes a new Ingredient and points its line at a temporary negative id', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ingredientId: -1, amountMin: 2, amountMax: null, unit: 'oz', note: '' }],
+				newIngredients: [{ id: -1, name: 'Plantation 3 Stars rum', type: 'spirit', parentId: rum }]
+			});
+
+			expect(((await result) as { draft: RecipeDraft }).draft).toMatchObject({
+				lines: [{ ingredientId: -1, amountMin: 2, amountMax: null, unit: 'oz', note: '' }],
+				newIngredients: [{ id: -1, name: 'Plantation 3 Stars rum', type: 'spirit', parentId: rum }]
+			});
+		});
+
+		it('supports a proposed Parent Ingredient that is itself new', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ingredientId: -2, amountMin: 2, amountMax: null, unit: 'oz', note: '' }],
+				newIngredients: [
+					{ id: -1, name: 'white rum', type: 'spirit', parentId: null },
+					{ id: -2, name: 'Plantation 3 Stars', type: 'spirit', parentId: -1 }
+				]
+			});
+
+			expect(((await result) as { draft: RecipeDraft }).draft).toMatchObject({
+				lines: [{ ingredientId: -2 }],
+				newIngredients: [
+					{ id: -1, name: 'white rum', type: 'spirit', parentId: null },
+					{ id: -2, name: 'Plantation 3 Stars', type: 'spirit', parentId: -1 }
+				]
+			});
+		});
+
+		it('renumbers proposed ids and orders parents before children', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ingredientId: -7, amountMin: 2, amountMax: null, unit: 'oz', note: '' }],
+				newIngredients: [
+					{ id: -7, name: 'Plantation 3 Stars', type: 'spirit', parentId: -9 },
+					{ id: -9, name: 'white rum', type: 'spirit', parentId: null }
+				]
+			});
+
+			expect(((await result) as { draft: RecipeDraft }).draft).toMatchObject({
+				lines: [{ ingredientId: -2 }],
+				newIngredients: [
+					{ id: -1, name: 'white rum', parentId: null },
+					{ id: -2, name: 'Plantation 3 Stars', parentId: -1 }
+				]
+			});
+		});
+
+		it('reuses an existing Ingredient when a proposed name matches it, ignoring case', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ingredientId: -1, amountMin: 2, amountMax: null, unit: 'oz', note: '' }],
+				newIngredients: [{ id: -1, name: '  RUM ', type: 'spirit', parentId: null }]
+			});
+
+			expect(((await result) as { draft: RecipeDraft }).draft).toMatchObject({
+				lines: [{ ingredientId: rum }],
+				newIngredients: []
+			});
+		});
+
+		it('drops a proposed Ingredient that no line uses', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				newIngredients: [{ id: -1, name: 'orgeat', type: 'syrup', parentId: null }]
+			});
+
+			expect(((await result) as { draft: RecipeDraft }).draft.newIngredients).toEqual([]);
+		});
+
+		it('reports no recipe when a proposed Ingredient has an invalid type', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ingredientId: -1, amountMin: 2, amountMax: null, unit: 'oz', note: '' }],
+				newIngredients: [{ id: -1, name: 'Amaro', type: 'amaro', parentId: null }]
+			});
+
+			expect(await result).toMatchObject({ status: 400, data: { errors: [NO_RECIPE] } });
+		});
+
+		it('reports no recipe when a proposed Ingredient names an unknown parent id', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ingredientId: -1, amountMin: 2, amountMax: null, unit: 'oz', note: '' }],
+				newIngredients: [{ id: -1, name: 'Plantation 3 Stars', type: 'spirit', parentId: 9999 }]
+			});
+
+			expect(await result).toMatchObject({ status: 400, data: { errors: [NO_RECIPE] } });
+		});
+
+		it('reports no recipe when a line uses a proposed Ingredient that is not there', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ingredientId: -1, amountMin: 2, amountMax: null, unit: 'oz', note: '' }]
+			});
+
+			expect(await result).toMatchObject({ status: 400, data: { errors: [NO_RECIPE] } });
+		});
+
+		it('saves the imported draft, creating the proposed new Ingredients', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ingredientId: -2, amountMin: 2, amountMax: null, unit: 'oz', note: '' }],
+				newIngredients: [
+					{ id: -1, name: 'white rum', type: 'spirit', parentId: null },
+					{ id: -2, name: 'Plantation 3 Stars', type: 'spirit', parentId: -1 }
+				]
+			});
+			const { draft } = (await result) as { draft: RecipeDraft };
+
+			const created = await thrown(create(owner, draft));
+
+			const location = isRedirect(created) ? created.location : '';
+			const id = Number(location.split('/').pop());
+			expect(location).toMatch(/^\/recipes\/\d+$/);
+			expect(await getRecipe(local.db, id)).toMatchObject({
+				name: 'Daiquiri',
+				lines: [{ ingredient: 'Plantation 3 Stars', amountMin: 2, unit: 'oz' }]
+			});
+			expect((await listIngredientOptions(local.db)).find((i) => i.name === 'Plantation 3 Stars')).toMatchObject({
+				type: 'spirit',
+				parent: 'white rum'
+			});
 		});
 	});
 });
