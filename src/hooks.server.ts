@@ -17,6 +17,7 @@ function authFor(origin: string): Auth {
 
 const database: Handle = ({ event, resolve }) => {
 	event.locals.db = getDb(env.DB);
+	event.locals.photos = env.PHOTOS;
 	return resolve(event);
 };
 

@@ -2,6 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { parseFilter } from '#lib/filter.ts';
 import { parseRecipeDraft } from '#lib/recipe-draft.ts';
 import { requireOwner } from '#lib/server/auth/guard.ts';
+import { putPhoto, readPhotoUpload } from '#lib/server/photos.ts';
 import {
 	deleteRecipe,
 	getOwnerNotes,
@@ -49,9 +50,12 @@ export const actions: Actions = {
 		const id = recipeId(params.id);
 		const form = await request.formData();
 		const parsed = parseRecipeDraft(readJson(String(form.get('recipe') ?? '')));
-		if (!parsed.ok) return fail(400, { errors: parsed.errors });
+		const photo = await readPhotoUpload(form);
+		const errors = [...(parsed.ok ? [] : parsed.errors), ...(photo.ok ? [] : [photo.error])];
+		if (!parsed.ok || !photo.ok) return fail(400, { errors });
 
-		const result = await updateRecipe(locals.db, id, parsed.changes);
+		const keys = photo.upload ? await putPhoto(locals.photos, id, photo.upload) : null;
+		const result = await updateRecipe(locals.db, id, parsed.changes, keys);
 		if (result === 'missing recipe') error(404, 'Recipe not found');
 		if (result === 'missing ingredient') {
 			return fail(400, { errors: ['An Ingredient in the Recipe lines is no longer in the catalog.'] });

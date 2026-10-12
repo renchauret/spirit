@@ -2,7 +2,7 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Auth } from './auth';
 import { signInOwner } from './auth/owner';
-import { noStore, ownerSession } from './hooks';
+import { PHOTO_ROUTE, noStore, ownerSession } from './hooks';
 import {
 	cookieHeaderFrom,
 	createOwnerAuth,
@@ -11,8 +11,9 @@ import {
 	type OwnerAuth
 } from './testing/owner-auth';
 
-const eventFor = (headers: HeadersInit = {}) =>
+const eventFor = (headers: HeadersInit = {}, routeId = '/') =>
 	({
+		route: { id: routeId },
 		url: new URL(`${origin}/`),
 		request: new Request(`${origin}/`, { headers }),
 		locals: {}
@@ -36,6 +37,16 @@ describe('noStore', () => {
 		});
 
 		expect(response.headers.get('cache-control')).toBe('no-store');
+	});
+
+	it('leaves the long-lived cache header on photo bytes', async () => {
+		const response = await noStore({
+			event: eventFor({}, PHOTO_ROUTE),
+			resolve: async () =>
+				new Response('photo', { headers: { 'cache-control': 'public, max-age=31536000, immutable' } })
+		});
+
+		expect(response.headers.get('cache-control')).toBe('public, max-age=31536000, immutable');
 	});
 });
 

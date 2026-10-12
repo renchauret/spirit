@@ -4,9 +4,12 @@
 	import { familyOf, placeholderGlass } from '#lib/browse.ts';
 	import { GLASSES, GLASS_LABELS } from '#lib/domain.ts';
 	import type { IngredientOption } from '#lib/ingredient-search.ts';
+	import type { ResizedPhoto } from '#lib/photo-resize.ts';
+	import { PHOTO_VARIANTS } from '#lib/photos.ts';
 	import type { RecipeDraft } from '#lib/recipe-draft.ts';
 	import Editable from './Editable.svelte';
 	import GlassPlaceholder from './GlassPlaceholder.svelte';
+	import PhotoPicker from './PhotoPicker.svelte';
 	import RecipeLineEditor from './RecipeLineEditor.svelte';
 	import TagSheet from './TagSheet.svelte';
 
@@ -15,6 +18,8 @@
 		ingredients,
 		existingTags,
 		action,
+		photo = null,
+		photoUpload = false,
 		oncancel,
 		onsaved
 	}: {
@@ -22,6 +27,8 @@
 		ingredients: IngredientOption[];
 		existingTags: string[];
 		action: string;
+		photo?: string | null;
+		photoUpload?: boolean;
 		oncancel: () => void;
 		onsaved: () => void;
 	} = $props();
@@ -29,6 +36,7 @@
 	let saving = $state(false);
 	let errors = $state<string[]>([]);
 	let tagSheetOpen = $state(false);
+	let newPhoto = $state<ResizedPhoto | null>(null);
 	let stepElements = $state<HTMLElement[]>([]);
 
 	const family = $derived(familyOf(draft.tags));
@@ -53,7 +61,11 @@
 		if (!draft.tags.includes(tag)) draft.tags.push(tag);
 	}
 
-	const save: SubmitFunction = () => {
+	const save: SubmitFunction = ({ formData }) => {
+		if (newPhoto) {
+			formData.set(PHOTO_VARIANTS.card.field, newPhoto.card, 'card');
+			formData.set(PHOTO_VARIANTS.page.field, newPhoto.page, 'page');
+		}
 		saving = true;
 		errors = [];
 		return async ({ result, update }) => {
@@ -86,7 +98,11 @@
 {/if}
 
 <div class="stack">
-	<GlassPlaceholder glass={draft.glass || familyGlass} {family} hero />
+	{#if photoUpload}
+		<PhotoPicker bind:value={newPhoto} {photo} name={draft.name} glass={draft.glass || familyGlass} {family} disabled={saving} />
+	{:else}
+		<GlassPlaceholder glass={draft.glass || familyGlass} {family} hero />
+	{/if}
 
 	<Editable as="h1" label="Name" bind:value={draft.name} />
 

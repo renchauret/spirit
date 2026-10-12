@@ -2,8 +2,8 @@
 	import ActiveFilters from '#lib/components/ActiveFilters.svelte';
 	import FilterButton from '#lib/components/FilterButton.svelte';
 	import FilterSheet from '#lib/components/FilterSheet.svelte';
-	import GlassPlaceholder from '#lib/components/GlassPlaceholder.svelte';
 	import OwnerRow from '#lib/components/OwnerRow.svelte';
+	import RecipeImage from '#lib/components/RecipeImage.svelte';
 	import SearchBox from '#lib/components/SearchBox.svelte';
 	import UnitToggle from '#lib/components/UnitToggle.svelte';
 	import { activeFilterCount, isFilterActive, isNarrowed, recipeHref } from '#lib/filter.ts';
@@ -40,11 +40,11 @@
 			{#each data.recipes as recipe (recipe.id)}
 				<li>
 					<a class="card" href={recipeHref(recipe.id, data.filter)}>
-						<GlassPlaceholder glass={recipe.glass} family={recipe.family}>
+						<RecipeImage photo={recipe.photo} name={recipe.name} glass={recipe.glass} family={recipe.family}>
 							{#if recipe.favorite}
 								<span class="star fav" aria-label="House favorite">★</span>
 							{/if}
-						</GlassPlaceholder>
+						</RecipeImage>
 						<span class="t">
 							<b>{recipe.name}</b>
 							{#if recipe.subtitle}

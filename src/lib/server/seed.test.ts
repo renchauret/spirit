@@ -75,7 +75,8 @@ describe('seed loader', () => {
 				favorite: true,
 				family: 'sour',
 				glass: 'coupe',
-				subtitle: 'white rum · sour'
+				subtitle: 'white rum · sour',
+				photo: null
 			},
 			{
 				id: expect.any(Number),
@@ -83,7 +84,8 @@ describe('seed loader', () => {
 				favorite: false,
 				family: 'highball',
 				glass: 'collins',
-				subtitle: 'white rum · highball'
+				subtitle: 'white rum · highball',
+				photo: null
 			}
 		]);
 	});
@@ -100,6 +102,7 @@ describe('seed loader', () => {
 			family: 'highball',
 			glass: null,
 			placeholderGlass: 'collins',
+			photo: null,
 			method: ['Muddle the mint with the syrup.', 'Add the rest and stir with crushed ice.'],
 			garnish: 'mint sprig',
 			iceServe: 'crushed ice',

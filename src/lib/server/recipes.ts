@@ -9,6 +9,7 @@ import { filterAndRank, matchedLineIndexes } from '../ranking.ts';
 import type { RecipeChanges } from '../recipe-draft.ts';
 import { suggest, type Suggestion } from '../search.ts';
 import type { Db } from './db/index.ts';
+import { photoUrl, type PhotoKeys } from './photos.ts';
 import { ingredient, recipe, recipeLine, recipeTag, tag } from './db/schema.ts';
 
 export type RecipeCard = {
@@ -18,6 +19,7 @@ export type RecipeCard = {
 	family: FamilyTag | null;
 	glass: Glass;
 	subtitle: string;
+	photo: string | null;
 };
 
 export type Browse = {
@@ -41,6 +43,7 @@ export type RecipeView = {
 	family: FamilyTag | null;
 	glass: Glass | null;
 	placeholderGlass: Glass;
+	photo: string | null;
 	method: string[];
 	garnish: string | null;
 	iceServe: string | null;
@@ -60,7 +63,15 @@ function groupBy<T, K, V>(rows: T[], key: (row: T) => K, value: (row: T) => V): 
 
 export async function listRecipeCards(db: Db, filter: RecipeFilter = EMPTY_FILTER): Promise<RecipeCard[]> {
 	const [recipes, tags, lines, catalog] = await db.batch([
-		db.select({ id: recipe.id, name: recipe.name, favorite: recipe.favorite, glass: recipe.glass }).from(recipe),
+		db
+			.select({
+				id: recipe.id,
+				name: recipe.name,
+				favorite: recipe.favorite,
+				glass: recipe.glass,
+				cardPhotoKey: recipe.cardPhotoKey
+			})
+			.from(recipe),
 		db
 			.select({ recipeId: recipeTag.recipeId, name: tag.name })
 			.from(recipeTag)
@@ -100,7 +111,8 @@ export async function listRecipeCards(db: Db, filter: RecipeFilter = EMPTY_FILTE
 			favorite: r.favorite,
 			family,
 			glass: placeholderGlass(r.glass, family),
-			subtitle: cardSubtitle([...new Set(spirits)], family)
+			subtitle: cardSubtitle([...new Set(spirits)], family),
+			photo: photoUrl(r.cardPhotoKey)
 		};
 	});
 }
@@ -173,7 +185,8 @@ export async function getRecipe(db: Db, id: number): Promise<RecipeView | null> 
 				garnish: recipe.garnish,
 				iceServe: recipe.iceServe,
 				description: recipe.description,
-				source: recipe.source
+				source: recipe.source,
+				pagePhotoKey: recipe.pagePhotoKey
 			})
 			.from(recipe)
 			.where(eq(recipe.id, id)),
@@ -210,6 +223,7 @@ export async function getRecipe(db: Db, id: number): Promise<RecipeView | null> 
 		family,
 		glass: r.glass,
 		placeholderGlass: placeholderGlass(r.glass, family),
+		photo: photoUrl(r.pagePhotoKey),
 		method: r.method,
 		garnish: r.garnish,
 		iceServe: r.iceServe,
@@ -248,7 +262,12 @@ export async function listIngredientOptions(db: Db): Promise<IngredientOption[]>
 
 export type UpdateResult = 'saved' | 'missing recipe' | 'missing ingredient';
 
-export async function updateRecipe(db: Db, id: number, changes: RecipeChanges): Promise<UpdateResult> {
+export async function updateRecipe(
+	db: Db,
+	id: number,
+	changes: RecipeChanges,
+	photo: PhotoKeys | null = null
+): Promise<UpdateResult> {
 	const { tags, lines, ...fields } = changes;
 	const ingredientIds = [...new Set(lines.map((l) => l.ingredientId))];
 	const [found, known] = await db.batch([
@@ -259,7 +278,10 @@ export async function updateRecipe(db: Db, id: number, changes: RecipeChanges): 
 	if (known.length !== ingredientIds.length) return 'missing ingredient';
 
 	await db.batch([
-		db.update(recipe).set(fields).where(eq(recipe.id, id)),
+		db
+			.update(recipe)
+			.set(photo ? { ...fields, cardPhotoKey: photo.card, pagePhotoKey: photo.page } : fields)
+			.where(eq(recipe.id, id)),
 		db.delete(recipeLine).where(eq(recipeLine.recipeId, id)),
 		...lines.map((line, position) => db.insert(recipeLine).values({ ...line, recipeId: id, position })),
 		db.delete(recipeTag).where(eq(recipeTag.recipeId, id)),

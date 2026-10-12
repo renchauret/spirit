@@ -8,6 +8,7 @@ declare global {
 			auth: Auth;
 			db: Db;
 			owner: Owner | null;
+			photos: R2Bucket;
 		}
 	}
 }

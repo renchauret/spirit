@@ -22,7 +22,9 @@ export const recipe = sqliteTable('recipe', {
 	description: text('description'),
 	source: text('source'),
 	ownerNotes: text('owner_notes'),
-	favorite: integer('favorite', { mode: 'boolean' }).notNull().default(false)
+	favorite: integer('favorite', { mode: 'boolean' }).notNull().default(false),
+	cardPhotoKey: text('card_photo_key'),
+	pagePhotoKey: text('page_photo_key')
 });
 
 export const recipeLine = sqliteTable(

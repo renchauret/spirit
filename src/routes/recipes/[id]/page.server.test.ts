@@ -4,6 +4,7 @@ import type { RecipeDraft } from '#lib/recipe-draft.ts';
 import { ingredient, recipe, recipeLine, recipeTag, tag } from '#lib/server/db/schema.ts';
 import { getOwnerNotes, getRecipe } from '#lib/server/recipes.ts';
 import { createLocalD1, type LocalD1 } from '#lib/server/testing/local-d1.ts';
+import { jpeg, photoForm, webp } from '#lib/server/testing/photos.ts';
 import { actions, load } from './+page.server';
 
 const origin = 'https://spirit.renchauret.com';
@@ -71,7 +72,7 @@ describe('/recipes/[id]', () => {
 		load({
 			params: { id: recipeId },
 			url: new URL(`${origin}/recipes/${recipeId}${search}`),
-			locals: { owner, db: local.db }
+			locals: { owner, db: local.db, photos: local.photos }
 		} as never) as Promise<Record<string, unknown>>;
 
 	const post = (
@@ -82,12 +83,29 @@ describe('/recipes/[id]', () => {
 	) =>
 		actions[action]({
 			params: { id: recipeId },
-			locals: { owner, db: local.db },
+			locals: { owner, db: local.db, photos: local.photos },
 			request: new Request(`${origin}/recipes/${recipeId}?/${action}`, {
 				method: 'POST',
 				body: new URLSearchParams(fields)
 			})
 		} as never);
+
+	const saveWithPhoto = (
+		owner: App.Locals['owner'],
+		card: Blob | null,
+		page: Blob | null,
+		photos: R2Bucket = local.photos
+	) => {
+		const form = new FormData();
+		form.set('recipe', JSON.stringify(draft));
+		return actions.save({
+			params: { id: String(id) },
+			locals: { owner, db: local.db, photos },
+			request: new Request(`${origin}/recipes/${id}?/save`, { method: 'POST', body: photoForm(card, page, form) })
+		} as never);
+	};
+
+	const storedPhotos = async () => (await local.photos.list()).objects.map((o) => o.key);
 
 	const save = (owner: App.Locals['owner'], body: unknown, recipeId = String(id)) =>
 		post('save', owner, { recipe: typeof body === 'string' ? body : JSON.stringify(body) }, recipeId);
@@ -198,6 +216,65 @@ describe('/recipes/[id]', () => {
 
 		it('is a 404 for a Recipe that does not exist', async () => {
 			expect(isHttpError(await thrown(save(owner, draft, '404')), 404)).toBe(true);
+		});
+
+		it('leaves the photo alone when none is sent', async () => {
+			await save(owner, draft);
+
+			expect((await getRecipe(local.db, id))?.photo).toBeNull();
+			expect(await storedPhotos()).toEqual([]);
+		});
+	});
+
+	describe('save with a photo', () => {
+		it('stores the Owner’s card and Recipe-page images in R2 and shows them', async () => {
+			expect(await saveWithPhoto(owner, webp(20), webp(80))).toEqual({ saved: true });
+
+			const keys = await storedPhotos();
+			expect(keys).toHaveLength(2);
+			const page = keys.find((k) => k.endsWith('-page.webp'));
+			const card = keys.find((k) => k.endsWith('-card.webp'));
+			expect(page).toMatch(new RegExp(`^recipes/${id}/`));
+			expect((await getRecipe(local.db, id))?.photo).toBe(`/photos/${page}`);
+			expect((await loadAs(null)).recipe).toMatchObject({ photo: `/photos/${page}` });
+			expect(card).toBeDefined();
+		});
+
+		it('replaces the photo under new keys without overwriting the old objects', async () => {
+			await saveWithPhoto(owner, webp(), webp());
+			const first = (await getRecipe(local.db, id))?.photo;
+			await saveWithPhoto(owner, jpeg(), jpeg());
+
+			const photo = (await getRecipe(local.db, id))?.photo;
+			expect(photo).not.toBe(first);
+			expect(photo).toMatch(/-page\.jpg$/);
+			expect(await storedPhotos()).toHaveLength(4);
+		});
+
+		it('saves nothing when R2 refuses the photo', async () => {
+			const refusing = { put: async () => null } as unknown as R2Bucket;
+
+			await expect(saveWithPhoto(owner, webp(), webp(), refusing)).rejects.toThrow('already exists');
+
+			expect(await getRecipe(local.db, id)).toMatchObject({ name: 'Tom Collins', photo: null });
+		});
+
+		it('rejects a Visitor with 401 and stores nothing', async () => {
+			expect(isHttpError(await thrown(saveWithPhoto(null, webp(), webp())), 401)).toBe(true);
+
+			expect(await storedPhotos()).toEqual([]);
+			expect((await getRecipe(local.db, id))?.name).toBe('Tom Collins');
+		});
+
+		it('refuses an image that is not WebP or JPEG and changes nothing', async () => {
+			const gif = new Blob(['GIF89a'], { type: 'image/gif' });
+
+			expect(await saveWithPhoto(owner, webp(), gif)).toMatchObject({
+				status: 400,
+				data: { errors: ['The Recipe-page image must be a WebP or JPEG image.'] }
+			});
+			expect(await storedPhotos()).toEqual([]);
+			expect((await getRecipe(local.db, id))?.name).toBe('Tom Collins');
 		});
 	});
 

@@ -103,6 +103,14 @@ Use `--remote` instead of `--local` to load it into production.
 
 Without `--replace`, loading fails if any of the seeded rows already exist. `--replace` first deletes every Recipe, Recipe line, Tag and Ingredient, including anything the Owner has edited, so use it on production only when that is intended.
 
+## Photos
+
+In Edit mode, the Owner taps the photo area to add or replace a Recipe's photo. The browser resizes it before upload ([`src/lib/photo-resize.ts`](src/lib/photo-resize.ts)) into a 600 px center-cropped square for cards and a Recipe-page image with a 1600 px long edge. Neither is enlarged. Both are WebP where the browser can encode WebP. Safari, and so every browser on iOS, can't, so there both are JPEG. The original is never uploaded.
+
+The photo is sent with **Done**, and **Cancel** discards it. The server checks the Owner session, the content type and the file's bytes (WebP or JPEG only), and the size (1 MB for the card image, 4 MB for the Recipe-page image). It stores both images in the `PHOTOS` R2 bucket under new keys, `recipes/<id>/<uuid>-card.<ext>` and `recipes/<id>/<uuid>-page.<ext>`, with a conditional put, so an existing object is never overwritten. The Recipe's `card_photo_key` and `page_photo_key` columns point at the current pair, and they change in the same D1 batch as the rest of the edit, after both images are stored. If R2 fails, nothing is saved. Replacing a photo leaves the old objects in R2, and so does deleting a Recipe.
+
+The bucket is private. `/photos/<key>` streams a photo from R2 with `Cache-Control: public, max-age=31536000, immutable`, which is safe because keys never change. It's the only response that doesn't get `no-store`. In `npm run dev` and in tests, photos go to the local R2 simulation.
+
 ## Owner account
 
 The Owner signs in at `/signin`, which nothing links to. After signing in, they return to the page named in `?redirectTo=`, or the page they came from. Sessions last 30 days and renew whenever the site is used. Sign-in is limited to 5 attempts per address every 15 minutes.

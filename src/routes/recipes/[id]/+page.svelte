@@ -2,9 +2,9 @@
 	import { afterNavigate } from '$app/navigation';
 	import DeleteRecipe from '#lib/components/DeleteRecipe.svelte';
 	import FavoriteToggle from '#lib/components/FavoriteToggle.svelte';
-	import GlassPlaceholder from '#lib/components/GlassPlaceholder.svelte';
 	import OwnerRow from '#lib/components/OwnerRow.svelte';
 	import RecipeEditor from '#lib/components/RecipeEditor.svelte';
+	import RecipeImage from '#lib/components/RecipeImage.svelte';
 	import RecipeLines from '#lib/components/RecipeLines.svelte';
 	import UnitToggle from '#lib/components/UnitToggle.svelte';
 	import { GLASS_LABELS } from '#lib/domain.ts';
@@ -54,6 +54,8 @@
 			ingredients={data.editor.ingredients}
 			existingTags={data.editor.tagSuggestions}
 			action="?/save"
+			photo={recipe.photo}
+			photoUpload
 			oncancel={() => (draft = null)}
 			onsaved={() => (draft = null)}
 		/>
@@ -68,7 +70,7 @@
 		</div>
 		<OwnerRow signedIn={data.signedIn} />
 
-		<GlassPlaceholder glass={recipe.placeholderGlass} family={recipe.family} hero />
+		<RecipeImage photo={recipe.photo} name={recipe.name} glass={recipe.placeholderGlass} family={recipe.family} hero />
 
 		{#if data.editor}
 			<div class="title">
