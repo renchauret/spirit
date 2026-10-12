@@ -221,6 +221,11 @@ describe('the Cocktails doc import', () => {
 		expect(line('Tom Collins', 'club soda')).toMatchObject({ amountMin: null, unit: 'top' });
 	});
 
+	it('serves Moscow Mule in a copper mug and Mint Julep in a julep cup', () => {
+		expect(recipe('Moscow Mule').glass).toBe('copper mug');
+		expect(recipe('Mint Julep').glass).toBe('julep cup');
+	});
+
 	it('has no optional Recipe lines', () => {
 		for (const r of cocktails.recipes) {
 			for (const l of r.lines) expect(l.note ?? '', r.name).not.toMatch(/option/i);

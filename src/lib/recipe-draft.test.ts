@@ -81,6 +81,16 @@ describe('parseRecipeDraft', () => {
 		});
 	});
 
+	it.each(['copper mug', 'wine glass', 'irish coffee glass', 'julep cup'] as const)(
+		'accepts the %s glass',
+		(glass) => {
+			expect(parseRecipeDraft({ ...draft, glass })).toMatchObject({
+				ok: true,
+				changes: { glass }
+			});
+		}
+	);
+
 	it('drops empty Method steps', () => {
 		expect(
 			parseRecipeDraft({

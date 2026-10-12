@@ -10,13 +10,15 @@
 	}: { glass: Glass; family: FamilyTag | null; hero?: boolean; children?: Snippet } = $props();
 
 	const fill = $derived(`var(--family-${family ? family.replace(' ', '-') : 'none'})`);
+	const label = $derived(GLASS_LABELS[glass]);
+	const ariaLabel = $derived(/(glass|mug|cup)$/.test(label) ? label : `${label} glass`);
 </script>
 
 <div class="ph" class:hero data-family={family ?? 'none'}>
 	<svg
 		viewBox="0 0 100 100"
 		role={hero ? 'img' : undefined}
-		aria-label={hero ? `${GLASS_LABELS[glass]} glass` : undefined}
+		aria-label={hero ? ariaLabel : undefined}
 		aria-hidden={!hero}
 	>
 		<g {fill}>
@@ -59,6 +61,27 @@
 					d="M36 16 Q30 40 40 52 Q33 66 40 78 L60 78 Q67 66 60 52 Q70 40 64 16 Z"
 				/>
 				<path class="g" d="M50 78 L50 86 M38 88 Q50 84 62 88" />
+			{:else if glass === 'copper mug'}
+				<path class="liq" d="M33 40 L35.5 81 L64.5 81 L67 40 Z" />
+				<path class="g" d="M30 28 L34 84 L66 84 L70 28 Z" />
+				<path class="g" d="M30 28 L70 28 M31.5 34 L68.5 34" />
+				<path class="g" d="M69 42 Q84 43 84 56 Q84 69 67 70" />
+			{:else if glass === 'wine glass'}
+				<path class="liq" d="M34 36 Q34 50 50 54 Q66 50 66 36 Z" />
+				<path class="g" d="M30 18 Q30 52 50 56 Q70 52 70 18 Z" />
+				<path class="g" d="M50 56 L50 84 M34 86 Q50 82 66 86" />
+			{:else if glass === 'irish coffee glass'}
+				<path class="liq" d="M35.5 32 L39 60 L61 60 L64.5 32 Z" />
+				<path class="g" d="M34 26 L38 62 L62 62 L66 26 Z" />
+				<path class="g" d="M34 26 L66 26 M35.5 32 L64.5 32" />
+				<path class="g" d="M66 36 Q78 37 78 48 Q78 59 63 60" />
+				<path class="g" d="M50 62 L50 82 M34 86 Q50 82 66 86" />
+			{:else if glass === 'julep cup'}
+				<path class="liq" d="M34.5 44 L37.5 79 L62.5 79 L65.5 44 Z" />
+				<path class="g" d="M32 30 L36 82 L64 82 L68 30 Z" />
+				<path class="g" d="M32 30 L68 30 M33.5 37 L66.5 37" />
+				<rect class="ice" x="42" y="50" width="9" height="9" rx="2" />
+				<rect class="ice" x="49" y="62" width="9" height="9" rx="2" transform="rotate(-12 53 66)" />
 			{/if}
 		</g>
 	</svg>

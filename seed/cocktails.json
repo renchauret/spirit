@@ -218,6 +218,7 @@
 		{
 			"name": "Moscow Mule",
 			"tags": ["highball"],
+			"glass": "copper mug",
 			"method": ["Stir."],
 			"garnish": "lime wheel",
 			"lines": [
@@ -534,6 +535,7 @@
 		{
 			"name": "Mint Julep",
 			"tags": ["old fashioned"],
+			"glass": "julep cup",
 			"method": ["Swizzle."],
 			"garnish": "mint sprig and Angostura bitters",
 			"lines": [
