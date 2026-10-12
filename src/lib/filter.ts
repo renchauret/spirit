@@ -1,6 +1,7 @@
 import type { IngredientType } from './domain.ts';
 
 export type RecipeFilter = {
+	query: string;
 	ingredients: number[];
 	tags: string[];
 	favorites: boolean;
@@ -11,8 +12,10 @@ export type FilterSection = {
 	ingredients: { id: number; name: string }[];
 };
 
-export const EMPTY_FILTER: RecipeFilter = { ingredients: [], tags: [], favorites: false };
+export const EMPTY_FILTER: RecipeFilter = { query: '', ingredients: [], tags: [], favorites: false };
 
+const QUERY_PARAM = 'q';
+const QUERY_MAX_LENGTH = 100;
 const INGREDIENT_PARAM = 'i';
 const TAG_PARAM = 'tag';
 const FAVORITES_PARAM = 'fav';
@@ -25,6 +28,7 @@ export function parseFilter(params: URLSearchParams): RecipeFilter {
 		.filter(Number.isSafeInteger);
 	const tags = params.getAll(TAG_PARAM).filter(Boolean);
 	return {
+		query: (params.get(QUERY_PARAM) ?? '').slice(0, QUERY_MAX_LENGTH),
 		ingredients: [...new Set(ingredients)],
 		tags: [...new Set(tags)],
 		favorites: params.get(FAVORITES_PARAM) === '1'
@@ -33,6 +37,7 @@ export function parseFilter(params: URLSearchParams): RecipeFilter {
 
 export function filterSearch(filter: RecipeFilter): string {
 	const params = new URLSearchParams();
+	if (isSearching(filter)) params.set(QUERY_PARAM, filter.query);
 	for (const id of filter.ingredients) params.append(INGREDIENT_PARAM, String(id));
 	for (const tag of filter.tags) params.append(TAG_PARAM, tag);
 	if (filter.favorites) params.set(FAVORITES_PARAM, '1');
@@ -46,6 +51,14 @@ export function activeFilterCount(filter: RecipeFilter): number {
 
 export function isFilterActive(filter: RecipeFilter): boolean {
 	return activeFilterCount(filter) > 0;
+}
+
+export function isSearching(filter: RecipeFilter): boolean {
+	return filter.query.trim() !== '';
+}
+
+export function isNarrowed(filter: RecipeFilter): boolean {
+	return isSearching(filter) || isFilterActive(filter);
 }
 
 function toggle<T>(values: readonly T[], value: T): T[] {

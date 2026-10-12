@@ -1,6 +1,7 @@
 import { ML_PER, type LineAmount } from './amounts.ts';
 import { compareNames } from './browse.ts';
-import type { RecipeFilter } from './filter.ts';
+import { isSearching, type RecipeFilter } from './filter.ts';
+import { MATCH_RANK, matchNames } from './search.ts';
 
 export type CatalogEntry = { id: number; parentId: number | null };
 
@@ -13,7 +14,7 @@ export type RankableRecipe = {
 	lines: readonly RankableLine[];
 };
 
-type Ranked<T> = { recipe: T; amountScore: number };
+type Ranked<T> = { recipe: T; amountScore: number; nameMatch: number };
 type Comparison<T> = (a: Ranked<T>, b: Ranked<T>) => number;
 
 export function lineMl(line: LineAmount): number {
@@ -74,6 +75,7 @@ function inOrder<T>(comparisons: Comparison<T>[]): Comparison<T> {
 }
 
 const byAmountScore: Comparison<RankableRecipe> = (a, b) => b.amountScore - a.amountScore;
+const byNameMatch: Comparison<RankableRecipe> = (a, b) => b.nameMatch - a.nameMatch;
 const favoritesFirst: Comparison<RankableRecipe> = (a, b) => Number(b.recipe.favorite) - Number(a.recipe.favorite);
 const byName: Comparison<RankableRecipe> = (a, b) => compareNames(a.recipe.name, b.recipe.name);
 
@@ -83,13 +85,26 @@ export function filterAndRank<T extends RankableRecipe>(
 	catalog: readonly CatalogEntry[]
 ): T[] {
 	const sets = withDescendants(filter.ingredients, catalog);
-	const ordering = inOrder<T>([...(sets.length ? [byAmountScore] : []), favoritesFirst, byName]);
+	const searching = isSearching(filter);
+	const ordering = inOrder<T>([
+		...(sets.length ? [byAmountScore] : []),
+		...(searching ? [byNameMatch] : []),
+		favoritesFirst,
+		byName
+	]);
 
-	return recipes
+	const narrowed = recipes
 		.filter((recipe) => containsAll(recipe, sets))
 		.filter((recipe) => filter.tags.every((tag) => recipe.tags.includes(tag)))
-		.filter((recipe) => !filter.favorites || recipe.favorite)
-		.map((recipe) => ({ recipe, amountScore: amountScore(recipe, sets) }))
+		.filter((recipe) => !filter.favorites || recipe.favorite);
+	const matches = searching ? matchNames(narrowed.map((recipe) => recipe.name), filter.query) : [];
+
+	return narrowed
+		.flatMap((recipe, i) => {
+			const match = matches[i];
+			if (searching && !match) return [];
+			return [{ recipe, amountScore: amountScore(recipe, sets), nameMatch: match ? MATCH_RANK[match] : 0 }];
+		})
 		.sort(ordering)
 		.map(({ recipe }) => recipe);
 }

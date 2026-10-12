@@ -29,7 +29,7 @@ describe('FilterButton', () => {
 });
 
 describe('FilterSheet', () => {
-	const filter: RecipeFilter = { ingredients: [2], tags: ['sour'], favorites: false };
+	const filter: RecipeFilter = { ...EMPTY_FILTER, ingredients: [2], tags: ['sour'] };
 	const html = text(render(FilterSheet, { props: { open: true, filter, sections, count: 3 } }).body);
 
 	it('has a house-favorites toggle, family Tags and Ingredient sections in the fixed order', () => {
@@ -52,6 +52,11 @@ describe('FilterSheet', () => {
 		expect(html).toContain('href="/?i=2&amp;tag=sour&amp;fav=1"');
 	});
 
+	it('keeps the search text in its links', () => {
+		const searching = text(render(FilterSheet, { props: { open: true, filter: { ...filter, query: 'neg' }, sections, count: 1 } }).body);
+		expect(searching).toContain('href="/?q=neg&amp;i=2&amp;i=1&amp;tag=sour"');
+	});
+
 	it('marks the active choices', () => {
 		expect(html).toMatch(/aria-current="true"[^>]*>\s*white rum/);
 		expect(html).toMatch(/aria-current="true"[^>]*>\s*sour/);
@@ -65,12 +70,20 @@ describe('ActiveFilters', () => {
 	});
 
 	it('shows a removable chip per filter, and Clear all', () => {
-		const filter: RecipeFilter = { ingredients: [3], tags: ['sour'], favorites: true };
+		const filter: RecipeFilter = { ...EMPTY_FILTER, ingredients: [3], tags: ['sour'], favorites: true };
 		const html = text(render(ActiveFilters, { props: { filter, sections } }).body);
 
 		expect(html).toMatch(/href="\/\?tag=sour&amp;fav=1"[^>]*>\s*lime juice ✕/);
 		expect(html).toMatch(/href="\/\?i=3&amp;fav=1"[^>]*>\s*#sour ✕/);
 		expect(html).toMatch(/href="\/\?i=3&amp;tag=sour"[^>]*>\s*★ favorites ✕/);
+		expect(html).toMatch(/href="\/"[^>]*>\s*Clear all/);
+	});
+
+	it('keeps the search text when removing one filter, and clears it with Clear all', () => {
+		const filter: RecipeFilter = { query: 'neg', ingredients: [3], tags: [], favorites: false };
+		const html = text(render(ActiveFilters, { props: { filter, sections } }).body);
+
+		expect(html).toMatch(/href="\/\?q=neg"[^>]*>\s*lime juice ✕/);
 		expect(html).toMatch(/href="\/"[^>]*>\s*Clear all/);
 	});
 });

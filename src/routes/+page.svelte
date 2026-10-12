@@ -4,8 +4,9 @@
 	import FilterSheet from '#lib/components/FilterSheet.svelte';
 	import GlassPlaceholder from '#lib/components/GlassPlaceholder.svelte';
 	import OwnerRow from '#lib/components/OwnerRow.svelte';
+	import SearchBox from '#lib/components/SearchBox.svelte';
 	import UnitToggle from '#lib/components/UnitToggle.svelte';
-	import { activeFilterCount, isFilterActive, recipeHref } from '#lib/filter.ts';
+	import { activeFilterCount, isFilterActive, isNarrowed, recipeHref } from '#lib/filter.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -26,10 +27,11 @@
 	</header>
 	<OwnerRow signedIn={data.signedIn} />
 
+	<SearchBox filter={data.filter} suggestions={data.suggestions} />
 	<ActiveFilters filter={data.filter} sections={data.sections} />
 
 	<div class="row heading">
-		<h2>{isFilterActive(data.filter) ? 'Results' : 'Favorites first'}</h2>
+		<h2>{isNarrowed(data.filter) ? 'Results' : 'Favorites first'}</h2>
 		<span class="count">{data.recipes.length}</span>
 	</div>
 
@@ -55,6 +57,8 @@
 		</ul>
 	{:else if isFilterActive(data.filter)}
 		<p class="muted">Nothing matches. Try removing a filter.</p>
+	{:else if isNarrowed(data.filter)}
+		<p class="muted">No Recipe names match.</p>
 	{:else}
 		<p class="muted">No Recipes yet.</p>
 	{/if}

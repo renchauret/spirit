@@ -110,6 +110,58 @@ describe('filterAndRank', () => {
 	});
 });
 
+describe('filterAndRank with search text', () => {
+	const negroni = recipe('Negroni', [line(GIN, 1, 'oz')]);
+	const whiteNegroni = recipe('White Negroni', [line(GIN, 1.5, 'oz')], { favorite: true });
+	const negroniSbagliato = recipe('Negroni Sbagliato', [line(SODA, 1, 'oz')]);
+	const negroniFavorite = recipe('Negroni Bianco', [line(GIN, 1, 'oz')], { favorite: true });
+	const neroni = recipe('Neroni', [line(GIN, 2, 'oz')], { favorite: true });
+	const search = [negroniSbagliato, neroni, negroni, whiteNegroni, negroniFavorite, gimlet];
+
+	it('keeps only Recipes whose names match', () => {
+		expect(names(all, { query: 'daiq' })).toEqual(['Daiquiri']);
+		expect(names(all, { query: 'BIRD' })).toEqual(['Jungle Bird']);
+		expect(names(all, { query: 'mohito' })).toEqual(['Mojito']);
+		expect(names(all, { query: 'xyzzy' })).toEqual([]);
+	});
+
+	it('ignores blank search text', () => {
+		expect(names(all, { query: '   ' })).toEqual(names(all, {}));
+	});
+
+	it('with text only, orders by exact, partial then fuzzy match, then favorites, then A–Z', () => {
+		expect(names(search, { query: 'negroni' })).toEqual([
+			'Negroni',
+			'Negroni Bianco',
+			'White Negroni',
+			'Negroni Sbagliato',
+			'Neroni'
+		]);
+	});
+
+	it('with an Ingredient filter, orders by amount score, then name match, then favorites, then A–Z', () => {
+		const bigFuzzy = recipe('Negorni Royale', [line(GIN, 3, 'oz')]);
+		expect(names([...search, bigFuzzy], { query: 'negroni', ingredients: [GIN] })).toEqual([
+			'Negorni Royale',
+			'Neroni',
+			'White Negroni',
+			'Negroni',
+			'Negroni Bianco'
+		]);
+	});
+
+	it('ANDs search text with Ingredients, Tags and favorites', () => {
+		expect(names(all, { query: 'i', ingredients: [LIME], tags: ['sour'] })).toEqual(['Daiquiri', 'Gimlet']);
+		expect(names(all, { query: 'daiq', ingredients: [GIN] })).toEqual([]);
+		expect(names(all, { query: 'daiq', tags: ['highball'] })).toEqual([]);
+		expect(names(all, { query: 'mojito', favorites: true })).toEqual([]);
+	});
+
+	it('with the favorites filter, narrows without changing the search order', () => {
+		expect(names(search, { query: 'negroni', favorites: true })).toEqual(['Negroni Bianco', 'White Negroni', 'Neroni']);
+	});
+});
+
 describe('lineMl', () => {
 	it.each([
 		[line(GIN, 2, 'oz'), 60],

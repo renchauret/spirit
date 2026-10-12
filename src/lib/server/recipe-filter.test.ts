@@ -151,6 +151,28 @@ describe('filtering Recipes in D1', () => {
 		expect(browse.sections.map((s) => s.type)).toContain('fresh');
 	});
 
+	it('searches Recipe names, tolerating typos, together with the filter', async () => {
+		expect(await names({ ...EMPTY_FILTER, query: 'daquiri' })).toEqual(['Daiquiri']);
+		expect(await names({ ...EMPTY_FILTER, query: 'bird' })).toEqual(['Jungle Bird']);
+		expect(await names(filter(['gin'], { query: 'daiq' }))).toEqual([]);
+	});
+
+	it('suggests matching Ingredients and Tags, leaving out what is picked', async () => {
+		const camp = await browseRecipes(local.db, { ...EMPTY_FILTER, query: 'camp' });
+		expect(camp.suggestions).toEqual([{ kind: 'ingredient', id: ids.get('Campari'), name: 'Campari' }]);
+		expect(camp.recipes).toEqual([]);
+
+		const sour = await browseRecipes(local.db, { ...EMPTY_FILTER, query: 'sour' });
+		expect(sour.suggestions).toEqual([{ kind: 'tag', name: 'sour' }]);
+
+		const picked = await browseRecipes(local.db, filter(['Campari'], { query: 'camp' }));
+		expect(picked.suggestions).toEqual([]);
+	});
+
+	it('suggests only Ingredients the filter offers', async () => {
+		expect((await browseRecipes(local.db, { ...EMPTY_FILTER, query: 'egg white' })).suggestions).toEqual([]);
+	});
+
 	it('lists the Recipe lines that match the picked Ingredients', async () => {
 		const [{ id }] = await local.db.select({ id: recipe.id }).from(recipe).where(eq(recipe.name, 'Mojito'));
 

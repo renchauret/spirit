@@ -2,9 +2,10 @@ import { asc, eq, notInArray, sql } from 'drizzle-orm';
 import type { LineAmount } from '../amounts.ts';
 import { cardSubtitle, compareNames, familyOf, placeholderGlass } from '../browse.ts';
 import { INGREDIENT_TYPES, type FamilyTag, type Glass } from '../domain.ts';
-import { EMPTY_FILTER, type FilterSection, type RecipeFilter } from '../filter.ts';
+import { EMPTY_FILTER, isSearching, type FilterSection, type RecipeFilter } from '../filter.ts';
 import { filterAndRank, matchedLineIndexes } from '../ranking.ts';
 import type { RecipeChanges } from '../recipe-draft.ts';
+import { suggest, type Suggestion } from '../search.ts';
 import type { Db } from './db/index.ts';
 import { ingredient, recipe, recipeLine, recipeTag, tag } from './db/schema.ts';
 
@@ -20,6 +21,7 @@ export type RecipeCard = {
 export type Browse = {
 	filter: RecipeFilter;
 	sections: FilterSection[];
+	suggestions: Suggestion[];
 	recipes: RecipeCard[];
 };
 
@@ -128,7 +130,19 @@ export async function browseRecipes(db: Db, requested: RecipeFilter): Promise<Br
 	const sections = await listFilterSections(db, requested.ingredients);
 	const offered = new Set(sections.flatMap((s) => s.ingredients.map((i) => i.id)));
 	const filter = { ...requested, ingredients: requested.ingredients.filter((id) => offered.has(id)) };
-	return { filter, sections, recipes: await listRecipeCards(db, filter) };
+	const [recipes, suggestions] = await Promise.all([listRecipeCards(db, filter), listSuggestions(db, filter, sections)]);
+	return { filter, sections, suggestions, recipes };
+}
+
+async function listSuggestions(db: Db, filter: RecipeFilter, sections: FilterSection[]): Promise<Suggestion[]> {
+	if (!isSearching(filter)) return [];
+	const tags = await db.selectDistinct({ name: tag.name }).from(tag).innerJoin(recipeTag, eq(recipeTag.tagId, tag.id));
+	return suggest(
+		filter.query,
+		sections.flatMap((s) => s.ingredients),
+		tags.map((t) => t.name),
+		filter
+	);
 }
 
 export async function matchedLines(db: Db, recipeId: number, picked: readonly number[]): Promise<number[]> {
