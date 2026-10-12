@@ -19,6 +19,11 @@
 	--display: 'Bricolage Grotesque', 'Avenir Next', system-ui, sans-serif;
 	--body: 'Atkinson Hyperlegible', system-ui, -apple-system, sans-serif;
 	--mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+	--leading: 1.45;
+	--page-top: 8px;
+	--brand-size: 1.7rem;
+	--header-h: calc(var(--brand-size) * var(--leading));
+	--header-control-h: 38px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -63,7 +68,7 @@ body {
 	color: var(--fg);
 	font-family: var(--body);
 	font-size: 16px;
-	line-height: 1.45;
+	line-height: var(--leading);
 }
 
 h1,
@@ -115,7 +120,7 @@ a {
 	max-width: 520px;
 	margin: 0 auto;
 	padding-inline: 16px;
-	padding-block: 8px 48px;
+	padding-block: var(--page-top) 48px;
 }
 
 .stack {
@@ -129,6 +134,19 @@ a {
 	align-items: center;
 	gap: 8px;
 	flex-wrap: wrap;
+}
+
+.page-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 8px;
+	min-height: var(--header-h);
+	box-sizing: content-box;
+}
+
+.page-header h1 {
+	font-size: var(--brand-size);
 }
 
 .chips {
@@ -181,6 +199,11 @@ a {
 	border-radius: 10px;
 	padding: 10px 14px;
 	min-height: 44px;
+}
+
+.btn.compact {
+	min-height: var(--header-control-h);
+	padding-block: 6px;
 }
 
 .btn.primary {

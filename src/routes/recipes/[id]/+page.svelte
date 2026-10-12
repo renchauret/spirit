@@ -60,10 +60,10 @@
 		/>
 		<DeleteRecipe name={recipe.name} />
 	{:else}
-		<div class="top">
-			<a class="btn" href="/" onclick={back}>‹ Back</a>
+		<div class="page-header top">
+			<a class="btn compact" href="/" onclick={back}>‹ Back</a>
 			<div class="row">
-				{#if data.editor}<button type="button" class="btn primary" onclick={startEditing}>Edit</button>{/if}
+				{#if data.editor}<button type="button" class="btn compact primary" onclick={startEditing}>Edit</button>{/if}
 				<UnitToggle />
 			</div>
 		</div>
@@ -136,14 +136,11 @@
 
 <style>
 	.top {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: 8px;
 		position: sticky;
 		top: env(safe-area-inset-top, 0px);
 		background: var(--bg);
-		padding-block: 6px;
+		margin-top: calc(-1 * var(--page-top));
+		padding-block: var(--page-top) 6px;
 		z-index: 3;
 	}
 

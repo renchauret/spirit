@@ -18,7 +18,7 @@
 </svelte:head>
 
 <main class="stack">
-	<header class="brand">
+	<header class="page-header">
 		<h1>Spirit</h1>
 		<div class="controls">
 			<FilterButton count={activeFilterCount(data.filter)} onclick={() => (sheetOpen = true)} />
@@ -67,17 +67,6 @@
 <FilterSheet bind:open={sheetOpen} filter={data.filter} sections={data.sections} count={data.recipes.length} />
 
 <style>
-	.brand {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: 8px;
-	}
-
-	.brand h1 {
-		font-size: 1.7rem;
-	}
-
 	.controls {
 		display: flex;
 		align-items: center;
