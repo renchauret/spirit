@@ -182,7 +182,7 @@
 		{
 			"name": "Corpse Reviver #2",
 			"tags": ["daisy"],
-			"method": ["Shake."],
+			"method": ["Rinse the glass with absinthe.", "Shake."],
 			"lines": [
 				{ "ingredient": "orange liqueur", "amount": 0.75, "unit": "oz" },
 				{ "ingredient": "Lillet Blanc", "amount": 0.75, "unit": "oz" },

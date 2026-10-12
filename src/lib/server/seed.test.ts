@@ -5,6 +5,10 @@ import { getRecipe, listRecipeCards } from './recipes';
 import { parseSeed, seedStatements, type Seed } from './seed';
 import { createLocalD1, type LocalD1 } from './testing/local-d1';
 
+function readSeed(path: string): Seed {
+	return parseSeed(JSON.parse(readFileSync(path, 'utf8')));
+}
+
 const seed: Seed = parseSeed({
 	ingredients: [
 		{ name: 'rum', type: 'spirit' },
@@ -129,7 +133,7 @@ describe('seed loader', () => {
 	});
 
 	it('loads the bundled fixture', async () => {
-		const fixture = parseSeed(JSON.parse(readFileSync('seed/fixture.json', 'utf8')));
+		const fixture = readSeed('seed/fixture.json');
 		await load(local, seedStatements(fixture));
 
 		expect(await listRecipeCards(local.db)).toHaveLength(fixture.recipes.length);
@@ -137,17 +141,17 @@ describe('seed loader', () => {
 
 	it('loads the Cocktails doc import over existing data', async () => {
 		await load(local, seedStatements(seed));
-		const cocktails = parseSeed(JSON.parse(readFileSync('seed/cocktails.json', 'utf8')));
+		const cocktails = readSeed('seed/cocktails.json');
 		await load(local, seedStatements(cocktails, { replace: true }));
 
 		const cards = await listRecipeCards(local.db);
-		expect(cards).toHaveLength(52);
+		expect(cards).toHaveLength(cocktails.recipes.length);
 		expect(cards.find((c) => c.name === 'Daiquiri')).toMatchObject({ family: 'sour', subtitle: 'white rum · sour' });
 	});
 });
 
 describe('the Cocktails doc import', () => {
-	const cocktails = parseSeed(JSON.parse(readFileSync('seed/cocktails.json', 'utf8')));
+	const cocktails = readSeed('seed/cocktails.json');
 	const recipe = (name: string) => cocktails.recipes.find((r) => r.name === name)!;
 	const line = (recipeName: string, ingredient: string) =>
 		recipe(recipeName).lines.find((l) => l.ingredient === ingredient)!;
@@ -163,7 +167,7 @@ describe('the Cocktails doc import', () => {
 		expect(new Set(names).size).toBe(names.length);
 	});
 
-	it('uses every Ingredient in the catalog, or as a Parent Ingredient', () => {
+	it('uses every catalog Ingredient in a Recipe line or as a Parent Ingredient', () => {
 		const used = new Set(cocktails.recipes.flatMap((r) => r.lines.map((l) => l.ingredient)));
 		const parents = new Set(cocktails.ingredients.map((i) => i.parent));
 		const unused = cocktails.ingredients.filter((i) => !used.has(i.name) && !parents.has(i.name));
@@ -207,6 +211,11 @@ describe('the Cocktails doc import', () => {
 			unit: 'oz',
 			note: 'float'
 		});
+	});
+
+	it('keeps the amount of a measured top and notes it', () => {
+		expect(line('Moscow Mule', 'ginger beer')).toMatchObject({ amountMin: 4, unit: 'oz', note: 'top' });
+		expect(line('Tom Collins', 'club soda')).toMatchObject({ amountMin: null, unit: 'top' });
 	});
 
 	it('has no optional Recipe lines', () => {
