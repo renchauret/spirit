@@ -82,6 +82,21 @@ describe('RecipeLineSheet creating an Ingredient', () => {
 	});
 });
 
+describe('RecipeEditor Tags in Edit mode', () => {
+	it('renders each Tag as a removal button, not a link', () => {
+		const draft = { ...emptyDraft(), name: 'Tom Collins', tags: ['highball', 'old fashioned'] };
+		const html = text(
+			render(RecipeEditor, {
+				props: { draft, ingredients: catalog, existingTags: [], action: '?/save', oncancel: noop }
+			}).body
+		);
+
+		expect(html).toMatch(/<button[^>]*aria-label="Remove Tag highball"[^>]*>\s*highball <span aria-hidden="true">✕<\/span><\/button>/);
+		expect(html).toMatch(/<button[^>]*aria-label="Remove Tag old fashioned"[^>]*>/);
+		expect(html).not.toMatch(/<a[^>]*>\s*#?highball/);
+	});
+});
+
 describe('RecipeEditor on a new Recipe', () => {
 	it('opens the same editor, empty, posting to the create action', () => {
 		const html = text(
