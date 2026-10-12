@@ -154,11 +154,12 @@
 
 	.method-one {
 		margin: 0;
+		padding-inline: 6px;
 	}
 
 	.method {
 		margin: 0;
-		padding-left: 1.3rem;
+		padding-inline: calc(1.3rem + 6px) 6px;
 	}
 
 	.kv {
