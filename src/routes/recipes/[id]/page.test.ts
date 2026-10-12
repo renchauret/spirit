@@ -47,3 +47,19 @@ describe('Recipe page Tags in the read view', () => {
 		expect(readView(false)).toMatch(/<a[^>]*href="\/\?tag=highball"[^>]*>\s*#highball\s*<\/a>/);
 	});
 });
+
+describe('Recipe page header', () => {
+	it('gives the Owner regular-height Back and Edit buttons', () => {
+		const html = readView(true);
+
+		expect(html).toMatch(/<a class="btn" href="\/"[^>]*>‹ Back<\/a>/);
+		expect(html).toMatch(/<button type="button" class="btn primary"[^>]*>Edit<\/button>/);
+	});
+
+	it('gives a Visitor the regular-height Back without Edit', () => {
+		const html = readView(false);
+
+		expect(html).toMatch(/<a class="btn" href="\/"[^>]*>‹ Back<\/a>/);
+		expect(html).not.toMatch(/>Edit<\/button>/);
+	});
+});

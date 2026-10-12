@@ -22,8 +22,7 @@
 	--leading: 1.45;
 	--page-top: 8px;
 	--brand-size: 1.7rem;
-	--header-h: calc(var(--brand-size) * var(--leading));
-	--header-control-h: 38px;
+	--control-h: 45px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -141,8 +140,7 @@ a {
 	justify-content: space-between;
 	align-items: center;
 	gap: 8px;
-	min-height: var(--header-h);
-	box-sizing: content-box;
+	min-height: var(--control-h);
 }
 
 .page-header h1 {
@@ -197,13 +195,8 @@ a {
 	border: 1px solid var(--line);
 	background: var(--surface);
 	border-radius: 10px;
-	padding: 10px 14px;
-	min-height: 44px;
-}
-
-.btn.compact {
-	min-height: var(--header-control-h);
-	padding-block: 6px;
+	padding: 9px 14px;
+	min-height: var(--control-h);
 }
 
 .btn.primary {

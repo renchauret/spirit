@@ -60,9 +60,11 @@
 		/>
 		<DeleteRecipe name={recipe.name} />
 	{:else}
-		<div class="page-header top">
-			<a class="btn compact" href="/" onclick={back}>‹ Back</a>
-			{#if data.editor}<button type="button" class="btn compact primary" onclick={startEditing}>Edit</button>{/if}
+		<div class="top">
+			<div class="page-header">
+				<a class="btn" href="/" onclick={back}>‹ Back</a>
+				{#if data.editor}<button type="button" class="btn primary" onclick={startEditing}>Edit</button>{/if}
+			</div>
 		</div>
 		<OwnerRow signedIn={data.signedIn} />
 
