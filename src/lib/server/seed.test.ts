@@ -1,12 +1,25 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { isFamilyTag } from '../domain';
+import { FAMILY_DEFAULT_GLASS, isFamilyTag } from '../domain';
+import { foldName } from '../ingredient-search';
 import { getRecipe, listIngredientOptions, listRecipeCards } from './recipes';
 import { parseSeed, seedStatements, type Seed } from './seed';
 import { createLocalD1, type LocalD1 } from './testing/local-d1';
 
 function readSeed(path: string): Seed {
 	return parseSeed(JSON.parse(readFileSync(path, 'utf8')));
+}
+
+const fold = (name: string) => foldName(name).replace(/[^a-z0-9]/g, '');
+const findRecipe = (seed: Seed, name: string) => seed.recipes.find((r) => r.name === name)!;
+const findLine = (seed: Seed, recipeName: string, ingredient: string) =>
+	findRecipe(seed, recipeName).lines.find((l) => l.ingredient === ingredient)!;
+
+function expectEveryIngredientUsed(seed: Seed) {
+	const used = new Set(seed.recipes.flatMap((r) => r.lines.map((l) => l.ingredient)));
+	const parents = new Set(seed.ingredients.map((i) => i.parent));
+	const unused = seed.ingredients.filter((i) => !used.has(i.name) && !parents.has(i.name));
+	expect(unused).toEqual([]);
 }
 
 const seed: Seed = parseSeed({
@@ -278,9 +291,8 @@ describe('additive seed loading', () => {
 
 describe('the Cocktails doc import', () => {
 	const cocktails = readSeed('seed/cocktails.json');
-	const recipe = (name: string) => cocktails.recipes.find((r) => r.name === name)!;
-	const line = (recipeName: string, ingredient: string) =>
-		recipe(recipeName).lines.find((l) => l.ingredient === ingredient)!;
+	const recipe = (name: string) => findRecipe(cocktails, name);
+	const line = (recipeName: string, ingredient: string) => findLine(cocktails, recipeName, ingredient);
 
 	it('gives every Recipe exactly one family Tag', () => {
 		for (const r of cocktails.recipes) {
@@ -301,10 +313,7 @@ describe('the Cocktails doc import', () => {
 	});
 
 	it('uses every catalog Ingredient in a Recipe line or as a Parent Ingredient', () => {
-		const used = new Set(cocktails.recipes.flatMap((r) => r.lines.map((l) => l.ingredient)));
-		const parents = new Set(cocktails.ingredients.map((i) => i.parent));
-		const unused = cocktails.ingredients.filter((i) => !used.has(i.name) && !parents.has(i.name));
-		expect(unused).toEqual([]);
+		expectEveryIngredientUsed(cocktails);
 	});
 
 	it('turns Gin/Vodka into gin, and Alcohol and Whisk(e)y into whiskey', () => {
@@ -361,6 +370,141 @@ describe('the Cocktails doc import', () => {
 			for (const l of r.lines) expect(l.note ?? '', r.name).not.toMatch(/option/i);
 		}
 		expect(recipe('Mint Julep').lines.map((l) => l.ingredient)).toEqual(['mint', 'simple syrup', 'bourbon']);
+	});
+});
+
+describe('the IBA import', () => {
+	const iba = readSeed('seed/iba.json');
+	const cocktails = readSeed('seed/cocktails.json');
+	const recipe = (name: string) => findRecipe(iba, name);
+	const line = (recipeName: string, ingredient: string) => findLine(iba, recipeName, ingredient);
+
+	it('holds 64 uniquely named Recipes, each sourced from IBA and not a favorite', () => {
+		expect(iba.recipes).toHaveLength(64);
+		const names = iba.recipes.map((r) => fold(r.name));
+		expect(new Set(names).size).toBe(names.length);
+		for (const r of iba.recipes) {
+			expect(r.source, r.name).toBe('IBA');
+			expect(r.favorite, r.name).toBe(false);
+		}
+	});
+
+	it('gives every Recipe at most one Tag, which is a Family Tag', () => {
+		for (const r of iba.recipes) {
+			expect(r.tags.length, r.name).toBeLessThanOrEqual(1);
+			for (const tag of r.tags) expect(isFamilyTag(tag), `${r.name}: ${tag}`).toBe(true);
+		}
+	});
+
+	it('collides with no existing Recipe name and leaves Dry Martini and John Collins out', () => {
+		const taken = new Set([...cocktails.recipes.map((r) => fold(r.name)), 'spikedeggnog', 'drymartini', 'johncollins']);
+		for (const r of iba.recipes) expect(taken.has(fold(r.name)), r.name).toBe(false);
+	});
+
+	it('keeps every oz amount a multiple of ¼', () => {
+		for (const r of iba.recipes) {
+			for (const l of r.lines) {
+				if (l.unit !== 'oz') continue;
+				expect((l.amountMin! * 4) % 1, `${r.name}: ${l.ingredient}`).toBe(0);
+			}
+		}
+	});
+
+	it('uses every catalog Ingredient in a Recipe line or as a Parent Ingredient', () => {
+		expectEveryIngredientUsed(iba);
+	});
+
+	it('imports Bloody Mary, Irish Coffee and Sherry Cobbler without a Family Tag', () => {
+		for (const name of ['Bloody Mary', 'Irish Coffee', 'Sherry Cobbler']) {
+			expect(recipe(name).tags, name).toEqual([]);
+		}
+	});
+
+	it('files the tiki and sparkling Recipes as asked', () => {
+		const tiki = [
+			'Zombie',
+			'Jungle Bird',
+			'Three Dots and a Dash',
+			"Missionary's Downfall",
+			'IBA Tiki',
+			"Don's Special Daiquiri",
+			'Chartreuse Swizzle',
+			'Planters Punch',
+			'Suffering Bastard',
+			'Pisco Punch'
+		];
+		const sparkling = [
+			'Bellini',
+			'Kir',
+			'Spritz',
+			'Champagne Cocktail',
+			'French 75',
+			'Russian Spring Punch',
+			'Old Cuban'
+		];
+		for (const name of tiki) expect(recipe(name).tags, name).toEqual(['tiki']);
+		for (const name of sparkling) expect(recipe(name).tags, name).toEqual(['sparkling']);
+	});
+
+	it('converts 22.5 ml to ¾ oz', () => {
+		expect(line('Jungle Bird', 'Campari')).toMatchObject({ amountMin: 0.75, unit: 'oz' });
+		expect(line('Naked and Famous', 'mezcal')).toMatchObject({ amountMin: 0.75, unit: 'oz' });
+	});
+
+	it('marks an optional line in its note', () => {
+		expect(line('Champagne Cocktail', 'Grand Marnier')).toMatchObject({
+			amountMin: 1,
+			unit: 'dash',
+			note: 'few drops; optional'
+		});
+	});
+
+	it('resolves an alternative to the first option with the rest in the note', () => {
+		expect(line('New York Sour', 'rye whiskey')).toMatchObject({ amountMin: 2, unit: 'oz', note: 'or bourbon' });
+		expect(line('New York Sour', 'red wine')).toMatchObject({ note: 'Shiraz or Malbec' });
+	});
+
+	it('sets the glass only when it differs from the family default', () => {
+		for (const r of iba.recipes) {
+			if (!r.tags.length) {
+				expect(r.glass, `${r.name} has no family and needs a glass`).not.toBeNull();
+				continue;
+			}
+			const family = r.tags[0];
+			if (!isFamilyTag(family)) continue;
+			if (r.glass !== null) expect(r.glass, r.name).not.toBe(FAMILY_DEFAULT_GLASS[family]);
+		}
+		expect(recipe('Bellini').glass).toBeNull();
+		expect(recipe('Champagne Cocktail').glass).toBe('coupe');
+		expect(recipe('Irish Coffee').glass).toBe('irish coffee glass');
+	});
+});
+
+describe('the IBA import over the Cocktails doc', () => {
+	let local: LocalD1;
+
+	beforeEach(async () => {
+		local = await createLocalD1();
+	});
+
+	afterEach(async () => {
+		await local.dispose();
+	});
+
+	it('loads additively alongside the Cocktails doc with 116 Recipes and no duplicate Ingredients', async () => {
+		const cocktails = readSeed('seed/cocktails.json');
+		const iba = readSeed('seed/iba.json');
+		await load(local, seedStatements(cocktails, { replace: true }));
+		await load(local, seedStatements(iba, { additive: true }));
+
+		const cards = await listRecipeCards(local.db);
+		expect(cards).toHaveLength(cocktails.recipes.length + iba.recipes.length);
+		expect(cards).toHaveLength(116);
+		expect(cards.find((c) => c.name === 'Jungle Bird')).toMatchObject({ family: 'tiki' });
+
+		const options = await listIngredientOptions(local.db);
+		const names = options.map((i) => i.name.toLowerCase());
+		expect(new Set(names).size).toBe(names.length);
 	});
 });
 
