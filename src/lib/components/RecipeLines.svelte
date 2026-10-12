@@ -28,14 +28,12 @@
 		display: grid;
 		grid-template-columns: 6rem 1fr;
 		gap: 10px;
-		padding: 9px 0;
+		padding: 9px 6px;
 		border-bottom: 1px solid var(--line);
 	}
 
 	.lines li.hit {
 		background: var(--soft);
-		border-radius: 8px;
-		padding-inline: 6px;
 	}
 
 	.amt {
