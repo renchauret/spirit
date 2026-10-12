@@ -357,6 +357,27 @@ describe('/recipes/new', () => {
 			});
 		});
 
+		it('warns about the existing Recipe when the imported name matches, ignoring case', async () => {
+			const [existing] = await local.db.insert(recipe).values({ name: 'Daiquiri' }).returning();
+			const { result } = importFrom(owner, 'daiquiri', { ...answer, name: 'DAIQUIRI' });
+
+			expect(await result).toMatchObject({ duplicate: { id: existing.id, name: 'Daiquiri' } });
+		});
+
+		it('warns about the existing Recipe when the imported link matches its Source', async () => {
+			const link = 'https://example.com/daiquiri';
+			const [existing] = await local.db.insert(recipe).values({ name: 'Already imported', source: link }).returning();
+			const { result } = importFromLink(owner, link, { ...answer, name: 'A different name' }, html('<p>x</p>'));
+
+			expect(await result).toMatchObject({ duplicate: { id: existing.id, name: 'Already imported' } });
+		});
+
+		it('warns about nothing when neither the name nor the link matches', async () => {
+			const { result } = importFrom(owner, 'Daiquiri');
+
+			expect(await result).toMatchObject({ duplicate: null });
+		});
+
 		it('caps the pasted text before the reader sees it', async () => {
 			const { seen, result } = importFrom(owner, 'x'.repeat(MAX_IMPORT_TEXT + 50));
 			await result;

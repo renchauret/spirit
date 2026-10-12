@@ -4,9 +4,9 @@ import type { LineAmount } from '../amounts.ts';
 import { cardSubtitle, compareNames, familyOf, placeholderGlass } from '../browse.ts';
 import { INGREDIENT_TYPES, type FamilyTag, type Glass } from '../domain.ts';
 import { EMPTY_FILTER, isSearching, type FilterSection, type RecipeFilter } from '../filter.ts';
-import { foldName, nameTakenMessage, type IngredientOption } from '../ingredient-search.ts';
+import { foldName, nameTakenMessage, sameIngredientName, type IngredientOption } from '../ingredient-search.ts';
 import { filterAndRank, matchedLineIndexes } from '../ranking.ts';
-import type { RecipeChanges } from '../recipe-draft.ts';
+import type { DuplicateRecipe, RecipeChanges } from '../recipe-draft.ts';
 import { suggest, type Suggestion } from '../search.ts';
 import type { Db } from './db/index.ts';
 import { photoUrl, type PhotoKeys } from './photos.ts';
@@ -236,6 +236,17 @@ export async function getRecipe(db: Db, id: number): Promise<RecipeView | null> 
 export async function getOwnerNotes(db: Db, id: number): Promise<string | null> {
 	const [found] = await db.select({ ownerNotes: recipe.ownerNotes }).from(recipe).where(eq(recipe.id, id));
 	return found?.ownerNotes ?? null;
+}
+
+export async function findDuplicateRecipe(db: Db, name: string, source: string): Promise<DuplicateRecipe | null> {
+	const recipes = await db
+		.select({ id: recipe.id, name: recipe.name, source: recipe.source })
+		.from(recipe)
+		.orderBy(asc(recipe.id));
+	const match =
+		(foldName(name) ? recipes.find((r) => sameIngredientName(r.name, name)) : undefined) ??
+		(source ? recipes.find((r) => r.source === source) : undefined);
+	return match ? { id: match.id, name: match.name } : null;
 }
 
 export async function listTagNames(db: Db): Promise<string[]> {

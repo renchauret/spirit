@@ -10,10 +10,17 @@ import {
 	type Unit
 } from '../domain.ts';
 import { foldName, type IngredientOption } from '../ingredient-search.ts';
-import { normalizeTag, singleLine, type DraftLine, type NewIngredient, type RecipeDraft } from '../recipe-draft.ts';
+import {
+	normalizeTag,
+	singleLine,
+	type DraftLine,
+	type DuplicateRecipe,
+	type NewIngredient,
+	type RecipeDraft
+} from '../recipe-draft.ts';
 import type { Db } from './db/index.ts';
 import { reducePage, type PageContent } from './page-content.ts';
-import { listIngredientOptions, listTagNames } from './recipes.ts';
+import { findDuplicateRecipe, listIngredientOptions, listTagNames } from './recipes.ts';
 import type { ReadNewIngredient, RecipeReader, RecipeReaderAnswer, RecipeReaderInput } from './recipe-reader.ts';
 
 export const MAX_IMPORT_TEXT = 20000;
@@ -22,7 +29,9 @@ export const MAX_IMPORT_JSONLD = 5000;
 export const CANNOT_OPEN = "Couldn't open that page. Copy the recipe text from it and paste that here instead.";
 export const NO_RECIPE = "Couldn't find a recipe there.";
 
-export type ImportOutcome = { ok: true; draft: RecipeDraft } | { ok: false; error: string };
+export type ImportOutcome =
+	| { ok: true; draft: RecipeDraft; duplicate: DuplicateRecipe | null }
+	| { ok: false; error: string };
 
 export type PageFetch = (url: string, init?: RequestInit) => Promise<Response>;
 
@@ -223,6 +232,11 @@ function linkFromInput(text: string): string | null {
 	}
 }
 
+async function importOutcome(db: Db, draft: RecipeDraft | null): Promise<ImportOutcome> {
+	if (!draft) return { ok: false, error: NO_RECIPE };
+	return { ok: true, draft, duplicate: await findDuplicateRecipe(db, draft.name, draft.source) };
+}
+
 export async function importRecipe(
 	reader: RecipeReader,
 	db: Db,
@@ -230,14 +244,10 @@ export async function importRecipe(
 	text: string
 ): Promise<ImportOutcome> {
 	const link = linkFromInput(text);
-	if (!link) {
-		const draft = await importPastedText(reader, db, text);
-		return draft ? { ok: true, draft } : { ok: false, error: NO_RECIPE };
-	}
+	if (!link) return importOutcome(db, await importPastedText(reader, db, text));
 
 	const page = await fetchPage(fetch, link);
 	if (!page) return { ok: false, error: CANNOT_OPEN };
 
-	const draft = await readSource(reader, db, pageSource(page), link);
-	return draft ? { ok: true, draft } : { ok: false, error: NO_RECIPE };
+	return importOutcome(db, await readSource(reader, db, pageSource(page), link));
 }

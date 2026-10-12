@@ -27,6 +27,6 @@ export const actions: Actions = {
 		const text = String((await request.formData()).get('text') ?? '');
 		const outcome = await importRecipe(locals.recipeReader, locals.db, fetch, text);
 		if (!outcome.ok) return fail(400, { text, errors: [outcome.error] });
-		return { draft: outcome.draft };
+		return { draft: outcome.draft, duplicate: outcome.duplicate };
 	}
 };

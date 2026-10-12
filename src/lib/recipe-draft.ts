@@ -20,6 +20,8 @@ export type NewIngredient = {
 	parentId: number | null;
 };
 
+export type DuplicateRecipe = { id: number; name: string };
+
 export type RecipeDraft = {
 	name: string;
 	glass: Glass | '';
