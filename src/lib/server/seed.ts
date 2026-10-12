@@ -1,4 +1,4 @@
-import { GLASSES, INGREDIENT_TYPES, UNITS, type Glass, type IngredientType, type Unit } from '../domain.ts';
+import { GLASSES, INGREDIENT_TYPES, UNITS, UNITS_WITHOUT_AMOUNT, type Glass, type IngredientType, type Unit } from '../domain.ts';
 
 export type SeedIngredient = {
 	name: string;
@@ -48,7 +48,6 @@ const RECIPE_FIELDS = [
 	'lines'
 ];
 const LINE_FIELDS = ['ingredient', 'amount', 'unit', 'note'];
-const UNITS_WITHOUT_AMOUNT: Unit[] = ['top', 'rinse', 'to taste'];
 
 function fail(where: string, message: string): never {
 	throw new Error(`Seed ${where}: ${message}`);

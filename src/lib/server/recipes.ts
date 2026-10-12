@@ -1,8 +1,10 @@
-import { asc, eq, notInArray, sql } from 'drizzle-orm';
+import { asc, eq, inArray, notInArray, sql } from 'drizzle-orm';
+import { alias } from 'drizzle-orm/sqlite-core';
 import type { LineAmount } from '../amounts.ts';
 import { cardSubtitle, compareNames, familyOf, placeholderGlass } from '../browse.ts';
 import { INGREDIENT_TYPES, type FamilyTag, type Glass } from '../domain.ts';
 import { EMPTY_FILTER, isSearching, type FilterSection, type RecipeFilter } from '../filter.ts';
+import type { IngredientOption } from '../ingredient-search.ts';
 import { filterAndRank, matchedLineIndexes } from '../ranking.ts';
 import type { RecipeChanges } from '../recipe-draft.ts';
 import { suggest, type Suggestion } from '../search.ts';
@@ -26,6 +28,7 @@ export type Browse = {
 };
 
 export type RecipeLineView = LineAmount & {
+	ingredientId: number;
 	ingredient: string;
 	note: string | null;
 };
@@ -182,6 +185,7 @@ export async function getRecipe(db: Db, id: number): Promise<RecipeView | null> 
 			.orderBy(asc(recipeTag.position)),
 		db
 			.select({
+				ingredientId: recipeLine.ingredientId,
 				ingredient: ingredient.name,
 				amountMin: recipeLine.amountMin,
 				amountMax: recipeLine.amountMax,
@@ -233,13 +237,31 @@ function deleteUnusedTags(db: Db) {
 	return db.delete(tag).where(notInArray(tag.id, db.select({ tagId: recipeTag.tagId }).from(recipeTag)));
 }
 
-export async function updateRecipe(db: Db, id: number, changes: RecipeChanges): Promise<boolean> {
-	const [found] = await db.select({ id: recipe.id }).from(recipe).where(eq(recipe.id, id));
-	if (!found) return false;
+export async function listIngredientOptions(db: Db): Promise<IngredientOption[]> {
+	const parent = alias(ingredient, 'parent');
+	const rows = await db
+		.select({ id: ingredient.id, name: ingredient.name, parent: parent.name })
+		.from(ingredient)
+		.leftJoin(parent, eq(parent.id, ingredient.parentId));
+	return rows.sort((a, b) => compareNames(a.name, b.name));
+}
 
-	const { tags, ...fields } = changes;
+export type UpdateResult = 'saved' | 'missing recipe' | 'missing ingredient';
+
+export async function updateRecipe(db: Db, id: number, changes: RecipeChanges): Promise<UpdateResult> {
+	const { tags, lines, ...fields } = changes;
+	const ingredientIds = [...new Set(lines.map((l) => l.ingredientId))];
+	const [found, known] = await db.batch([
+		db.select({ id: recipe.id }).from(recipe).where(eq(recipe.id, id)),
+		db.select({ id: ingredient.id }).from(ingredient).where(inArray(ingredient.id, ingredientIds))
+	]);
+	if (!found.length) return 'missing recipe';
+	if (known.length !== ingredientIds.length) return 'missing ingredient';
+
 	await db.batch([
 		db.update(recipe).set(fields).where(eq(recipe.id, id)),
+		db.delete(recipeLine).where(eq(recipeLine.recipeId, id)),
+		...lines.map((line, position) => db.insert(recipeLine).values({ ...line, recipeId: id, position })),
 		db.delete(recipeTag).where(eq(recipeTag.recipeId, id)),
 		...tags.flatMap((name, position) => [
 			db.insert(tag).values({ name }).onConflictDoNothing(),
@@ -256,7 +278,7 @@ export async function updateRecipe(db: Db, id: number, changes: RecipeChanges): 
 		]),
 		deleteUnusedTags(db)
 	]);
-	return true;
+	return 'saved';
 }
 
 export async function setFavorite(db: Db, id: number, favorite: boolean): Promise<boolean> {

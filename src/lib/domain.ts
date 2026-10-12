@@ -19,6 +19,8 @@ export const UNITS = [
 ] as const;
 export type Unit = (typeof UNITS)[number];
 
+export const UNITS_WITHOUT_AMOUNT: readonly Unit[] = ['top', 'rinse', 'to taste'];
+
 export const GLASSES = ['coupe', 'cocktail', 'rocks', 'collins', 'highball', 'flute', 'hurricane'] as const;
 export type Glass = (typeof GLASSES)[number];
 

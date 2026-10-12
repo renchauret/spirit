@@ -9,7 +9,7 @@ import { actions, load } from './+page.server';
 const origin = 'https://spirit.renchauret.com';
 const owner = { id: 'owner', email: 'owner@example.com' };
 
-const draft: RecipeDraft = {
+const fields: Omit<RecipeDraft, 'lines'> = {
 	name: 'Improved Tom Collins',
 	glass: 'collins',
 	garnish: 'Lemon twist',
@@ -33,6 +33,9 @@ async function thrown(promise: unknown) {
 describe('/recipes/[id]', () => {
 	let local: LocalD1;
 	let id: number;
+	let gin: number;
+	let soda: number;
+	let draft: RecipeDraft;
 
 	beforeEach(async () => {
 		local = await createLocalD1();
@@ -42,6 +45,22 @@ describe('/recipes/[id]', () => {
 			.returning({ id: recipe.id });
 		const [highball] = await local.db.insert(tag).values({ name: 'highball' }).returning();
 		await local.db.insert(recipeTag).values({ recipeId: id, tagId: highball.id, position: 0 });
+		const [rum] = await local.db.insert(ingredient).values({ name: 'rum', type: 'spirit' }).returning();
+		[{ id: gin }, { id: soda }] = await local.db
+			.insert(ingredient)
+			.values([
+				{ name: 'gin', type: 'spirit' },
+				{ name: 'club soda', type: 'mixer' },
+				{ name: 'white rum', type: 'spirit', parentId: rum.id }
+			])
+			.returning();
+		draft = {
+			...fields,
+			lines: [
+				{ ingredientId: gin, amountMin: 2, amountMax: null, unit: 'oz', note: '' },
+				{ ingredientId: soda, amountMin: null, amountMax: null, unit: 'top', note: '' }
+			]
+		};
 	});
 
 	afterEach(async () => {
@@ -82,12 +101,18 @@ describe('/recipes/[id]', () => {
 			expect(JSON.stringify(data)).not.toContain('cheap gin');
 		});
 
-		it('sends the Owner the Owner notes and Tag suggestions', async () => {
+		it('sends the Owner the Owner notes, Tag suggestions and Ingredient catalog', async () => {
 			const data = await loadAs(owner);
 
 			expect(data.editor).toEqual({
 				ownerNotes: 'Secret: cheap gin',
-				tagSuggestions: ['highball']
+				tagSuggestions: ['highball'],
+				ingredients: [
+					{ id: soda, name: 'club soda', parent: null },
+					{ id: gin, name: 'gin', parent: null },
+					{ id: expect.any(Number), name: 'rum', parent: null },
+					{ id: expect.any(Number), name: 'white rum', parent: 'rum' }
+				]
 			});
 		});
 
@@ -96,19 +121,12 @@ describe('/recipes/[id]', () => {
 		});
 
 		it('still highlights the lines matching the active Ingredient filter', async () => {
-			const [gin, soda] = await local.db
-				.insert(ingredient)
-				.values([
-					{ name: 'gin', type: 'spirit' },
-					{ name: 'club soda', type: 'mixer' }
-				])
-				.returning();
 			await local.db.insert(recipeLine).values([
-				{ recipeId: id, position: 0, ingredientId: gin.id, amountMin: 2, unit: 'oz' },
-				{ recipeId: id, position: 1, ingredientId: soda.id, unit: 'top' }
+				{ recipeId: id, position: 0, ingredientId: gin, amountMin: 2, unit: 'oz' },
+				{ recipeId: id, position: 1, ingredientId: soda, unit: 'top' }
 			]);
 
-			expect((await loadAs(owner, String(id), `?i=${soda.id}`)).highlighted).toEqual([1]);
+			expect((await loadAs(owner, String(id), `?i=${soda}`)).highlighted).toEqual([1]);
 		});
 	});
 
@@ -120,9 +138,33 @@ describe('/recipes/[id]', () => {
 				name: 'Improved Tom Collins',
 				glass: 'collins',
 				method: ['Shake.', 'Top with soda.'],
-				tags: ['highball', 'tiki']
+				tags: ['highball', 'tiki'],
+				lines: [
+					{ ingredient: 'gin', amountMin: 2, unit: 'oz' },
+					{ ingredient: 'club soda', amountMin: null, unit: 'top' }
+				]
 			});
 			expect(await getOwnerNotes(local.db, id)).toBe('Use the good gin.');
+		});
+
+		it('saves the Recipe lines in their new order', async () => {
+			await save(owner, draft);
+			await save(owner, { ...draft, lines: [draft.lines[1], draft.lines[0]] });
+
+			expect((await getRecipe(local.db, id))?.lines.map((l) => l.ingredient)).toEqual(['club soda', 'gin']);
+		});
+
+		it('refuses a Recipe line whose Ingredient is gone from the catalog', async () => {
+			const result = await save(owner, {
+				...draft,
+				lines: [{ ...draft.lines[0], ingredientId: 9999 }]
+			});
+
+			expect(result).toMatchObject({
+				status: 400,
+				data: { errors: ['An Ingredient in the Recipe lines is no longer in the catalog.'] }
+			});
+			expect((await getRecipe(local.db, id))?.name).toBe('Tom Collins');
 		});
 
 		it('rejects a Visitor with 401 and changes nothing', async () => {

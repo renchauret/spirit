@@ -111,7 +111,7 @@ describe('seed loader', () => {
 				{ ingredient: 'lime juice', amountMin: 1, amountMax: null, unit: 'oz', note: 'fresh' },
 				{ ingredient: 'white rum', amountMin: 2, amountMax: null, unit: 'oz', note: null },
 				{ ingredient: 'club soda', amountMin: null, amountMax: null, unit: 'top', note: null }
-			]
+			].map((line) => ({ ingredientId: expect.any(Number), ...line }))
 		});
 	});
 

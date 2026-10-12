@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatLineAmount, parseUnitSystem } from './amounts';
+import { formatLineAmount, formatLineAmountAsWritten, parseUnitSystem } from './amounts';
 
 const line = (
 	amountMin: number | null,
@@ -106,5 +106,14 @@ describe('parseUnitSystem', () => {
 	it('defaults to oz', () => {
 		expect(parseUnitSystem(undefined)).toBe('oz');
 		expect(parseUnitSystem('gallons')).toBe('oz');
+	});
+});
+
+describe('formatLineAmountAsWritten', () => {
+	it('keeps the unit the Recipe line was written in', () => {
+		expect(formatLineAmountAsWritten(line(45, 'ml'))).toBe('45 ml');
+		expect(formatLineAmountAsWritten(line(1.5, 'oz', 2))).toBe('1½–2 oz');
+		expect(formatLineAmountAsWritten(line(2, 'dash'))).toBe('2 dashes');
+		expect(formatLineAmountAsWritten(line(null, 'top'))).toBe('top');
 	});
 });

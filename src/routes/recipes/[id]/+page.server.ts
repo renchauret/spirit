@@ -6,6 +6,7 @@ import {
 	deleteRecipe,
 	getOwnerNotes,
 	getRecipe,
+	listIngredientOptions,
 	listTagNames,
 	matchedLines,
 	setFavorite,
@@ -34,8 +35,12 @@ export const load: PageServerLoad = async ({ params, url, locals: { db, owner } 
 	const highlighted = await matchedLines(db, id, parseFilter(url.searchParams).ingredients);
 	if (!owner) return { recipe, highlighted, editor: null };
 
-	const [ownerNotes, tagSuggestions] = await Promise.all([getOwnerNotes(db, id), listTagNames(db)]);
-	return { recipe, highlighted, editor: { ownerNotes, tagSuggestions } };
+	const [ownerNotes, tagSuggestions, ingredients] = await Promise.all([
+		getOwnerNotes(db, id),
+		listTagNames(db),
+		listIngredientOptions(db)
+	]);
+	return { recipe, highlighted, editor: { ownerNotes, tagSuggestions, ingredients } };
 };
 
 export const actions: Actions = {
@@ -46,7 +51,11 @@ export const actions: Actions = {
 		const parsed = parseRecipeDraft(readJson(String(form.get('recipe') ?? '')));
 		if (!parsed.ok) return fail(400, { errors: parsed.errors });
 
-		if (!(await updateRecipe(locals.db, id, parsed.changes))) error(404, 'Recipe not found');
+		const result = await updateRecipe(locals.db, id, parsed.changes);
+		if (result === 'missing recipe') error(404, 'Recipe not found');
+		if (result === 'missing ingredient') {
+			return fail(400, { errors: ['An Ingredient in the Recipe lines is no longer in the catalog.'] });
+		}
 		return { saved: true };
 	},
 

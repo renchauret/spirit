@@ -10,8 +10,15 @@ const draft: RecipeDraft = {
 	source: '',
 	ownerNotes: '',
 	method: ['Shake everything but the soda with ice.', 'Strain and top with soda.'],
-	tags: ['highball']
+	tags: ['highball'],
+	lines: [
+		{ ingredientId: 3, amountMin: 1, amountMax: null, unit: 'oz', note: ' fresh ' },
+		{ ingredientId: 1, amountMin: 2, amountMax: null, unit: 'oz', note: '' },
+		{ ingredientId: 9, amountMin: null, amountMax: null, unit: 'top', note: '' }
+	]
 };
+
+const line = draft.lines[0];
 
 describe('parseRecipeDraft', () => {
 	it('accepts a complete draft, turning empty text into nothing', () => {
@@ -26,7 +33,12 @@ describe('parseRecipeDraft', () => {
 				source: null,
 				ownerNotes: null,
 				method: ['Shake everything but the soda with ice.', 'Strain and top with soda.'],
-				tags: ['highball']
+				tags: ['highball'],
+				lines: [
+					{ ingredientId: 3, amountMin: 1, amountMax: null, unit: 'oz', note: 'fresh' },
+					{ ingredientId: 1, amountMin: 2, amountMax: null, unit: 'oz', note: null },
+					{ ingredientId: 9, amountMin: null, amountMax: null, unit: 'top', note: null }
+				]
 			}
 		});
 	});
@@ -104,6 +116,76 @@ describe('parseRecipeDraft', () => {
 		});
 	});
 
+	it('keeps Recipe lines in the order they were given', () => {
+		const result = parseRecipeDraft({ ...draft, lines: [draft.lines[2], draft.lines[0], draft.lines[1]] });
+
+		expect(result.ok && result.changes.lines.map((l) => l.ingredientId)).toEqual([9, 3, 1]);
+	});
+
+	it('accepts a range', () => {
+		expect(parseRecipeDraft({ ...draft, lines: [{ ...line, amountMin: 6, amountMax: 8, unit: 'leaf' }] })).toMatchObject({
+			ok: true,
+			changes: { lines: [{ amountMin: 6, amountMax: 8, unit: 'leaf' }] }
+		});
+	});
+
+	it('needs at least one Recipe line', () => {
+		expect(parseRecipeDraft({ ...draft, lines: [] })).toEqual({
+			ok: false,
+			errors: ['Add at least one Recipe line.']
+		});
+	});
+
+	it('needs an amount unless the unit is top, rinse or to taste', () => {
+		const lines = [
+			{ ...line, unit: 'rinse', amountMin: null },
+			{ ...line, unit: 'to taste', amountMin: null },
+			{ ...line, unit: 'dash', amountMin: null }
+		];
+
+		expect(parseRecipeDraft({ ...draft, lines })).toEqual({
+			ok: false,
+			errors: ['Give Recipe line 3 an amount, or make it top, rinse or to taste.']
+		});
+	});
+
+	it('rejects amounts that are not positive or a range that runs backwards', () => {
+		const lines = [
+			{ ...line, amountMin: 0 },
+			{ ...line, amountMin: 2, amountMax: 1 },
+			{ ...line, amountMin: null, amountMax: 1 }
+		];
+
+		expect(parseRecipeDraft({ ...draft, lines })).toEqual({
+			ok: false,
+			errors: [
+				'Recipe line 1 has an amount that does not make sense.',
+				'Recipe line 2 has an amount that does not make sense.',
+				'Recipe line 3 has an amount that does not make sense.'
+			]
+		});
+	});
+
+	it('rejects a Recipe line note that is too long', () => {
+		expect(parseRecipeDraft({ ...draft, lines: [{ ...line, note: 'x'.repeat(201) }] })).toEqual({
+			ok: false,
+			errors: ['Keep each Recipe line note under 200 characters.']
+		});
+	});
+
+	it.each([
+		['no Ingredient', { ...line, ingredientId: undefined }],
+		['an Ingredient that is not an id', { ...line, ingredientId: 1.5 }],
+		['a unit not on the list', { ...line, unit: 'pinch' }],
+		['an amount that is not a number', { ...line, amountMin: '1' }],
+		['no note', { ...line, note: null }]
+	])('cannot read a Recipe line with %s', (_, bad) => {
+		expect(parseRecipeDraft({ ...draft, lines: [bad] })).toEqual({
+			ok: false,
+			errors: ['That edit could not be read.']
+		});
+	});
+
 	it('rejects input that is not a draft', () => {
 		expect(parseRecipeDraft(null)).toEqual({
 			ok: false,
@@ -138,7 +220,8 @@ describe('draftFrom', () => {
 				source: null,
 				ownerNotes: 'Stir longer',
 				method: ['Stir.'],
-				tags: ['old fashioned']
+				tags: ['old fashioned'],
+				lines: [{ ingredientId: 4, amountMin: 1, amountMax: null, unit: 'oz', note: null }]
 			})
 		).toEqual({
 			name: 'Negroni',
@@ -149,7 +232,8 @@ describe('draftFrom', () => {
 			source: '',
 			ownerNotes: 'Stir longer',
 			method: ['Stir.'],
-			tags: ['old fashioned']
+			tags: ['old fashioned'],
+			lines: [{ ingredientId: 4, amountMin: 1, amountMax: null, unit: 'oz', note: '' }]
 		});
 	});
 });

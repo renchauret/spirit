@@ -51,7 +51,7 @@
 	{#if draft && data.editor}
 		<RecipeEditor
 			bind:draft
-			lines={recipe.lines}
+			ingredients={data.editor.ingredients}
 			existingTags={data.editor.tagSuggestions}
 			action="?/save"
 			oncancel={() => (draft = null)}

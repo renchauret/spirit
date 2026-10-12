@@ -3,23 +3,23 @@
 	import { enhance, type SubmitFunction } from '$app/forms';
 	import { familyOf, placeholderGlass } from '#lib/browse.ts';
 	import { GLASSES, GLASS_LABELS } from '#lib/domain.ts';
+	import type { IngredientOption } from '#lib/ingredient-search.ts';
 	import type { RecipeDraft } from '#lib/recipe-draft.ts';
-	import type { RecipeLineView } from '#lib/server/recipes.ts';
 	import Editable from './Editable.svelte';
 	import GlassPlaceholder from './GlassPlaceholder.svelte';
-	import RecipeLines from './RecipeLines.svelte';
+	import RecipeLineEditor from './RecipeLineEditor.svelte';
 	import TagSheet from './TagSheet.svelte';
 
 	let {
 		draft = $bindable(),
-		lines,
+		ingredients,
 		existingTags,
 		action,
 		oncancel,
 		onsaved
 	}: {
 		draft: RecipeDraft;
-		lines: RecipeLineView[];
+		ingredients: IngredientOption[];
 		existingTags: string[];
 		action: string;
 		oncancel: () => void;
@@ -103,7 +103,7 @@
 
 	<section class="stack section">
 		<h2>Recipe lines</h2>
-		<RecipeLines {lines} />
+		<RecipeLineEditor bind:lines={draft.lines} {ingredients} />
 	</section>
 
 	<section class="stack section">

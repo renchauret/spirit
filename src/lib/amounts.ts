@@ -68,16 +68,17 @@ function convert(amount: number, unit: Unit, system: UnitSystem): string {
 	return system === 'ml' ? String(Math.round(ml)) : formatNumber(ml / ML_PER.oz!);
 }
 
-export function formatLineAmount(line: LineAmount, system: UnitSystem): string {
+export function formatLineAmountAsWritten(line: LineAmount): string {
 	const { amountMin, amountMax, unit } = line;
 	if (amountMin === null) return unit;
 	const amounts = amountMax === null ? [amountMin] : [amountMin, amountMax];
-
-	if (convertsTo(unit, system)) {
-		return `${amounts.map((a) => convert(a, unit, system)).join('–')} ${system}`;
-	}
-
-	const largest = amounts[amounts.length - 1];
-	const word = largest > 1 ? (PLURALS[unit] ?? unit) : unit;
+	const word = amounts[amounts.length - 1] > 1 ? (PLURALS[unit] ?? unit) : unit;
 	return `${amounts.map(formatNumber).join('–')} ${word}`;
+}
+
+export function formatLineAmount(line: LineAmount, system: UnitSystem): string {
+	const { amountMin, amountMax, unit } = line;
+	if (amountMin === null || !convertsTo(unit, system)) return formatLineAmountAsWritten(line);
+	const amounts = amountMax === null ? [amountMin] : [amountMin, amountMax];
+	return `${amounts.map((a) => convert(a, unit, system)).join('–')} ${system}`;
 }
