@@ -3,6 +3,7 @@ import { env } from 'cloudflare:workers';
 import { createAuth, type Auth } from '#lib/server/auth/index.ts';
 import { getDb } from '#lib/server/db/index.ts';
 import { noStore, ownerSession } from '#lib/server/hooks.ts';
+import { anthropicRecipeReader } from '#lib/server/recipe-reader.ts';
 
 const authByOrigin = new Map<string, Auth>();
 
@@ -18,6 +19,7 @@ function authFor(origin: string): Auth {
 const database: Handle = ({ event, resolve }) => {
 	event.locals.db = getDb(env.DB);
 	event.locals.photos = env.PHOTOS;
+	event.locals.recipeReader = anthropicRecipeReader(env.ANTHROPIC_API_KEY);
 	return resolve(event);
 };
 

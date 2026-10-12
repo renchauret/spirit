@@ -18,6 +18,7 @@ Cloudflare configuration is in [`wrangler.jsonc`](wrangler.jsonc):
 | `PHOTOS` | R2 bucket | `spirit-photos` |
 | custom domain | Workers route | `spirit.renchauret.com` on the renchauret.com zone |
 | `BETTER_AUTH_SECRET` | Worker secret | signs Owner session cookies |
+| `ANTHROPIC_API_KEY` | Worker secret | reads an imported Recipe with Claude |
 
 Server code reads bindings with `import { env } from 'cloudflare:workers'`. Routes get the Drizzle database from `locals.db`, set in `src/hooks.server.ts`, so their `load` functions and actions can be tested against a local D1 database.
 
@@ -34,6 +35,7 @@ So this project uses Wrangler (`wrangler.jsonc`) for local development, migratio
 ```sh
 npm install
 printf 'BETTER_AUTH_SECRET=%s\n' "$(openssl rand -base64 32)" > .dev.vars
+printf 'ANTHROPIC_API_KEY=%s\n' '<anthropic key>' >> .dev.vars
 npm run db:migrate:local
 npm run db:seed:local
 npm run owner -- seed --email <email>
