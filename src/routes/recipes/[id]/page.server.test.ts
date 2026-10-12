@@ -1,4 +1,4 @@
-import { isHttpError } from '@sveltejs/kit';
+import { isHttpError, isRedirect } from '@sveltejs/kit';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { RecipeDraft } from '#lib/recipe-draft.ts';
 import { ingredient, recipe, recipeLine, recipeTag, tag } from '#lib/server/db/schema.ts';
@@ -55,17 +55,23 @@ describe('/recipes/[id]', () => {
 			locals: { owner, db: local.db }
 		} as never) as Promise<Record<string, unknown>>;
 
-	const save = (owner: App.Locals['owner'], body: unknown, recipeId = String(id)) =>
-		actions.save({
+	const post = (
+		action: keyof typeof actions,
+		owner: App.Locals['owner'],
+		fields: Record<string, string> = {},
+		recipeId = String(id)
+	) =>
+		actions[action]({
 			params: { id: recipeId },
 			locals: { owner, db: local.db },
-			request: new Request(`${origin}/recipes/${recipeId}?/save`, {
+			request: new Request(`${origin}/recipes/${recipeId}?/${action}`, {
 				method: 'POST',
-				body: new URLSearchParams({
-					recipe: typeof body === 'string' ? body : JSON.stringify(body)
-				})
+				body: new URLSearchParams(fields)
 			})
 		} as never);
+
+	const save = (owner: App.Locals['owner'], body: unknown, recipeId = String(id)) =>
+		post('save', owner, { recipe: typeof body === 'string' ? body : JSON.stringify(body) }, recipeId);
 
 	describe('load', () => {
 		it('sends Visitors no Owner notes and no editor data', async () => {
@@ -150,6 +156,52 @@ describe('/recipes/[id]', () => {
 
 		it('is a 404 for a Recipe that does not exist', async () => {
 			expect(isHttpError(await thrown(save(owner, draft, '404')), 404)).toBe(true);
+		});
+	});
+
+	describe('favorite', () => {
+		it('lets the Owner mark and unmark a house favorite', async () => {
+			expect(await post('favorite', owner, { favorite: 'true' })).toEqual({ favorite: true });
+			expect((await getRecipe(local.db, id))?.favorite).toBe(true);
+
+			expect(await post('favorite', owner, { favorite: 'false' })).toEqual({ favorite: false });
+			expect((await getRecipe(local.db, id))?.favorite).toBe(false);
+		});
+
+		it('rejects a Visitor with 401 and changes nothing', async () => {
+			expect(isHttpError(await thrown(post('favorite', null, { favorite: 'true' })), 401)).toBe(true);
+
+			expect((await getRecipe(local.db, id))?.favorite).toBe(false);
+		});
+
+		it('rejects a missing or unknown value', async () => {
+			expect(await post('favorite', owner, {})).toMatchObject({ status: 400 });
+			expect(await post('favorite', owner, { favorite: 'yes' })).toMatchObject({ status: 400 });
+			expect((await getRecipe(local.db, id))?.favorite).toBe(false);
+		});
+
+		it('is a 404 for a Recipe that does not exist', async () => {
+			expect(isHttpError(await thrown(post('favorite', owner, { favorite: 'true' }, '404')), 404)).toBe(true);
+		});
+	});
+
+	describe('delete', () => {
+		it('deletes the Recipe and sends the Owner home', async () => {
+			const result = await thrown(post('delete', owner));
+
+			expect(isRedirect(result) && result.status === 303 && result.location === '/').toBe(true);
+			expect(await getRecipe(local.db, id)).toBeNull();
+			expect(await local.db.select().from(recipeTag)).toEqual([]);
+		});
+
+		it('rejects a Visitor with 401 and keeps the Recipe', async () => {
+			expect(isHttpError(await thrown(post('delete', null)), 401)).toBe(true);
+
+			expect((await getRecipe(local.db, id))?.name).toBe('Tom Collins');
+		});
+
+		it('is a 404 for a Recipe that does not exist', async () => {
+			expect(isHttpError(await thrown(post('delete', owner, {}, '404')), 404)).toBe(true);
 		});
 	});
 });

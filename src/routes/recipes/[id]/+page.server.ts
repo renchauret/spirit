@@ -1,8 +1,16 @@
-import { error, fail } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { parseFilter } from '#lib/filter.ts';
 import { parseRecipeDraft } from '#lib/recipe-draft.ts';
 import { requireOwner } from '#lib/server/auth/guard.ts';
-import { getOwnerNotes, getRecipe, listTagNames, matchedLines, updateRecipe } from '#lib/server/recipes.ts';
+import {
+	deleteRecipe,
+	getOwnerNotes,
+	getRecipe,
+	listTagNames,
+	matchedLines,
+	setFavorite,
+	updateRecipe
+} from '#lib/server/recipes.ts';
 import type { Actions, PageServerLoad } from './$types';
 
 function recipeId(param: string): number {
@@ -40,5 +48,23 @@ export const actions: Actions = {
 
 		if (!(await updateRecipe(locals.db, id, parsed.changes))) error(404, 'Recipe not found');
 		return { saved: true };
+	},
+
+	favorite: async ({ params, locals, request }) => {
+		requireOwner(locals);
+		const id = recipeId(params.id);
+		const value = (await request.formData()).get('favorite');
+		if (value !== 'true' && value !== 'false') return fail(400, { errors: ['That favorite could not be read.'] });
+
+		const favorite = value === 'true';
+		if (!(await setFavorite(locals.db, id, favorite))) error(404, 'Recipe not found');
+		return { favorite };
+	},
+
+	delete: async ({ params, locals }) => {
+		requireOwner(locals);
+		const id = recipeId(params.id);
+		if (!(await deleteRecipe(locals.db, id))) error(404, 'Recipe not found');
+		redirect(303, '/');
 	}
 };

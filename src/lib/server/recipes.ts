@@ -229,6 +229,10 @@ export async function listTagNames(db: Db): Promise<string[]> {
 	return rows.map((t) => t.name);
 }
 
+function deleteUnusedTags(db: Db) {
+	return db.delete(tag).where(notInArray(tag.id, db.select({ tagId: recipeTag.tagId }).from(recipeTag)));
+}
+
 export async function updateRecipe(db: Db, id: number, changes: RecipeChanges): Promise<boolean> {
 	const [found] = await db.select({ id: recipe.id }).from(recipe).where(eq(recipe.id, id));
 	if (!found) return false;
@@ -250,7 +254,20 @@ export async function updateRecipe(db: Db, id: number, changes: RecipeChanges): 
 					.where(eq(tag.name, name))
 			)
 		]),
-		db.delete(tag).where(notInArray(tag.id, db.select({ tagId: recipeTag.tagId }).from(recipeTag)))
+		deleteUnusedTags(db)
 	]);
 	return true;
+}
+
+export async function setFavorite(db: Db, id: number, favorite: boolean): Promise<boolean> {
+	const updated = await db.update(recipe).set({ favorite }).where(eq(recipe.id, id)).returning({ id: recipe.id });
+	return updated.length > 0;
+}
+
+export async function deleteRecipe(db: Db, id: number): Promise<boolean> {
+	const [deleted] = await db.batch([
+		db.delete(recipe).where(eq(recipe.id, id)).returning({ id: recipe.id }),
+		deleteUnusedTags(db)
+	]);
+	return deleted.length > 0;
 }

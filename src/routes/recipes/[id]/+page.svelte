@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { afterNavigate } from '$app/navigation';
+	import DeleteRecipe from '#lib/components/DeleteRecipe.svelte';
+	import FavoriteToggle from '#lib/components/FavoriteToggle.svelte';
 	import GlassPlaceholder from '#lib/components/GlassPlaceholder.svelte';
 	import OwnerRow from '#lib/components/OwnerRow.svelte';
 	import RecipeEditor from '#lib/components/RecipeEditor.svelte';
@@ -55,6 +57,7 @@
 			oncancel={() => (draft = null)}
 			onsaved={() => (draft = null)}
 		/>
+		<DeleteRecipe name={recipe.name} />
 	{:else}
 		<div class="top">
 			<a class="btn" href="/" onclick={back}>‹ Back</a>
@@ -67,10 +70,17 @@
 
 		<GlassPlaceholder glass={recipe.placeholderGlass} family={recipe.family} hero />
 
-		<h1>
-			{recipe.name}
-			{#if recipe.favorite}<span class="fav" aria-label="House favorite">★</span>{/if}
-		</h1>
+		{#if data.editor}
+			<div class="title">
+				<h1>{recipe.name}</h1>
+				<FavoriteToggle favorite={recipe.favorite} />
+			</div>
+		{:else}
+			<h1>
+				{recipe.name}
+				{#if recipe.favorite}<span class="fav" aria-label="House favorite">★</span>{/if}
+			</h1>
+		{/if}
 
 		{#if recipe.tags.length || recipe.favorite}
 			<div class="chips">
@@ -134,6 +144,12 @@
 		background: var(--bg);
 		padding-block: 6px;
 		z-index: 3;
+	}
+
+	.title {
+		display: flex;
+		align-items: center;
+		gap: 4px;
 	}
 
 	.description {
