@@ -4,10 +4,6 @@
 
 {#if signedIn}
 	<nav class="owner-row" aria-label="Owner">
-		<a href="/recipes/new">+ New Recipe</a>
-		<span aria-hidden="true">·</span>
-		<a href="/ingredients">Ingredients</a>
-		<span aria-hidden="true">·</span>
 		<form method="POST" action="/signout">
 			<button type="submit">Sign out</button>
 		</form>
@@ -22,11 +18,6 @@
 		padding-block: 0.25rem;
 		font-size: 0.85rem;
 		border-bottom: 1px solid color-mix(in srgb, currentColor 15%, transparent);
-	}
-
-	a {
-		color: inherit;
-		text-decoration: underline;
 	}
 
 	form {

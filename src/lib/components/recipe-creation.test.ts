@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 import type { IngredientOption } from '#lib/ingredient-search.ts';
 import { emptyDraft } from '#lib/recipe-draft.ts';
 import IngredientSearch from './IngredientSearch.svelte';
-import OwnerRow from './OwnerRow.svelte';
 import RecipeEditor from './RecipeEditor.svelte';
 import RecipeLineSheet from './RecipeLineSheet.svelte';
 
@@ -15,14 +14,6 @@ const catalog: IngredientOption[] = [
 ];
 
 const noop = () => {};
-
-describe('OwnerRow', () => {
-	it('links + New Recipe to the editor on an empty Recipe', () => {
-		const html = text(render(OwnerRow, { props: { signedIn: true } }).body);
-
-		expect(html).toMatch(/<a href="\/recipes\/new"[^>]*>\+ New Recipe<\/a>/);
-	});
-});
 
 describe('IngredientSearch', () => {
 	const search = (typed: string, oncreate?: (name: string) => void) =>
