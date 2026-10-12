@@ -1,0 +1,11 @@
+node_modules
+.wrangler
+/.svelte-kit
+/build
+.DS_Store
+Thumbs.db
+.env
+.env.*
+.dev.vars*
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
