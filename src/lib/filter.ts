@@ -81,6 +81,10 @@ export function browseHref(filter: RecipeFilter): string {
 	return `/${filterSearch(filter)}`;
 }
 
+export function tagBrowseHref(tag: string): string {
+	return browseHref({ ...EMPTY_FILTER, tags: [tag] });
+}
+
 export function recipeHref(id: number, filter: RecipeFilter): string {
 	return `/recipes/${id}${filterSearch({ ...EMPTY_FILTER, ingredients: filter.ingredients })}`;
 }

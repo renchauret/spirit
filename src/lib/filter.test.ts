@@ -9,6 +9,7 @@ import {
 	isSearching,
 	parseFilter,
 	recipeHref,
+	tagBrowseHref,
 	toggleFavorites,
 	toggleIngredient,
 	toggleTag
@@ -89,6 +90,11 @@ describe('links', () => {
 	it('links to the Recipe list with the filter', () => {
 		expect(browseHref(EMPTY_FILTER)).toBe('/');
 		expect(browseHref({ ...EMPTY_FILTER, ingredients: [3], tags: ['sour'] })).toBe('/?i=3&tag=sour');
+	});
+
+	it('links to the Recipe list with a single Tag applied', () => {
+		expect(tagBrowseHref('sour')).toBe('/?tag=sour');
+		expect(tagBrowseHref('old fashioned')).toBe('/?tag=old+fashioned');
 	});
 
 	it('links to a Recipe page with only the picked Ingredients, for highlighting', () => {

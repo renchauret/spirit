@@ -7,7 +7,7 @@
 	import RecipeImage from '#lib/components/RecipeImage.svelte';
 	import RecipeLines from '#lib/components/RecipeLines.svelte';
 	import { GLASS_LABELS } from '#lib/domain.ts';
-	import { browseHref, EMPTY_FILTER } from '#lib/filter.ts';
+	import { tagBrowseHref } from '#lib/filter.ts';
 	import { draftFrom, type RecipeDraft } from '#lib/recipe-draft.ts';
 	import type { PageProps } from './$types';
 
@@ -83,7 +83,7 @@
 		{#if recipe.tags.length || recipe.favorite}
 			<div class="chips">
 				{#each recipe.tags as tag (tag)}
-					<a class="chip" href={browseHref({ ...EMPTY_FILTER, tags: [tag] })}>#{tag}</a>
+					<a class="chip" href={tagBrowseHref(tag)}>#{tag}</a>
 				{/each}
 				{#if recipe.favorite}<span class="chip">★ House favorite</span>{/if}
 			</div>
