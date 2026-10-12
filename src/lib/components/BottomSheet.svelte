@@ -1,7 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { swipeDown } from '#lib/swipe-down.ts';
 
 	let { label, onclose, children }: { label: string; onclose: () => void; children: Snippet } = $props();
+
+	const swipe = swipeDown(() => onclose());
 
 	function onkeydown(event: KeyboardEvent) {
 		if (event.key === 'Escape') onclose();
@@ -11,7 +14,7 @@
 <svelte:window {onkeydown} />
 
 <button type="button" class="scrim" aria-label="Close" tabindex="-1" onclick={onclose}></button>
-<div class="sheet" role="dialog" aria-modal="true" aria-label={label}>
+<div class="sheet" role="dialog" aria-modal="true" aria-label={label} {@attach swipe}>
 	<div class="grip"></div>
 	{@render children()}
 </div>
@@ -38,6 +41,7 @@
 		padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
 		max-height: 82%;
 		overflow: auto;
+		overscroll-behavior: contain;
 		display: flex;
 		flex-direction: column;
 		gap: 14px;
@@ -56,6 +60,7 @@
 	@media (prefers-reduced-motion: no-preference) {
 		.sheet {
 			animation: up 0.18s ease-out;
+			transition: transform 0.2s ease-out;
 		}
 
 		@keyframes up {
