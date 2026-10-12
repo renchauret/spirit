@@ -4,6 +4,8 @@ import { isAmount, isText, isTextList } from '../validation.ts';
 
 export type RecipeReaderInput = {
 	text: string;
+	title?: string;
+	jsonLd?: string[];
 	catalog: IngredientOption[];
 	tags: string[];
 	glasses: readonly Glass[];
@@ -41,6 +43,8 @@ const MAX_TOKENS = 4096;
 const TOOL_NAME = 'record_recipe';
 
 const SYSTEM = `You read one cocktail recipe from source text and record it with the ${TOOL_NAME} tool. If the source holds no cocktail recipe, call the tool with found set to false.
+
+When the source includes a page title or JSON-LD blocks, treat them as hints; the readable text is the source of truth.
 
 Follow these rules exactly:
 - Transcribe faithfully. Keep ranges as ranges.
@@ -93,7 +97,7 @@ const RECIPE_TOOL = {
 
 function promptFor(input: RecipeReaderInput): string {
 	const catalog = input.catalog.map((i) => `${i.id} | ${i.name} | ${i.type} | ${i.parent ?? ''}`).join('\n');
-	return [
+	const lines = [
 		'Ingredient catalog (id | name | Ingredient type | Parent Ingredient):',
 		catalog || '(empty)',
 		'',
@@ -101,10 +105,12 @@ function promptFor(input: RecipeReaderInput): string {
 		`Glasses: ${input.glasses.join(', ')}`,
 		`Units: ${input.units.join(', ')}`,
 		`Ingredient types: ${input.ingredientTypes.join(', ')}`,
-		'',
-		'Source:',
-		input.text
-	].join('\n');
+		''
+	];
+	if (input.title) lines.push(`Page title: ${input.title}`, '');
+	if (input.jsonLd?.length) lines.push(`JSON-LD blocks (hints):\n${input.jsonLd.join('\n')}`, '');
+	lines.push('Source:', input.text);
+	return lines.join('\n');
 }
 
 function parseLine(value: unknown): ReadRecipeLine | null {

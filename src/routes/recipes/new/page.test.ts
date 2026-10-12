@@ -35,4 +35,15 @@ describe('New Recipe page', () => {
 		expect(html).toContain("Couldn't find a recipe there.");
 		expect(html).toContain('just a page');
 	});
+
+	it('shows the page-could-not-be-opened error with the link kept', () => {
+		const form = {
+			text: 'https://example.com/daiquiri',
+			errors: ["Couldn't open that page. Copy the recipe text from it and paste that here instead."]
+		};
+		const html = clean(render(Page, { props: { params: {}, data, form } }).body);
+
+		expect(html).toContain("Couldn't open that page. Copy the recipe text from it and paste that here instead.");
+		expect(html).toContain('https://example.com/daiquiri');
+	});
 });
