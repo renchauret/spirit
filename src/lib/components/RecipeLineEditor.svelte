@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { tick } from 'svelte';
-	import { formatLineAmountAsWritten } from '#lib/amounts.ts';
+	import { formatLineAmount } from '#lib/amounts.ts';
 	import type { IngredientOption } from '#lib/ingredient-search.ts';
 	import type { DraftLine, NewIngredient } from '#lib/recipe-draft.ts';
 	import { dropIndex, moveLine } from '#lib/recipe-lines.ts';
@@ -101,7 +101,7 @@
 				⠿
 			</button>
 			<button type="button" class="tap" aria-label="Edit {nameOf(line)}" onclick={() => (sheet = { editing: i })}>
-				<span class="amt">{formatLineAmountAsWritten(line)}</span>
+				<span class="amt">{formatLineAmount(line)}</span>
 				<span>
 					{nameOf(line)}
 					{#if line.note}<span class="muted small">· {line.note}</span>{/if}

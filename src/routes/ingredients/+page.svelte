@@ -16,8 +16,8 @@
 </svelte:head>
 
 <main class="stack">
-	<div class="top">
-		<a class="btn" href="/">‹ Back</a>
+	<div class="page-header">
+		<a class="btn compact" href="/">‹ Back</a>
 	</div>
 	<OwnerRow signedIn={data.signedIn} />
 
@@ -57,13 +57,6 @@
 {/if}
 
 <style>
-	.top {
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		gap: 8px;
-	}
-
 	.section {
 		gap: 6px;
 	}

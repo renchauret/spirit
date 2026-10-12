@@ -3,10 +3,16 @@ import { describe, expect, it } from 'vitest';
 import OwnerRow from '#lib/components/OwnerRow.svelte';
 import { load } from './+layout.server';
 
-const cookies = { get: () => undefined };
+const loadFor = async (owner: App.Locals['owner'], cookies: Record<string, string> = {}) =>
+	(await load({ cookies: { get: (name: string) => cookies[name] }, locals: { owner } } as never)) as {
+		signedIn: boolean;
+	};
 
-const loadFor = async (owner: App.Locals['owner']) =>
-	(await load({ cookies, locals: { owner } } as never)) as { signedIn: boolean };
+describe('root layout', () => {
+	it('ignores a leftover units cookie from the removed oz/ml toggle', async () => {
+		expect(await loadFor(null, { units: 'ml' })).toEqual({ signedIn: false });
+	});
+});
 
 describe('signed-in row', () => {
 	it('is never rendered for Visitors', async () => {

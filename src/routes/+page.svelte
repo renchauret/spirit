@@ -5,7 +5,6 @@
 	import OwnerRow from '#lib/components/OwnerRow.svelte';
 	import RecipeImage from '#lib/components/RecipeImage.svelte';
 	import SearchBox from '#lib/components/SearchBox.svelte';
-	import UnitToggle from '#lib/components/UnitToggle.svelte';
 	import { activeFilterCount, isFilterActive, isNarrowed, recipeHref } from '#lib/filter.ts';
 	import type { PageProps } from './$types';
 
@@ -22,7 +21,6 @@
 		<h1>Spirit</h1>
 		<div class="controls">
 			<FilterButton count={activeFilterCount(data.filter)} onclick={() => (sheetOpen = true)} />
-			<UnitToggle />
 		</div>
 	</header>
 	<OwnerRow signedIn={data.signedIn} />

@@ -6,7 +6,6 @@
 	import RecipeEditor from '#lib/components/RecipeEditor.svelte';
 	import RecipeImage from '#lib/components/RecipeImage.svelte';
 	import RecipeLines from '#lib/components/RecipeLines.svelte';
-	import UnitToggle from '#lib/components/UnitToggle.svelte';
 	import { GLASS_LABELS } from '#lib/domain.ts';
 	import { draftFrom, type RecipeDraft } from '#lib/recipe-draft.ts';
 	import type { PageProps } from './$types';
@@ -62,10 +61,7 @@
 	{:else}
 		<div class="page-header top">
 			<a class="btn compact" href="/" onclick={back}>‹ Back</a>
-			<div class="row">
-				{#if data.editor}<button type="button" class="btn compact primary" onclick={startEditing}>Edit</button>{/if}
-				<UnitToggle />
-			</div>
+			{#if data.editor}<button type="button" class="btn compact primary" onclick={startEditing}>Edit</button>{/if}
 		</div>
 		<OwnerRow signedIn={data.signedIn} />
 

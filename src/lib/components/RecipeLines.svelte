@@ -1,16 +1,14 @@
 <script lang="ts">
 	import { formatLineAmount } from '#lib/amounts.ts';
 	import type { RecipeLineView } from '#lib/server/recipes.ts';
-	import { getUnitPreference } from '#lib/units.svelte.ts';
 
 	let { lines, highlighted = [] }: { lines: RecipeLineView[]; highlighted?: number[] } = $props();
-	const units = getUnitPreference();
 </script>
 
 <ul class="lines">
 	{#each lines as line, i (i)}
 		<li class:hit={highlighted.includes(i)}>
-			<span class="amt">{formatLineAmount(line, units.system)}</span>
+			<span class="amt">{formatLineAmount(line)}</span>
 			<span>
 				{line.ingredient}
 				{#if line.note}<span class="muted small">· {line.note}</span>{/if}

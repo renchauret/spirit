@@ -1,9 +1,5 @@
 import type { Unit } from './domain.ts';
 
-export type UnitSystem = 'oz' | 'ml';
-
-export const UNITS_COOKIE = 'units';
-
 export type LineAmount = {
 	amountMin: number | null;
 	amountMax: number | null;
@@ -19,8 +15,6 @@ export const ML_PER: Partial<Record<Unit, number>> = {
 	tsp: 5,
 	barspoon: 5
 };
-
-const METRIC: Unit[] = ['ml', 'cl'];
 
 const FRACTIONS: [number, string][] = [
 	[0, ''],
@@ -45,10 +39,6 @@ const PLURALS: Partial<Record<Unit, string>> = {
 	sprig: 'sprigs'
 };
 
-export function parseUnitSystem(value: string | undefined): UnitSystem {
-	return value === 'ml' ? 'ml' : 'oz';
-}
-
 export function formatNumber(n: number): string {
 	const whole = Math.floor(n);
 	const fraction = FRACTIONS.find(([value]) => Math.abs(value - (n - whole)) < FRACTION_TOLERANCE);
@@ -59,26 +49,10 @@ export function formatNumber(n: number): string {
 	return whole ? `${whole}${glyph}` : glyph;
 }
 
-function convertsTo(unit: Unit, system: UnitSystem): boolean {
-	return system === 'ml' ? ML_PER[unit] !== undefined : METRIC.includes(unit);
-}
-
-function convert(amount: number, unit: Unit, system: UnitSystem): string {
-	const ml = amount * ML_PER[unit]!;
-	return system === 'ml' ? String(Math.round(ml)) : formatNumber(ml / ML_PER.oz!);
-}
-
-export function formatLineAmountAsWritten(line: LineAmount): string {
+export function formatLineAmount(line: LineAmount): string {
 	const { amountMin, amountMax, unit } = line;
 	if (amountMin === null) return unit;
 	const amounts = amountMax === null ? [amountMin] : [amountMin, amountMax];
 	const word = amounts[amounts.length - 1] > 1 ? (PLURALS[unit] ?? unit) : unit;
 	return `${amounts.map(formatNumber).join('–')} ${word}`;
-}
-
-export function formatLineAmount(line: LineAmount, system: UnitSystem): string {
-	const { amountMin, amountMax, unit } = line;
-	if (amountMin === null || !convertsTo(unit, system)) return formatLineAmountAsWritten(line);
-	const amounts = amountMax === null ? [amountMin] : [amountMin, amountMax];
-	return `${amounts.map((a) => convert(a, unit, system)).join('–')} ${system}`;
 }

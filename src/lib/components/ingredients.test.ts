@@ -17,7 +17,7 @@ const sheet = (entry: CatalogEntry, step?: 'confirm delete') =>
 
 describe('Ingredients page', () => {
 	it('lists the catalog grouped by Ingredient type in the fixed order', () => {
-		const html = text(render(IngredientsPage, { props: { data: { catalog, signedIn: true, units: 'oz' } } as never }).body);
+		const html = text(render(IngredientsPage, { props: { data: { catalog, signedIn: true } } as never }).body);
 
 		expect([...html.matchAll(/<h2>([^<]*)<\/h2>/g)].map((m) => m[1])).toEqual(['spirit', 'juice']);
 		expect([...html.matchAll(/<span class="name[^"]*">\s*([^<]*?)\s*</g)].map((m) => m[1])).toEqual([
@@ -29,6 +29,12 @@ describe('Ingredients page', () => {
 		expect(html).toContain('a kind of rum');
 		expect(html).toContain('unused');
 		expect(html).toMatch(/<a href="\/ingredients"[^>]*>Ingredients<\/a>/);
+	});
+
+	it('has a compact Back button in the shared page header, like the Recipe page', () => {
+		const html = text(render(IngredientsPage, { props: { data: { catalog, signedIn: true } } as never }).body);
+
+		expect(html).toMatch(/<div class="page-header[^"]*"[^>]*>\s*<a class="btn compact[^"]*" href="\/"[^>]*>‹ Back<\/a>/);
 	});
 });
 
