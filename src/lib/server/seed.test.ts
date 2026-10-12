@@ -288,6 +288,13 @@ describe('the Cocktails doc import', () => {
 		}
 	});
 
+	it('files the re-tagged Recipes into the tiki and sparkling families', () => {
+		expect(recipe('Mai Tai').tags).toContain('tiki');
+		expect(recipe('Piña Colada').tags).toContain('tiki');
+		expect(recipe('Mimosa').tags).toContain('sparkling');
+		expect(recipe('Poinsettia').tags).toContain('sparkling');
+	});
+
 	it('names every Recipe once', () => {
 		const names = cocktails.recipes.map((r) => r.name);
 		expect(new Set(names).size).toBe(names.length);

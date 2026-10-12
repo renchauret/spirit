@@ -92,6 +92,12 @@
 	.ph[data-family='flip'] {
 		background: color-mix(in oklab, var(--soft) 55%, #e9dcc0 45%);
 	}
+	.ph[data-family='tiki'] {
+		background: color-mix(in oklab, var(--soft) 58%, #7fd0bf 42%);
+	}
+	.ph[data-family='sparkling'] {
+		background: color-mix(in oklab, var(--soft) 50%, #ddc47e 50%);
+	}
 
 	.hero {
 		width: 100%;
