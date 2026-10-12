@@ -18,16 +18,19 @@
 <main class="stack">
 	<header class="page-header">
 		<h1>Spirit</h1>
-		<div class="controls">
-			<FilterButton count={activeFilterCount(data.filter)} onclick={() => (sheetOpen = true)} />
-			{#if data.signedIn}
+		{#if data.signedIn}
+			<div class="controls">
 				<a class="btn" href="/recipes/new">Create</a>
 				<a class="btn" href="/ingredients">Ingredients</a>
-			{/if}
-		</div>
+			</div>
+		{/if}
 	</header>
 
-	<SearchBox filter={data.filter} suggestions={data.suggestions} />
+	<SearchBox filter={data.filter} suggestions={data.suggestions}>
+		{#snippet trailing()}
+			<FilterButton count={activeFilterCount(data.filter)} onclick={() => (sheetOpen = true)} />
+		{/snippet}
+	</SearchBox>
 	<ActiveFilters filter={data.filter} sections={data.sections} />
 
 	<div class="row heading">

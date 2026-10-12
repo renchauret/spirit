@@ -26,6 +26,14 @@ describe('FilterButton', () => {
 		expect(html).toContain('Filter · 2');
 		expect(html).toMatch(/class="[^"]*\bsel\b/);
 	});
+
+	it('wears the shared squared-off button shape whether on or off', () => {
+		const off = text(render(FilterButton, { props: { count: 0, onclick: () => {} } }).body);
+		const on = text(render(FilterButton, { props: { count: 2, onclick: () => {} } }).body);
+
+		expect(off).toMatch(/<button[^>]*class="[^"]*\bbtn\b/);
+		expect(on).toMatch(/<button[^>]*class="[^"]*\bbtn\b/);
+	});
 });
 
 describe('FilterSheet', () => {
