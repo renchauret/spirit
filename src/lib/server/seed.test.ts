@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { isFamilyTag } from '../domain';
 import { getRecipe, listRecipeCards } from './recipes';
 import { parseSeed, seedStatements, type Seed } from './seed';
 import { createLocalD1, type LocalD1 } from './testing/local-d1';
@@ -132,6 +133,87 @@ describe('seed loader', () => {
 		await load(local, seedStatements(fixture));
 
 		expect(await listRecipeCards(local.db)).toHaveLength(fixture.recipes.length);
+	});
+
+	it('loads the Cocktails doc import over existing data', async () => {
+		await load(local, seedStatements(seed));
+		const cocktails = parseSeed(JSON.parse(readFileSync('seed/cocktails.json', 'utf8')));
+		await load(local, seedStatements(cocktails, { replace: true }));
+
+		const cards = await listRecipeCards(local.db);
+		expect(cards).toHaveLength(52);
+		expect(cards.find((c) => c.name === 'Daiquiri')).toMatchObject({ family: 'sour', subtitle: 'white rum · sour' });
+	});
+});
+
+describe('the Cocktails doc import', () => {
+	const cocktails = parseSeed(JSON.parse(readFileSync('seed/cocktails.json', 'utf8')));
+	const recipe = (name: string) => cocktails.recipes.find((r) => r.name === name)!;
+	const line = (recipeName: string, ingredient: string) =>
+		recipe(recipeName).lines.find((l) => l.ingredient === ingredient)!;
+
+	it('gives every Recipe exactly one family Tag', () => {
+		for (const r of cocktails.recipes) {
+			expect(r.tags.filter(isFamilyTag), r.name).toHaveLength(1);
+		}
+	});
+
+	it('names every Recipe once', () => {
+		const names = cocktails.recipes.map((r) => r.name);
+		expect(new Set(names).size).toBe(names.length);
+	});
+
+	it('uses every Ingredient in the catalog, or as a Parent Ingredient', () => {
+		const used = new Set(cocktails.recipes.flatMap((r) => r.lines.map((l) => l.ingredient)));
+		const parents = new Set(cocktails.ingredients.map((i) => i.parent));
+		const unused = cocktails.ingredients.filter((i) => !used.has(i.name) && !parents.has(i.name));
+		expect(unused).toEqual([]);
+	});
+
+	it('turns Gin/Vodka into gin, and Alcohol and Whisk(e)y into whiskey', () => {
+		const names = cocktails.ingredients.map((i) => i.name.toLowerCase());
+		expect(names).not.toContain('gin/vodka');
+		expect(names).not.toContain('alcohol');
+		expect(names).not.toContain('whisk(e)y');
+		expect(line('Moscow Mule', 'gin')).toMatchObject({ amountMin: 2, unit: 'oz' });
+		expect(line('Eggnog', 'whiskey')).toMatchObject({ amountMin: 2, unit: 'oz' });
+		expect(line('Old Fashioned', 'whiskey')).toMatchObject({ amountMin: 2, unit: 'oz' });
+	});
+
+	it('turns parts into 3 oz each', () => {
+		expect(recipe('Mimosa').lines.map((l) => [l.ingredient, l.amountMin, l.unit])).toEqual([
+			['orange juice', 3, 'oz'],
+			['Champagne', 3, 'oz']
+		]);
+		expect(line('Poinsettia', 'Champagne')).toMatchObject({ amountMin: 3, unit: 'oz' });
+	});
+
+	it('turns a pinch into to taste with the note pinch', () => {
+		expect(line('How to Drink Spiked Eggnog', 'salt')).toMatchObject({
+			amountMin: null,
+			unit: 'to taste',
+			note: 'pinch'
+		});
+	});
+
+	it('counts sugar cubes as whole', () => {
+		expect(line('Old Fashioned', 'sugar cube')).toMatchObject({ amountMin: 1, unit: 'whole' });
+		expect(line('Sazerac', 'sugar cube')).toMatchObject({ amountMin: 1, unit: 'whole' });
+	});
+
+	it('keeps the amount of a float and notes it', () => {
+		expect(line('Penicillin', 'Islay single malt Scotch')).toMatchObject({
+			amountMin: 0.25,
+			unit: 'oz',
+			note: 'float'
+		});
+	});
+
+	it('has no optional Recipe lines', () => {
+		for (const r of cocktails.recipes) {
+			for (const l of r.lines) expect(l.note ?? '', r.name).not.toMatch(/option/i);
+		}
+		expect(recipe('Mint Julep').lines.map((l) => l.ingredient)).toEqual(['mint', 'simple syrup', 'bourbon']);
 	});
 });
 

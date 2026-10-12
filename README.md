@@ -92,6 +92,15 @@ node scripts/seed-sql.ts seed/fixture.json --out .wrangler/seed/fixture.sql
 npx wrangler d1 execute spirit --remote --file .wrangler/seed/fixture.sql
 ```
 
+[`seed/cocktails.json`](seed/cocktails.json) holds the Recipes converted once from the "Cocktails" Google Doc. Load it into the local database with:
+
+```sh
+node scripts/seed-sql.ts seed/cocktails.json --replace --out .wrangler/seed/cocktails.sql
+npx wrangler d1 execute spirit --local --file .wrangler/seed/cocktails.sql
+```
+
+Use `--remote` instead of `--local` to load it into production.
+
 Without `--replace`, loading fails if any of the seeded rows already exist. `--replace` first deletes every Recipe, Recipe line, Tag and Ingredient, including anything the Owner has edited, so use it on production only when that is intended.
 
 ## Owner account

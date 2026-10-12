@@ -1,0 +1,706 @@
+{
+	"ingredients": [
+		{ "name": "gin", "type": "spirit" },
+		{ "name": "vodka", "type": "spirit" },
+		{ "name": "rum", "type": "spirit" },
+		{ "name": "white rum", "parent": "rum" },
+		{ "name": "dark rum", "parent": "rum" },
+		{ "name": "cachaça", "type": "spirit" },
+		{ "name": "tequila", "type": "spirit" },
+		{ "name": "reposado tequila", "parent": "tequila" },
+		{ "name": "mezcal", "type": "spirit" },
+		{ "name": "brandy", "type": "spirit" },
+		{ "name": "cognac", "parent": "brandy" },
+		{ "name": "pisco", "parent": "brandy" },
+		{ "name": "whiskey", "type": "spirit" },
+		{ "name": "bourbon", "parent": "whiskey" },
+		{ "name": "rye whiskey", "parent": "whiskey" },
+		{ "name": "Scotch", "parent": "whiskey" },
+		{ "name": "blended Scotch", "parent": "Scotch" },
+		{ "name": "Islay single malt Scotch", "parent": "Scotch" },
+		{ "name": "orange liqueur", "type": "liqueur" },
+		{ "name": "triple sec", "parent": "orange liqueur" },
+		{ "name": "maraschino liqueur", "type": "liqueur" },
+		{ "name": "crème de violette", "type": "liqueur" },
+		{ "name": "crème de mûre", "type": "liqueur" },
+		{ "name": "coffee liqueur", "type": "liqueur" },
+		{ "name": "Green Chartreuse", "type": "liqueur" },
+		{ "name": "Bénédictine", "type": "liqueur" },
+		{ "name": "Drambuie", "type": "liqueur" },
+		{ "name": "Campari", "type": "liqueur" },
+		{ "name": "Aperol", "type": "liqueur" },
+		{ "name": "amaro", "type": "liqueur" },
+		{ "name": "Amaro Nonino", "parent": "amaro" },
+		{ "name": "absinthe", "type": "liqueur" },
+		{ "name": "vermouth", "type": "fortified wine" },
+		{ "name": "sweet vermouth", "parent": "vermouth" },
+		{ "name": "dry vermouth", "parent": "vermouth" },
+		{ "name": "Lillet Blanc", "type": "fortified wine" },
+		{ "name": "Champagne", "type": "wine" },
+		{ "name": "Angostura bitters", "type": "bitters" },
+		{ "name": "orange bitters", "type": "bitters" },
+		{ "name": "Peychaud's bitters", "type": "bitters" },
+		{ "name": "simple syrup", "type": "syrup" },
+		{ "name": "honey syrup", "type": "syrup" },
+		{ "name": "honey-ginger syrup", "type": "syrup" },
+		{ "name": "raspberry syrup", "type": "syrup" },
+		{ "name": "pomegranate syrup", "type": "syrup" },
+		{ "name": "grenadine", "type": "syrup" },
+		{ "name": "orgeat", "type": "syrup" },
+		{ "name": "hazelnut orgeat", "parent": "orgeat" },
+		{ "name": "lemon juice", "type": "juice" },
+		{ "name": "lime juice", "type": "juice" },
+		{ "name": "orange juice", "type": "juice" },
+		{ "name": "grapefruit juice", "type": "juice" },
+		{ "name": "pineapple juice", "type": "juice" },
+		{ "name": "cranberry juice", "type": "juice" },
+		{ "name": "club soda", "type": "mixer" },
+		{ "name": "ginger beer", "type": "mixer" },
+		{ "name": "cola", "type": "mixer" },
+		{ "name": "espresso", "type": "mixer" },
+		{ "name": "mint", "type": "fresh" },
+		{ "name": "basil", "type": "fresh" },
+		{ "name": "lime", "type": "fresh" },
+		{ "name": "Cara Cara orange", "type": "fresh" },
+		{ "name": "green grapes", "type": "fresh" },
+		{ "name": "egg", "type": "dairy & egg" },
+		{ "name": "egg white", "type": "dairy & egg" },
+		{ "name": "egg yolk", "type": "dairy & egg" },
+		{ "name": "milk", "type": "dairy & egg" },
+		{ "name": "light cream", "type": "dairy & egg" },
+		{ "name": "heavy cream", "type": "dairy & egg" },
+		{ "name": "cream of coconut", "type": "dairy & egg" },
+		{ "name": "sugar", "type": "pantry" },
+		{ "name": "sugar cube", "type": "pantry" },
+		{ "name": "salt", "type": "pantry" },
+		{ "name": "vanilla extract", "type": "pantry" },
+		{ "name": "cloves", "type": "pantry" },
+		{ "name": "ground cloves", "parent": "cloves" },
+		{ "name": "ground cinnamon", "type": "pantry" },
+		{ "name": "ground nutmeg", "type": "pantry" },
+		{ "name": "ground ginger", "type": "pantry" }
+	],
+	"recipes": [
+		{
+			"name": "Aviation",
+			"tags": ["daisy"],
+			"method": ["Shake."],
+			"garnish": "Luxardo maraschino cherry",
+			"lines": [
+				{ "ingredient": "simple syrup", "amount": 0.25, "unit": "oz" },
+				{ "ingredient": "crème de violette", "amount": 0.25, "unit": "oz" },
+				{ "ingredient": "maraschino liqueur", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Water Lily",
+			"tags": ["daisy"],
+			"method": ["Shake."],
+			"garnish": "orange twist and Luxardo maraschino cherry",
+			"lines": [
+				{ "ingredient": "crème de violette", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "orange liqueur", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 0.75, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Gin Fizz",
+			"tags": ["highball"],
+			"method": ["Shake."],
+			"lines": [
+				{ "ingredient": "simple syrup", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 1.5, "unit": "oz" },
+				{ "ingredient": "egg white", "amount": 1, "unit": "whole" },
+				{ "ingredient": "club soda", "unit": "top" }
+			]
+		},
+		{
+			"name": "Tom Collins",
+			"tags": ["highball"],
+			"method": ["Shake."],
+			"garnish": "lemon twist",
+			"lines": [
+				{ "ingredient": "simple syrup", "amount": 0.25, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 2, "unit": "oz" },
+				{ "ingredient": "club soda", "unit": "top" }
+			]
+		},
+		{
+			"name": "Improved Tom Collins",
+			"tags": ["highball"],
+			"method": ["Shake."],
+			"garnish": "lemon twist",
+			"lines": [
+				{ "ingredient": "simple syrup", "amount": 0.25, "unit": "oz" },
+				{ "ingredient": "maraschino liqueur", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "absinthe", "amount": 2, "unit": "dash" },
+				{ "ingredient": "gin", "amount": 2, "unit": "oz" },
+				{ "ingredient": "club soda", "unit": "top" }
+			]
+		},
+		{
+			"name": "Clover Club",
+			"tags": ["sour"],
+			"method": ["Shake."],
+			"garnish": "3 raspberries",
+			"lines": [
+				{ "ingredient": "egg white", "amount": 1, "unit": "whole" },
+				{ "ingredient": "raspberry syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Last Word",
+			"tags": ["daisy"],
+			"method": ["Shake."],
+			"garnish": "brandied cherry",
+			"lines": [
+				{ "ingredient": "maraschino liqueur", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "Green Chartreuse", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 0.75, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Negroni",
+			"tags": ["martini"],
+			"method": ["Stir."],
+			"garnish": "orange twist",
+			"lines": [
+				{ "ingredient": "sweet vermouth", "amount": 1, "unit": "oz" },
+				{ "ingredient": "Campari", "amount": 1, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 1, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Corpse Reviver #2",
+			"tags": ["daisy"],
+			"method": ["Shake."],
+			"lines": [
+				{ "ingredient": "orange liqueur", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "Lillet Blanc", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "absinthe", "unit": "rinse" }
+			]
+		},
+		{
+			"name": "Cosmopolitan",
+			"tags": ["daisy"],
+			"method": ["Shake."],
+			"garnish": "lime wheel",
+			"lines": [
+				{ "ingredient": "orange liqueur", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "cranberry juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "vodka", "amount": 1.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Martini",
+			"tags": ["martini"],
+			"method": ["Shake."],
+			"garnish": "lemon twist",
+			"lines": [
+				{ "ingredient": "orange bitters", "amount": 1, "unit": "dash" },
+				{ "ingredient": "dry vermouth", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 1.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Moscow Mule",
+			"tags": ["highball"],
+			"method": ["Stir."],
+			"garnish": "lime wheel",
+			"lines": [
+				{ "ingredient": "lime juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "simple syrup", "amount": 1, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 2, "unit": "oz" },
+				{ "ingredient": "ginger beer", "amount": 4, "unit": "oz", "note": "top" }
+			]
+		},
+		{
+			"name": "Bee’s Knees",
+			"tags": ["sour"],
+			"method": ["Shake."],
+			"lines": [
+				{ "ingredient": "lemon juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "honey syrup", "amount": 1, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Bramble",
+			"tags": ["sour"],
+			"method": ["Shake."],
+			"lines": [
+				{ "ingredient": "lemon juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "crème de mûre", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Espresso Martini",
+			"tags": ["daisy"],
+			"method": ["Shake."],
+			"garnish": "3 coffee beans",
+			"lines": [
+				{ "ingredient": "espresso", "amount": 1, "unit": "oz" },
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "coffee liqueur", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Enzoni",
+			"tags": ["sour"],
+			"method": ["Shake."],
+			"garnish": "3 green grapes",
+			"lines": [
+				{ "ingredient": "green grapes", "amount": 5, "unit": "whole" },
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "Campari", "amount": 1, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 1, "unit": "oz" }
+			]
+		},
+		{
+			"name": "El Floridita",
+			"tags": ["daisy"],
+			"method": ["Shake."],
+			"garnish": "lime wheel",
+			"lines": [
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "maraschino liqueur", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "white rum", "amount": 1.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Daiquiri",
+			"tags": ["sour"],
+			"method": ["Shake."],
+			"garnish": "lime wheel",
+			"lines": [
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "white rum", "amount": 1.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Dark ’n’ Stormy",
+			"tags": ["highball"],
+			"method": ["Stir."],
+			"garnish": "lime wheel",
+			"lines": [
+				{ "ingredient": "lime juice", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "dark rum", "amount": 2, "unit": "oz" },
+				{ "ingredient": "ginger beer", "amount": 3, "unit": "oz", "note": "top" }
+			]
+		},
+		{
+			"name": "Mojito",
+			"tags": ["highball"],
+			"method": ["Muddle and stir."],
+			"garnish": "mint bouquet",
+			"lines": [
+				{ "ingredient": "mint", "amount": [6, 8], "unit": "leaf" },
+				{ "ingredient": "simple syrup", "amount": 1, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "white rum", "amount": 2, "unit": "oz" },
+				{ "ingredient": "club soda", "amount": 2, "unit": "oz", "note": "top" }
+			]
+		},
+		{
+			"name": "Mai Tai",
+			"tags": ["daisy"],
+			"method": ["Shake."],
+			"lines": [
+				{ "ingredient": "simple syrup", "amount": 0.25, "unit": "oz" },
+				{ "ingredient": "orgeat", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "orange liqueur", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "rum", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Piña Colada",
+			"tags": ["flip"],
+			"method": ["Blend with 1 cup of ice."],
+			"garnish": "pineapple and candied cherry",
+			"lines": [
+				{ "ingredient": "cream of coconut", "amount": 2, "unit": "oz" },
+				{ "ingredient": "pineapple juice", "amount": 2, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "rum", "amount": 1.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Mary Pickford",
+			"tags": ["daisy"],
+			"method": ["Shake."],
+			"lines": [
+				{ "ingredient": "grenadine", "amount": 2, "unit": "barspoon" },
+				{ "ingredient": "maraschino liqueur", "amount": 2, "unit": "barspoon" },
+				{ "ingredient": "pineapple juice", "amount": 1.5, "unit": "oz" },
+				{ "ingredient": "white rum", "amount": 1.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Caipirinha",
+			"tags": ["sour"],
+			"method": ["Muddle."],
+			"lines": [
+				{ "ingredient": "lime", "amount": 1, "unit": "whole" },
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "cachaça", "amount": 1.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Cuba Libre",
+			"tags": ["highball"],
+			"method": ["Stir."],
+			"lines": [
+				{ "ingredient": "lime juice", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "white rum", "amount": 1.5, "unit": "oz" },
+				{ "ingredient": "cola", "unit": "top" }
+			]
+		},
+		{
+			"name": "Margarita",
+			"tags": ["daisy"],
+			"method": ["Shake."],
+			"garnish": "lime wheel",
+			"lines": [
+				{ "ingredient": "lime juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "orange liqueur", "amount": 1, "unit": "oz" },
+				{ "ingredient": "tequila", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Paloma",
+			"tags": ["highball"],
+			"method": ["Shake."],
+			"garnish": "lime wheel",
+			"lines": [
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "tequila", "amount": 1.5, "unit": "oz" },
+				{ "ingredient": "grapefruit juice", "amount": 2, "unit": "oz" },
+				{ "ingredient": "club soda", "unit": "top" }
+			]
+		},
+		{
+			"name": "Tequila for Christmas",
+			"tags": ["sour"],
+			"method": ["Shake."],
+			"lines": [
+				{ "ingredient": "pomegranate syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "orgeat", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "pineapple juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "reposado tequila", "amount": 1.5, "unit": "oz" },
+				{ "ingredient": "mezcal", "amount": 0.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Pisco Sour",
+			"tags": ["sour"],
+			"method": ["Shake."],
+			"lines": [
+				{ "ingredient": "egg white", "amount": 1, "unit": "whole" },
+				{ "ingredient": "simple syrup", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "pisco", "amount": 1.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Old Fashioned",
+			"tags": ["old fashioned"],
+			"method": ["Stir."],
+			"garnish": "orange twist",
+			"lines": [
+				{ "ingredient": "sugar cube", "amount": 1, "unit": "whole" },
+				{ "ingredient": "Angostura bitters", "amount": 2, "unit": "dash" },
+				{ "ingredient": "orange bitters", "amount": 2, "unit": "dash" },
+				{ "ingredient": "club soda", "amount": 1, "unit": "barspoon" },
+				{ "ingredient": "whiskey", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Improved Whiskey Cocktail",
+			"tags": ["old fashioned"],
+			"method": ["Rinse the glass with absinthe.", "Stir."],
+			"garnish": "lemon twist",
+			"lines": [
+				{ "ingredient": "simple syrup", "amount": 0.25, "unit": "oz" },
+				{ "ingredient": "maraschino liqueur", "amount": 0.25, "unit": "oz" },
+				{ "ingredient": "Peychaud's bitters", "amount": 2, "unit": "dash" },
+				{ "ingredient": "Angostura bitters", "amount": 2, "unit": "dash" },
+				{ "ingredient": "whiskey", "amount": 2, "unit": "oz" },
+				{ "ingredient": "absinthe", "unit": "rinse" }
+			]
+		},
+		{
+			"name": "Rusty Nail",
+			"tags": ["old fashioned"],
+			"method": ["Stir."],
+			"lines": [
+				{ "ingredient": "Drambuie", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "Scotch", "amount": 1.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Penicillin",
+			"tags": ["sour"],
+			"method": ["Shake."],
+			"lines": [
+				{ "ingredient": "lemon juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "honey-ginger syrup", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "blended Scotch", "amount": 2, "unit": "oz" },
+				{ "ingredient": "Islay single malt Scotch", "amount": 0.25, "unit": "oz", "note": "float" }
+			]
+		},
+		{
+			"name": "Whiskey Sour",
+			"tags": ["sour"],
+			"method": ["Shake."],
+			"garnish": "4 drops of bitters",
+			"lines": [
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "whiskey", "amount": 2, "unit": "oz" },
+				{ "ingredient": "egg white", "amount": 1, "unit": "whole" }
+			]
+		},
+		{
+			"name": "Sazerac",
+			"tags": ["old fashioned"],
+			"method": ["Rinse a chilled glass with the absinthe.", "Stir."],
+			"garnish": "lemon twist",
+			"lines": [
+				{ "ingredient": "sugar cube", "amount": 1, "unit": "whole" },
+				{ "ingredient": "Peychaud's bitters", "amount": 4, "unit": "dash" },
+				{ "ingredient": "club soda", "amount": 1, "unit": "barspoon" },
+				{ "ingredient": "rye whiskey", "amount": 2, "unit": "oz" },
+				{ "ingredient": "absinthe", "amount": 0.25, "unit": "oz", "note": "glass rinse" }
+			]
+		},
+		{
+			"name": "Manhattan",
+			"tags": ["martini"],
+			"method": ["Stir."],
+			"garnish": "Luxardo maraschino cherry",
+			"lines": [
+				{ "ingredient": "Angostura bitters", "amount": 2, "unit": "dash" },
+				{ "ingredient": "sweet vermouth", "amount": 1, "unit": "oz" },
+				{ "ingredient": "whiskey", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Martinez",
+			"tags": ["martini"],
+			"method": ["Stir."],
+			"garnish": "orange twist",
+			"lines": [
+				{ "ingredient": "orange bitters", "amount": 2, "unit": "dash" },
+				{ "ingredient": "maraschino liqueur", "amount": 0.25, "unit": "oz" },
+				{ "ingredient": "sweet vermouth", "amount": 1.5, "unit": "oz" },
+				{ "ingredient": "whiskey", "amount": 1.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "The College Radio",
+			"tags": ["sour"],
+			"method": ["Blend."],
+			"garnish": "orange moon and Angostura bitters",
+			"lines": [
+				{ "ingredient": "orgeat", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "bourbon", "amount": 2, "unit": "oz" },
+				{ "ingredient": "Cara Cara orange", "amount": 4, "unit": "whole", "note": "supremes, juiced" }
+			]
+		},
+		{
+			"name": "Mint Julep",
+			"tags": ["old fashioned"],
+			"method": ["Swizzle."],
+			"garnish": "mint sprig and Angostura bitters",
+			"lines": [
+				{ "ingredient": "mint", "amount": [8, 10], "unit": "leaf" },
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "bourbon", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Paper Plane",
+			"tags": ["daisy"],
+			"method": ["Shake."],
+			"lines": [
+				{ "ingredient": "lemon juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "Amaro Nonino", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "Aperol", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "bourbon", "amount": 0.75, "unit": "oz" }
+			]
+		},
+		{
+			"name": "The Casper",
+			"tags": ["sour"],
+			"method": ["Shake."],
+			"garnish": "freshly grated nutmeg",
+			"lines": [
+				{ "ingredient": "hazelnut orgeat", "amount": 1, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "reposado tequila", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Boulevardier",
+			"tags": ["martini"],
+			"method": ["Stir."],
+			"garnish": "orange twist",
+			"lines": [
+				{ "ingredient": "Campari", "amount": 1, "unit": "oz" },
+				{ "ingredient": "sweet vermouth", "amount": 1, "unit": "oz" },
+				{ "ingredient": "whiskey", "amount": 1.25, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Sidecar",
+			"tags": ["daisy"],
+			"method": ["Shake."],
+			"garnish": "orange twist",
+			"lines": [
+				{ "ingredient": "lemon juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "triple sec", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "cognac", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Vieux Carré",
+			"tags": ["martini"],
+			"method": ["Stir."],
+			"garnish": "orange twist",
+			"lines": [
+				{ "ingredient": "Bénédictine", "amount": 1, "unit": "barspoon" },
+				{ "ingredient": "Peychaud's bitters", "amount": 2, "unit": "dash" },
+				{ "ingredient": "sweet vermouth", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "rye whiskey", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "cognac", "amount": 0.75, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Mimosa",
+			"tags": ["highball"],
+			"method": ["Stir."],
+			"lines": [
+				{ "ingredient": "orange juice", "amount": 3, "unit": "oz" },
+				{ "ingredient": "Champagne", "amount": 3, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Poinsettia",
+			"tags": ["highball"],
+			"method": ["Stir."],
+			"lines": [
+				{ "ingredient": "cranberry juice", "amount": 3, "unit": "oz" },
+				{ "ingredient": "Champagne", "amount": 3, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Trinidad Sour",
+			"tags": ["sour"],
+			"method": ["Shake."],
+			"lines": [
+				{ "ingredient": "orgeat", "amount": 1, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "rye whiskey", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "Angostura bitters", "amount": 1.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Eggnog",
+			"tags": ["flip"],
+			"method": ["Shake."],
+			"garnish": "nutmeg, orange zest and Luxardo maraschino cherry",
+			"lines": [
+				{ "ingredient": "maraschino liqueur", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "egg", "amount": 1, "unit": "whole" },
+				{ "ingredient": "whiskey", "amount": 2, "unit": "oz" },
+				{ "ingredient": "milk", "amount": 4, "unit": "oz", "note": "top" }
+			]
+		},
+		{
+			"name": "Allrecipes Spiked Eggnog",
+			"tags": ["flip"],
+			"garnish": "nutmeg, cinnamon and orange zest",
+			"source": "https://www.allrecipes.com/recipe/57028/amazingly-good-eggnog/",
+			"lines": [
+				{ "ingredient": "milk", "amount": 4, "unit": "cup" },
+				{ "ingredient": "cloves", "amount": 5, "unit": "whole" },
+				{ "ingredient": "vanilla extract", "amount": 0.5, "unit": "tsp" },
+				{ "ingredient": "ground cinnamon", "amount": 1, "unit": "tsp" },
+				{ "ingredient": "egg yolk", "amount": 12, "unit": "whole" },
+				{ "ingredient": "sugar", "amount": 1.5, "unit": "cup" },
+				{ "ingredient": "light cream", "amount": 4, "unit": "cup" },
+				{ "ingredient": "vanilla extract", "amount": 2, "unit": "tsp" },
+				{ "ingredient": "ground nutmeg", "amount": 0.5, "unit": "tsp" },
+				{ "ingredient": "whiskey", "amount": 2.5, "unit": "cup" }
+			]
+		},
+		{
+			"name": "How to Drink Spiked Eggnog",
+			"tags": ["flip"],
+			"garnish": "nutmeg",
+			"source": "https://www.youtube.com/watch?v=_kQiC0etS3g",
+			"lines": [
+				{ "ingredient": "egg white", "amount": 4, "unit": "whole" },
+				{ "ingredient": "sugar", "amount": 1, "unit": "tbsp" },
+				{ "ingredient": "egg yolk", "amount": 4, "unit": "whole" },
+				{ "ingredient": "sugar", "amount": 0.25, "unit": "cup" },
+				{ "ingredient": "milk", "amount": 2, "unit": "cup" },
+				{ "ingredient": "heavy cream", "amount": 1, "unit": "cup" },
+				{ "ingredient": "bourbon", "amount": 2, "unit": "oz" },
+				{ "ingredient": "rum", "amount": 2, "unit": "oz" },
+				{ "ingredient": "salt", "unit": "to taste", "note": "pinch" }
+			]
+		},
+		{
+			"name": "Joshua Weissman Eggnog",
+			"tags": ["flip"],
+			"source": "https://www.joshuaweissman.com/post/homemade-eggnog",
+			"lines": [
+				{ "ingredient": "milk", "amount": 3, "unit": "cup" },
+				{ "ingredient": "vanilla extract", "amount": 1.5, "unit": "tsp" },
+				{ "ingredient": "egg yolk", "amount": 6, "unit": "whole" },
+				{ "ingredient": "sugar", "amount": 1, "unit": "cup" },
+				{ "ingredient": "ground cinnamon", "amount": 1, "unit": "tsp" },
+				{ "ingredient": "ground cloves", "amount": 0.25, "unit": "tsp" },
+				{ "ingredient": "ground ginger", "amount": 2, "unit": "tbsp" },
+				{ "ingredient": "ground nutmeg", "amount": 1.5, "unit": "tsp" },
+				{ "ingredient": "whiskey", "amount": 0.25, "unit": "cup" },
+				{ "ingredient": "heavy cream", "amount": 1.5, "unit": "cup" }
+			]
+		},
+		{
+			"name": "Basil Lemonade",
+			"tags": ["sour"],
+			"lines": [
+				{ "ingredient": "orgeat", "amount": 1.5, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 1.5, "unit": "oz" },
+				{ "ingredient": "basil", "amount": 10, "unit": "leaf" }
+			]
+		}
+	]
+}
