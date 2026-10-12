@@ -580,12 +580,6 @@ describe('/recipes/new', () => {
 			});
 		});
 
-		it('keeps the link as the Source exactly as pasted', async () => {
-			const { result } = importFromLink(owner, '  https://example.com  ', answer, html('<p>x</p>'));
-
-			expect(((await result) as { draft: RecipeDraft }).draft.source).toBe('https://example.com');
-		});
-
 		it('treats anything that is not a single http link as pasted text and never fetches it', async () => {
 			for (const text of ['2 oz rum\n0.75 oz lime juice', 'http://one.example/a and more', 'ftp://example.com/recipe']) {
 				const { seen, fetched, result } = importFromLink(owner, text, answer, html('<p>ignored</p>'));

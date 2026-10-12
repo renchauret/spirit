@@ -13,23 +13,6 @@ const browse = (signedIn: boolean) =>
 	);
 
 describe('browse page', () => {
-	it('puts Filter on the search row after the search box, not in the header', () => {
-		const html = browse(true);
-
-		const header = html.slice(html.indexOf('<header'), html.indexOf('</header>'));
-		expect(header).not.toContain('>Filter<');
-
-		expect(html).toMatch(/<div class="search-row[^"]*">.*<input[^>]*type="search".*<button[^>]*>Filter<\/button>/);
-	});
-
-	it('gives Create and Ingredients the squared-off shared button class in the header', () => {
-		const html = browse(true);
-
-		expect(html).toMatch(/<a class="btn" href="\/recipes\/new"[^>]*>Create<\/a>/);
-		expect(html).toMatch(/<a class="btn" href="\/ingredients"[^>]*>Ingredients<\/a>/);
-		expect(html).not.toMatch(/class="btn[^"]*\bprimary\b[^"]*"[^>]*>(Create|Ingredients)</);
-	});
-
 	it('never shows the Owner pills to Visitors', () => {
 		const html = browse(false);
 

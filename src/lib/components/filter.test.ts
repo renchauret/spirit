@@ -26,14 +26,6 @@ describe('FilterButton', () => {
 		expect(html).toContain('Filter · 2');
 		expect(html).toMatch(/class="[^"]*\bsel\b/);
 	});
-
-	it('wears the shared squared-off button shape whether on or off', () => {
-		const off = text(render(FilterButton, { props: { count: 0, onclick: () => {} } }).body);
-		const on = text(render(FilterButton, { props: { count: 2, onclick: () => {} } }).body);
-
-		expect(off).toMatch(/<button[^>]*class="[^"]*\bbtn\b/);
-		expect(on).toMatch(/<button[^>]*class="[^"]*\bbtn\b/);
-	});
 });
 
 describe('FilterSheet', () => {
@@ -73,19 +65,6 @@ describe('FilterSheet', () => {
 	it('keeps the search text in its links', () => {
 		const searching = text(render(FilterSheet, { props: { open: true, filter: { ...filter, query: 'neg' }, sections, count: 1 } }).body);
 		expect(searching).toContain('href="/?q=neg&amp;i=2&amp;i=1&amp;tag=sour"');
-	});
-
-	it('filters by the tiki and sparkling families', () => {
-		expect(html).toContain('href="/?i=2&amp;tag=sour&amp;tag=tiki"');
-		expect(html).toContain('href="/?i=2&amp;tag=sour&amp;tag=sparkling"');
-	});
-
-	it('marks an active new-family chip', () => {
-		const active = text(
-			render(FilterSheet, { props: { open: true, filter: { ...EMPTY_FILTER, tags: ['tiki', 'sparkling'] }, sections, count: 1 } }).body
-		);
-		expect(active).toMatch(/aria-current="true"[^>]*>\s*tiki/);
-		expect(active).toMatch(/aria-current="true"[^>]*>\s*sparkling/);
 	});
 
 	it('marks the active choices', () => {

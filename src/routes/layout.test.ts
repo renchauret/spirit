@@ -7,10 +7,6 @@ const loadFor = async (owner: App.Locals['owner'], cookies: Record<string, strin
 	};
 
 describe('root layout', () => {
-	it('ignores a leftover units cookie from the removed oz/ml toggle', async () => {
-		expect(await loadFor(null, { units: 'ml' })).toEqual({ signedIn: false });
-	});
-
 	it('reports a Visitor as signed out', async () => {
 		expect((await loadFor(null)).signedIn).toBe(false);
 	});

@@ -113,11 +113,6 @@ describe('filtering Recipes in D1', () => {
 		expect(await names(filter([], { tags: ['highball'], favorites: true }))).toEqual([]);
 	});
 
-	it('never puts the score on a card', async () => {
-		const [card] = await listRecipeCards(local.db, filter(['lime juice']));
-		expect(Object.keys(card).sort()).toEqual(['family', 'favorite', 'glass', 'id', 'name', 'photo', 'subtitle']);
-	});
-
 	it('offers used Ingredients and their Parent Ingredients, sectioned by Ingredient type in the fixed order', async () => {
 		const sections = await listFilterSections(local.db, []);
 

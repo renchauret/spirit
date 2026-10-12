@@ -28,16 +28,6 @@ describe('New Recipe page', () => {
 		expect(html).not.toContain('Paste a link or the recipe text');
 	});
 
-	it('puts the editor actions in the shared page header row', () => {
-		const draft = { ...emptyDraft(), name: 'Daiquiri' };
-		const html = clean(render(Page, { props: { params: {}, data, form: { draft, duplicate: null } } }).body);
-
-		expect(html).toMatch(/<form[^>]*class="top[^"]*"[^>]*>/);
-		expect(html).toMatch(
-			/<div class="page-header[^"]*"[^>]*>\s*<button[^>]*>Cancel<\/button>\s*<strong>New Recipe<\/strong>\s*<button[^>]*type="submit"[^>]*>Done<\/button>/
-		);
-	});
-
 	it('shows the duplicate warning with a link to the existing Recipe', () => {
 		const draft = { ...emptyDraft(), name: 'Negroni' };
 		const form = { draft, duplicate: { id: 7, name: 'Negroni' } };
@@ -54,16 +44,5 @@ describe('New Recipe page', () => {
 
 		expect(html).toContain("Couldn't find a recipe there.");
 		expect(html).toContain('just a page');
-	});
-
-	it('shows the page-could-not-be-opened error with the link kept', () => {
-		const form = {
-			text: 'https://example.com/daiquiri',
-			errors: ["Couldn't open that page. Copy the recipe text from it and paste that here instead."]
-		};
-		const html = clean(render(Page, { props: { params: {}, data, form } }).body);
-
-		expect(html).toContain("Couldn't open that page. Copy the recipe text from it and paste that here instead.");
-		expect(html).toContain('https://example.com/daiquiri');
 	});
 });

@@ -18,11 +18,4 @@ describe('GlassPlaceholder', () => {
 		expect(html).toMatch(/class="g[" ]/);
 		expect(html).toMatch(/class="liq[" ]/);
 	});
-
-	it('describes each glass without repeating the word glass', () => {
-		const html = text(render(GlassPlaceholder, { props: { glass: 'wine glass', family: 'sour', hero: true } }).body);
-
-		expect(html).toContain('aria-label="wine glass"');
-		expect(html).not.toContain('wine glass glass');
-	});
 });

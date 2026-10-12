@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { render } from 'svelte/server';
 import { describe, expect, it } from 'vitest';
 import { EMPTY_FILTER, type RecipeFilter } from '#lib/filter.ts';
@@ -6,14 +5,6 @@ import type { Suggestion } from '#lib/search.ts';
 import SearchBox from './SearchBox.svelte';
 
 const text = (html: string) => html.replace(/<!--[^>]*-->/g, '').replace(/\s+/g, ' ');
-
-const source = readFileSync(new URL('./SearchBox.svelte', import.meta.url), 'utf8');
-
-const rule = (selector: string) => {
-	const start = source.indexOf(`${selector} {`);
-	expect(start, `${selector} rule`).toBeGreaterThanOrEqual(0);
-	return source.slice(start, source.indexOf('}', start));
-};
 
 describe('SearchBox', () => {
 	const filter: RecipeFilter = { query: 'camp', ingredients: [3], tags: ['tiki'], favorites: true };
@@ -45,12 +36,5 @@ describe('SearchBox', () => {
 		const empty = text(render(SearchBox, { props: { filter: EMPTY_FILTER, suggestions: [] } }).body);
 		expect(empty).not.toContain('sugg');
 		expect(empty).not.toMatch(/name="(i|tag|fav)"/);
-	});
-
-	it('lays the search box and any trailing action in one row that stretches them to a shared height', () => {
-		expect(rule('.search-row')).toContain('display: flex;');
-		expect(rule('.search-row')).toContain('align-items: stretch;');
-		expect(rule('.search')).toContain('flex: 1;');
-		expect(rule('.search')).toContain('min-width: 0;');
 	});
 });

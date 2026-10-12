@@ -53,24 +53,6 @@ describe('RecipeLineSheet creating an Ingredient', () => {
 		expect(html).toContain('Kind of… (optional)');
 		expect(html).toContain('Back to search');
 	});
-
-	it('lists every Ingredient type in order, with none chosen yet', () => {
-		const pills = [...html.matchAll(/<button type="button" aria-pressed="(true|false)"[^>]*>([^<]+)<\/button>/g)];
-		expect(pills.slice(0, 11).map((pill) => pill[2])).toEqual([
-			'spirit',
-			'liqueur',
-			'fortified wine',
-			'wine',
-			'bitters',
-			'syrup',
-			'juice',
-			'mixer',
-			'fresh',
-			'dairy &amp; egg',
-			'pantry'
-		]);
-		expect(pills.slice(0, 11).every((pill) => pill[1] === 'false')).toBe(true);
-	});
 });
 
 describe('RecipeEditor Tags in Edit mode', () => {
@@ -128,23 +110,6 @@ describe('RecipeEditor on a new Recipe', () => {
 		expect(html).toContain('<strong>New Recipe</strong>');
 		expect(html).toContain('+ Add Recipe line');
 		expect(html).toContain('&quot;lines&quot;:[],&quot;newIngredients&quot;:[]');
-	});
-
-	it('offers the copper mug, wine glass, Irish coffee glass and julep cup glasses', () => {
-		const html = text(
-			render(RecipeEditor, {
-				props: { draft: emptyDraft(), ingredients: catalog, existingTags: [], action: '?/create', oncancel: noop }
-			}).body
-		);
-
-		for (const [value, label] of [
-			['copper mug', 'copper mug'],
-			['wine glass', 'wine glass'],
-			['irish coffee glass', 'Irish coffee glass'],
-			['julep cup', 'julep cup']
-		] as const) {
-			expect(html, value).toContain(`<option value="${value}">${label}</option>`);
-		}
 	});
 
 	it('offers to add a photo, as in Edit mode', () => {

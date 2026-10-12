@@ -94,22 +94,13 @@ node scripts/seed-sql.ts seed/fixture.json --out .wrangler/seed/fixture.sql
 npx wrangler d1 execute spirit --remote --file .wrangler/seed/fixture.sql
 ```
 
-[`seed/cocktails.json`](seed/cocktails.json) holds the Recipes converted once from the "Cocktails" Google Doc. Load it into the local database with:
-
-```sh
-node scripts/seed-sql.ts seed/cocktails.json --replace --out .wrangler/seed/cocktails.sql
-npx wrangler d1 execute spirit --local --file .wrangler/seed/cocktails.sql
-```
-
-Use `--remote` instead of `--local` to load it into production.
-
 Without `--replace` or `--additive`, loading fails if any of the seeded rows already exist. `--replace` first deletes every Recipe, Recipe line, Tag and Ingredient, including anything the Owner has edited, so use it on production only when that is intended.
 
 To add a batch of new Recipes and Ingredients to a database that already has data, without replacing anything, pass `--additive`:
 
 ```sh
-node scripts/seed-sql.ts seed/iba.json --additive --out .wrangler/seed/iba.sql
-npx wrangler d1 execute spirit --remote --file .wrangler/seed/iba.sql
+node scripts/seed-sql.ts <seed.json> --additive --out .wrangler/seed/batch.sql
+npx wrangler d1 execute spirit --remote --file .wrangler/seed/batch.sql
 ```
 
 Additive loading reuses Ingredients whose name already exists (ignoring case) and keeps their existing Ingredient type and Parent Ingredient, reuses existing Tags, and inserts new Ingredients together with any new Parent Ingredients they need. If any seeded Recipe name already exists, the whole load fails and writes nothing, so it is safe to run against production.

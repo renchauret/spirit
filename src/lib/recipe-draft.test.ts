@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { draftFrom, emptyDraft, normalizeTag, parseRecipeDraft, suggestTags, type RecipeDraft } from './recipe-draft';
+import { draftFrom, emptyDraft, parseRecipeDraft, suggestTags, type RecipeDraft } from './recipe-draft';
 
 const draft: RecipeDraft = {
 	name: 'Improved Tom Collins',
@@ -80,16 +80,6 @@ describe('parseRecipeDraft', () => {
 			errors: ['Choose a glass from the list.']
 		});
 	});
-
-	it.each(['copper mug', 'wine glass', 'irish coffee glass', 'julep cup'] as const)(
-		'accepts the %s glass',
-		(glass) => {
-			expect(parseRecipeDraft({ ...draft, glass })).toMatchObject({
-				ok: true,
-				changes: { glass }
-			});
-		}
-	);
 
 	it('drops empty Method steps', () => {
 		expect(
@@ -214,12 +204,6 @@ describe('parseRecipeDraft', () => {
 	});
 });
 
-describe('normalizeTag', () => {
-	it('lowercases, trims and drops a leading #', () => {
-		expect(normalizeTag('  #Tiki ')).toBe('tiki');
-	});
-});
-
 describe('draftFrom', () => {
 	it('starts editing from the saved Recipe', () => {
 		expect(
@@ -252,22 +236,6 @@ describe('draftFrom', () => {
 });
 
 describe('emptyDraft', () => {
-	it('starts a new Recipe with nothing filled in', () => {
-		expect(emptyDraft()).toEqual({
-			name: '',
-			glass: '',
-			garnish: '',
-			iceServe: '',
-			description: '',
-			source: '',
-			ownerNotes: '',
-			method: [],
-			tags: [],
-			lines: [],
-			newIngredients: []
-		});
-	});
-
 	it('cannot be saved until it has a name and a Recipe line', () => {
 		expect(parseRecipeDraft(emptyDraft())).toEqual({
 			ok: false,

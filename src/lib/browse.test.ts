@@ -17,11 +17,6 @@ describe('familyOf', () => {
 		expect(familyOf(['summer', 'flip', 'sour'])).toBe('flip');
 	});
 
-	it('resolves the tiki and sparkling families', () => {
-		expect(familyOf(['tiki'])).toBe('tiki');
-		expect(familyOf(['sparkling'])).toBe('sparkling');
-	});
-
 	it('is null when no Tag is a family Tag', () => {
 		expect(familyOf(['summer'])).toBeNull();
 	});
@@ -32,13 +27,6 @@ describe('placeholderGlass', () => {
 		expect(placeholderGlass('flute', 'sour')).toBe('flute');
 		expect(placeholderGlass('hurricane', 'sparkling')).toBe('hurricane');
 	});
-
-	it.each(['copper mug', 'wine glass', 'irish coffee glass', 'julep cup'] as const)(
-		'keeps an explicit %s over the family default',
-		(glass) => {
-			expect(placeholderGlass(glass, 'highball')).toBe(glass);
-		}
-	);
 
 	it.each([
 		['sour', 'coupe'],

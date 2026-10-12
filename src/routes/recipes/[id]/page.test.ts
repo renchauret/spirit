@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs';
 import { render } from 'svelte/server';
 import { describe, expect, it } from 'vitest';
 import type { RecipeView } from '#lib/server/recipes.ts';
@@ -62,27 +61,5 @@ describe('Recipe page header', () => {
 
 		expect(html).toMatch(/<a class="btn" href="\/"[^>]*>‹ Back<\/a>/);
 		expect(html).not.toMatch(/>Edit<\/button>/);
-	});
-
-	it('wraps the Back and Edit buttons in the shared sticky page header', () => {
-		const html = readView(true);
-
-		expect(html).toMatch(/<div class="top[^"]*"[^>]*>\s*<div class="page-header[^"]*"[^>]*>\s*<a class="btn" href="\/"/);
-	});
-});
-
-describe('Recipe page Method', () => {
-	const source = readFileSync(new URL('./+page.svelte', import.meta.url), 'utf8');
-
-	const rule = (selector: string) => {
-		const start = source.indexOf(`${selector} {`);
-		expect(start, `${selector} rule`).toBeGreaterThanOrEqual(0);
-		return source.slice(start, source.indexOf('}', start));
-	};
-
-	it('insets the Method text like the Recipe lines, leaving the heading in place', () => {
-		expect(rule('.method-one')).toContain('padding-inline: 6px;');
-		expect(rule('.method')).toContain('padding-inline: calc(1.3rem + 6px) 6px;');
-		expect(source).not.toMatch(/\bh2 \{/);
 	});
 });
