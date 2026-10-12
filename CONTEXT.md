@@ -48,6 +48,10 @@ _Avoid_: Category, style
 A recipe the Owner has marked as a favorite.
 _Avoid_: Like, liked
 
+**Import**:
+Turning a link or pasted text into a draft Recipe for the Owner to review; nothing is saved until the Owner saves it.
+_Avoid_: Scrape, parse, clip
+
 ## People
 
 **Owner**:
