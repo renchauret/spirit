@@ -16,7 +16,7 @@
 
 <main class="stack">
 	<div class="page-header">
-		<a class="btn compact" href="/">‹ Back</a>
+		<a class="btn" href="/">‹ Back</a>
 	</div>
 
 	<h1>Ingredients</h1>

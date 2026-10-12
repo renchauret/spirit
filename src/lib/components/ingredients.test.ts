@@ -30,10 +30,10 @@ describe('Ingredients page', () => {
 		expect(html).toContain('unused');
 	});
 
-	it('has a compact Back button in the shared page header, like the Recipe page', () => {
+	it('has a regular-height Back button in the shared page header, like the Recipe page', () => {
 		const html = text(render(IngredientsPage, { props: { data: { catalog, signedIn: true } } as never }).body);
 
-		expect(html).toMatch(/<div class="page-header[^"]*"[^>]*>\s*<a class="btn compact[^"]*" href="\/"[^>]*>‹ Back<\/a>/);
+		expect(html).toMatch(/<div class="page-header[^"]*"[^>]*>\s*<a class="btn" href="\/"[^>]*>‹ Back<\/a>/);
 	});
 });
 
