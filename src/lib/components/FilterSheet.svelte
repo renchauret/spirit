@@ -8,6 +8,7 @@
 		type FilterSection,
 		type RecipeFilter
 	} from '#lib/filter.ts';
+	import { swipeDown } from '#lib/swipe-down.ts';
 
 	let {
 		open = $bindable(),
@@ -17,6 +18,8 @@
 	}: { open: boolean; filter: RecipeFilter; sections: FilterSection[]; count: number } = $props();
 
 	let dialog: HTMLDialogElement;
+
+	const swipe = swipeDown(() => (open = false));
 
 	$effect(() => {
 		if (open && !dialog.open) dialog.showModal();
@@ -34,6 +37,7 @@
 	aria-label="Filter"
 	onclose={() => (open = false)}
 	onclick={closeOnBackdrop}
+	{@attach swipe}
 >
 	<div class="body" data-sveltekit-replacestate data-sveltekit-noscroll data-sveltekit-keepfocus>
 		<div class="grip" aria-hidden="true"></div>
@@ -95,6 +99,7 @@
 		border-radius: 18px 18px 0 0;
 		background: var(--bg);
 		color: var(--fg);
+		overflow: auto;
 		overscroll-behavior: contain;
 	}
 
@@ -144,6 +149,7 @@
 	@media (prefers-reduced-motion: no-preference) {
 		.sheet[open] {
 			animation: up 0.18s ease-out;
+			transition: transform 0.2s ease-out;
 		}
 
 		@keyframes up {
