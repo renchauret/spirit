@@ -10,15 +10,13 @@ import {
 	type Unit
 } from '../domain.ts';
 import { foldName, type IngredientOption } from '../ingredient-search.ts';
-import { normalizeTag, type DraftLine, type NewIngredient, type RecipeDraft } from '../recipe-draft.ts';
+import { normalizeTag, singleLine, type DraftLine, type NewIngredient, type RecipeDraft } from '../recipe-draft.ts';
 import type { Db } from './db/index.ts';
 import { listIngredientOptions, listTagNames } from './recipes.ts';
 import type { ReadNewIngredient, RecipeReader, RecipeReaderAnswer } from './recipe-reader.ts';
 
 export const MAX_IMPORT_TEXT = 20000;
 export const NO_RECIPE = "Couldn't find a recipe there.";
-
-const tidyName = (text: string) => text.replace(/\s+/g, ' ').trim();
 
 function toDraft(answer: RecipeReaderAnswer, catalog: IngredientOption[], usedTags: string[]): RecipeDraft | null {
 	if (answer === 'no recipe') return null;
@@ -32,7 +30,7 @@ function toDraft(answer: RecipeReaderAnswer, catalog: IngredientOption[], usedTa
 		proposed.set(ingredient.id, ingredient);
 	}
 	for (const ingredient of proposed.values()) {
-		if (!tidyName(ingredient.name) || !isIngredientType(ingredient.type)) return null;
+		if (!singleLine(ingredient.name) || !isIngredientType(ingredient.type)) return null;
 		const parent = ingredient.parentId;
 		if (parent === null) continue;
 		if (parent === 0) return null;
@@ -45,7 +43,7 @@ function toDraft(answer: RecipeReaderAnswer, catalog: IngredientOption[], usedTa
 		if (match !== undefined) existingMatch.set(id, match);
 	}
 
-	const order: number[] = [];
+	const parentFirst: number[] = [];
 	const state = new Map<number, 'visiting' | 'done'>();
 	const visit = (id: number): boolean => {
 		const seen = state.get(id);
@@ -55,14 +53,14 @@ function toDraft(answer: RecipeReaderAnswer, catalog: IngredientOption[], usedTa
 		const parent = proposed.get(id)!.parentId;
 		if (parent !== null && parent < 0 && !existingMatch.has(parent) && !visit(parent)) return false;
 		state.set(id, 'done');
-		order.push(id);
+		parentFirst.push(id);
 		return true;
 	};
 	for (const id of proposed.keys()) {
 		if (!existingMatch.has(id) && !visit(id)) return null;
 	}
 	const draftId = new Map<number, number>();
-	order.forEach((id, index) => draftId.set(id, -(index + 1)));
+	parentFirst.forEach((id, index) => draftId.set(id, -(index + 1)));
 
 	const resolve = (id: number): number | null => {
 		if (id > 0) return known.has(id) ? id : null;
@@ -92,13 +90,13 @@ function toDraft(answer: RecipeReaderAnswer, catalog: IngredientOption[], usedTa
 		if (parent !== null) markUsed(parent);
 	};
 	for (const line of answer.lines) if (line.ingredientId !== null) markUsed(line.ingredientId);
-	const newIngredients: NewIngredient[] = order
+	const newIngredients: NewIngredient[] = parentFirst
 		.filter((id) => used.has(id))
 		.map((id) => {
 			const ingredient = proposed.get(id)!;
 			return {
 				id: draftId.get(id)!,
-				name: tidyName(ingredient.name),
+				name: singleLine(ingredient.name),
 				type: ingredient.type as IngredientType,
 				parentId: ingredient.parentId === null ? null : resolve(ingredient.parentId)
 			};
