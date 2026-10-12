@@ -17,7 +17,8 @@
 		"db:migrate:local": "wrangler d1 migrations apply spirit --local",
 		"db:migrate:remote": "wrangler d1 migrations apply spirit --remote",
 		"db:seed:local": "node scripts/seed-sql.ts seed/fixture.json --replace --out .wrangler/seed/fixture.sql && wrangler d1 execute spirit --local --file .wrangler/seed/fixture.sql",
-		"deploy": "npm run build && npm run db:migrate:remote && wrangler deploy"
+		"deploy": "npm run build && npm run db:migrate:remote && wrangler deploy",
+		"owner": "node scripts/owner.ts"
 	},
 	"devDependencies": {
 		"@sveltejs/adapter-cloudflare": "^8.0.0",
@@ -35,5 +36,16 @@
 	},
 	"imports": {
 		"#lib/*": "./src/lib/*"
+	},
+	"overrides": {
+		"better-auth": {
+			"@sveltejs/kit": "$@sveltejs/kit"
+		}
+	},
+	"dependencies": {
+		"better-auth": "^1.7.7"
+	},
+	"engines": {
+		"node": ">=22.18"
 	}
 }

@@ -30,6 +30,9 @@
 			"bucket_name": "spirit-photos"
 		}
 	],
+	"secrets": {
+		"required": ["BETTER_AUTH_SECRET"]
+	},
 	"observability": {
 		"enabled": true
 	}

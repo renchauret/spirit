@@ -2,6 +2,7 @@
 	import { afterNavigate } from '$app/navigation';
 	import { formatLineAmount } from '#lib/amounts.ts';
 	import GlassPlaceholder from '#lib/components/GlassPlaceholder.svelte';
+	import OwnerRow from '#lib/components/OwnerRow.svelte';
 	import UnitToggle from '#lib/components/UnitToggle.svelte';
 	import { GLASS_LABELS } from '#lib/domain.ts';
 	import { getUnitPreference } from '#lib/units.svelte.ts';
@@ -41,6 +42,7 @@
 		<a class="btn" href="/" onclick={back}>‹ Back</a>
 		<UnitToggle />
 	</div>
+	<OwnerRow signedIn={data.signedIn} />
 
 	<GlassPlaceholder glass={recipe.placeholderGlass} family={recipe.family} hero />
 

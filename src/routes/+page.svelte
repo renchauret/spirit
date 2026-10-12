@@ -1,5 +1,6 @@
 <script lang="ts">
 	import GlassPlaceholder from '#lib/components/GlassPlaceholder.svelte';
+	import OwnerRow from '#lib/components/OwnerRow.svelte';
 	import UnitToggle from '#lib/components/UnitToggle.svelte';
 	import type { PageProps } from './$types';
 
@@ -15,6 +16,7 @@
 		<h1>Spirit</h1>
 		<UnitToggle />
 	</header>
+	<OwnerRow signedIn={data.signedIn} />
 
 	<div class="row heading">
 		<h2>Favorites first</h2>

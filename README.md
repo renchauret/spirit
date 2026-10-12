@@ -7,6 +7,7 @@ A phone-first website of cocktail Recipes, served at https://spirit.renchauret.c
 - SvelteKit with `@sveltejs/adapter-cloudflare`, running on Cloudflare Workers. Every page is server-rendered on each request and sent with `Cache-Control: no-store`.
 - D1 through Drizzle ORM. Drizzle generates the migrations and Wrangler applies them. No FTS5 or other virtual tables, because they break `wrangler d1 export`.
 - R2 for photos.
+- Better Auth email + password for the Owner, with users, sessions and sign-in rate limits stored in D1. Sign-up is disabled, and the Owner account is created with a command (see [Owner account](#owner-account)).
 - Vitest for tests. D1-backed tests run against a real local D1 database from Wrangler's `getPlatformProxy`.
 
 Cloudflare configuration is in [`wrangler.jsonc`](wrangler.jsonc):
@@ -16,6 +17,7 @@ Cloudflare configuration is in [`wrangler.jsonc`](wrangler.jsonc):
 | `DB` | D1 database | `spirit` |
 | `PHOTOS` | R2 bucket | `spirit-photos` |
 | custom domain | Workers route | `spirit.renchauret.com` on the renchauret.com zone |
+| `BETTER_AUTH_SECRET` | Worker secret | signs Owner session cookies |
 
 Server code reads bindings with `import { env } from 'cloudflare:workers'`.
 
@@ -31,12 +33,14 @@ So this project uses Wrangler (`wrangler.jsonc`) for local development, migratio
 
 ```sh
 npm install
+printf 'BETTER_AUTH_SECRET=%s\n' "$(openssl rand -base64 32)" > .dev.vars
 npm run db:migrate:local
 npm run db:seed:local
+npm run owner -- seed --email <email>
 npm run dev
 ```
 
-`npm run db:seed:local` replaces every Recipe, Ingredient and Tag in the local database with the small fixture in [`seed/fixture.json`](seed/fixture.json).
+`.dev.vars` holds local secrets and is ignored by git. `npm run db:seed:local` replaces every Recipe, Ingredient and Tag in the local database with the small fixture in [`seed/fixture.json`](seed/fixture.json).
 
 `npm run dev` serves the app with local D1 and R2 simulations stored in `.wrangler/state`. To run the built Worker in the Workers runtime instead, use `npm run preview`.
 
@@ -90,6 +94,26 @@ npx wrangler d1 execute spirit --remote --file .wrangler/seed/fixture.sql
 
 Without `--replace`, loading fails if any of the seeded rows already exist. `--replace` first deletes every Recipe, Recipe line, Tag and Ingredient, including anything the Owner has edited, so use it on production only when that is intended.
 
+## Owner account
+
+The Owner signs in at `/signin`, which nothing links to. After signing in, they return to the page named in `?redirectTo=`, or the page they came from. Sessions last 30 days and renew whenever the site is used. Sign-in is limited to 5 attempts per address every 15 minutes.
+
+There is no sign-up. Create the Owner account with:
+
+```sh
+npm run owner -- seed --email <email>
+```
+
+Nothing is ever emailed, so the email is only a login ID. If the password is forgotten, set a new one with:
+
+```sh
+npm run owner -- reset --email <email>
+```
+
+`npm run owner` runs a TypeScript script directly, so it needs Node 22.18 or later. Both commands prompt for the password (at least 12 characters), or read it from stdin when piped. They run against the local database; add `--remote` to run them against production. A reset also signs the Owner out everywhere.
+
+Server code that writes data must call `requireOwner(locals)` from `src/lib/server/auth/guard.ts`, which rejects requests without an Owner session with a 401. Hiding controls is not access control.
+
 ## Deploy
 
 ```sh
@@ -118,10 +142,22 @@ Do this once before the first deploy:
    ```
 
 4. Make sure `spirit.renchauret.com` has no existing DNS record in the renchauret.com zone, because Wrangler creates it.
-5. Deploy:
+5. Set the secret that signs session cookies:
+
+   ```sh
+   openssl rand -base64 32 | npx wrangler secret put BETTER_AUTH_SECRET
+   ```
+
+6. Deploy:
 
    ```sh
    npm run deploy
+   ```
+
+7. Create the Owner account in production:
+
+   ```sh
+   npm run owner -- seed --email <email> --remote
    ```
 
 ## Logs
