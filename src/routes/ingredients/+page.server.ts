@@ -1,5 +1,6 @@
 import { error, fail } from '@sveltejs/kit';
 import { parseIngredientEdit, parseIngredientId } from '#lib/ingredient-catalog.ts';
+import { nameTakenMessage } from '#lib/ingredient-search.ts';
 import { requireOwner } from '#lib/server/auth/guard.ts';
 import { deleteIngredient, ingredientName, listCatalog, mergeIngredient, updateIngredient } from '#lib/server/ingredients.ts';
 import type { Actions, PageServerLoad } from './$types';
@@ -28,15 +29,15 @@ export const actions: Actions = {
 		if (!parsed.ok) return fail(400, { id, error: parsed.error });
 
 		const { name } = parsed.edit;
-		switch (await updateIngredient(locals.db, id, parsed.edit)) {
+		const result = await updateIngredient(locals.db, id, parsed.edit);
+		if (typeof result === 'object') return fail(400, { id, error: nameTakenMessage(result.taken) });
+		switch (result) {
 			case 'saved':
 				return { saved: id };
 			case 'missing':
 				return missing();
 			case 'missing parent':
 				return fail(400, { id, error: 'That Parent Ingredient is no longer in the catalog.' });
-			case 'name taken':
-				return fail(400, { id, error: `There’s already an Ingredient called ${name}.` });
 			case 'cycle':
 				return fail(400, { id, error: `${name} can’t be its own Parent Ingredient, or sit under an Ingredient that is under it.` });
 		}

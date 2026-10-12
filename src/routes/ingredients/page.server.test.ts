@@ -113,7 +113,18 @@ describe('/ingredients', () => {
 		it('refuses a name already in the catalog', async () => {
 			const result = await post('update', owner, { id: String(gin), name: 'Rum', type: 'spirit', parent: '' });
 
-			expect(result).toMatchObject({ status: 400, data: { id: gin, error: 'There’s already an Ingredient called Rum.' } });
+			expect(result).toMatchObject({ status: 400, data: { id: gin, error: 'There is already an Ingredient called rum.' } });
+		});
+
+		it('refuses a name already in the catalog with different accents', async () => {
+			await local.db.insert(ingredient).values({ name: 'crème de violette', type: 'liqueur' });
+
+			const result = await post('update', owner, { id: String(gin), name: 'creme de violette', type: 'liqueur', parent: '' });
+
+			expect(result).toMatchObject({
+				status: 400,
+				data: { id: gin, error: 'There is already an Ingredient called crème de violette.' }
+			});
 		});
 
 		it('refuses an edit it cannot read', async () => {

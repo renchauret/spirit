@@ -7,6 +7,14 @@ export function foldName(text: string): string {
 	return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
 }
 
+export function sameIngredientName(a: string, b: string): boolean {
+	return foldName(a) === foldName(b);
+}
+
+export function nameTakenMessage(name: string): string {
+	return `There is already an Ingredient called ${name}.`;
+}
+
 export function searchIngredients(
 	catalog: readonly IngredientOption[],
 	typed: string,
@@ -28,8 +36,7 @@ export function searchIngredients(
 }
 
 export function canCreateIngredient(catalog: readonly IngredientOption[], typed: string): boolean {
-	const name = foldName(typed);
-	return name !== '' && !catalog.some((option) => foldName(option.name) === name);
+	return foldName(typed) !== '' && !catalog.some((option) => sameIngredientName(option.name, typed));
 }
 
 export type NewIngredientForm = {

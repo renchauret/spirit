@@ -3,6 +3,7 @@
 	import { INGREDIENT_TYPES, UNITS, UNITS_WITHOUT_AMOUNT, type IngredientType, type Unit } from '#lib/domain.ts';
 	import {
 		canCreateIngredient,
+		nameTakenMessage,
 		newIngredientForm,
 		withParent,
 		type IngredientOption,
@@ -87,7 +88,7 @@
 	function ingredientProblem(): string | null {
 		if (!creating) return ingredientId === null ? 'Pick an Ingredient first.' : null;
 		if (!createdName) return 'Give the new Ingredient a name.';
-		if (!canCreateIngredient(ingredients, createdName)) return `There is already an Ingredient called ${createdName}.`;
+		if (!canCreateIngredient(ingredients, createdName)) return nameTakenMessage(createdName);
 		return creating.type ? null : 'Choose a type for the new Ingredient.';
 	}
 

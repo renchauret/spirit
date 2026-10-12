@@ -99,9 +99,41 @@ describe('Ingredient catalog', () => {
 		});
 
 		it('refuses a name another Ingredient already has, ignoring case', async () => {
-			expect(await updateIngredient(local.db, gin, { name: 'RUM', type: 'spirit', parentId: null })).toBe('name taken');
+			expect(await updateIngredient(local.db, gin, { name: 'RUM', type: 'spirit', parentId: null })).toEqual({
+				taken: 'rum'
+			});
 
 			expect((await parents()).gin).toBeNull();
+		});
+
+		it('refuses a name another Ingredient already has, ignoring accents', async () => {
+			await local.db.insert(ingredient).values({ name: 'crème de violette', type: 'liqueur' });
+
+			expect(await updateIngredient(local.db, gin, { name: 'Creme de Violette', type: 'liqueur', parentId: null })).toEqual({
+				taken: 'crème de violette'
+			});
+
+			expect((await listCatalog(local.db)).find((i) => i.id === gin)?.name).toBe('gin');
+		});
+
+		it('refuses a name another Ingredient already has, ignoring extra spaces', async () => {
+			expect(await updateIngredient(local.db, gin, { name: '  lime   juice ', type: 'juice', parentId: null })).toEqual({
+				taken: 'lime juice'
+			});
+
+			expect((await listCatalog(local.db)).find((i) => i.id === gin)?.name).toBe('gin');
+		});
+
+		it('renames an Ingredient to a different case or accent of its own name', async () => {
+			const [{ id: violette }] = await local.db
+				.insert(ingredient)
+				.values({ name: 'creme de violette', type: 'liqueur' })
+				.returning();
+
+			expect(await updateIngredient(local.db, violette, { name: 'Crème de Violette', type: 'liqueur', parentId: null })).toBe(
+				'saved'
+			);
+			expect((await listCatalog(local.db)).find((i) => i.id === violette)?.name).toBe('Crème de Violette');
 		});
 
 		it('refuses the Ingredient as its own parent', async () => {

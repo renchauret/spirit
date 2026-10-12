@@ -1,11 +1,12 @@
-import { and, countDistinct, eq, ne, sql } from 'drizzle-orm';
+import { countDistinct, eq } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/sqlite-core';
 import { compareNames } from '../browse.ts';
+import { sameIngredientName } from '../ingredient-search.ts';
 import { canBeParentOf, descendantIds, type CatalogEntry, type IngredientEdit } from '../ingredient-catalog.ts';
 import type { Db } from './db/index.ts';
 import { ingredient, recipeLine } from './db/schema.ts';
 
-export type UpdateIngredientResult = 'saved' | 'missing' | 'missing parent' | 'name taken' | 'cycle';
+export type UpdateIngredientResult = 'saved' | 'missing' | 'missing parent' | { taken: string } | 'cycle';
 export type DeleteIngredientResult = 'deleted' | 'missing' | 'in use';
 export type MergeIngredientResult = 'merged' | 'missing' | 'missing target' | 'same' | 'cycle';
 
@@ -32,20 +33,15 @@ export async function ingredientName(db: Db, id: number): Promise<string | null>
 	return found?.name ?? null;
 }
 
-function parentLinks(db: Db) {
-	return db.select({ id: ingredient.id, parentId: ingredient.parentId }).from(ingredient);
+function ingredientLinks(db: Db) {
+	return db.select({ id: ingredient.id, name: ingredient.name, parentId: ingredient.parentId }).from(ingredient);
 }
 
 export async function updateIngredient(db: Db, id: number, edit: IngredientEdit): Promise<UpdateIngredientResult> {
-	const [catalog, sameName] = await db.batch([
-		parentLinks(db),
-		db
-			.select({ id: ingredient.id })
-			.from(ingredient)
-			.where(and(ne(ingredient.id, id), sql`lower(${ingredient.name}) = lower(${edit.name})`))
-	]);
+	const catalog = await ingredientLinks(db);
 	if (!catalog.some((i) => i.id === id)) return 'missing';
-	if (sameName.length) return 'name taken';
+	const clash = catalog.find((i) => i.id !== id && sameIngredientName(i.name, edit.name));
+	if (clash) return { taken: clash.name };
 	if (edit.parentId !== null && !catalog.some((i) => i.id === edit.parentId)) return 'missing parent';
 	if (!canBeParentOf(catalog, id, edit.parentId)) return 'cycle';
 
@@ -70,7 +66,7 @@ export async function deleteIngredient(db: Db, id: number): Promise<DeleteIngred
 
 export async function mergeIngredient(db: Db, fromId: number, intoId: number): Promise<MergeIngredientResult> {
 	if (fromId === intoId) return 'same';
-	const catalog = await parentLinks(db);
+	const catalog = await ingredientLinks(db);
 	if (!catalog.some((i) => i.id === fromId)) return 'missing';
 	if (!catalog.some((i) => i.id === intoId)) return 'missing target';
 	if (descendantIds(catalog, fromId).has(intoId)) return 'cycle';

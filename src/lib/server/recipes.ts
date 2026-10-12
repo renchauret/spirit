@@ -4,7 +4,7 @@ import type { LineAmount } from '../amounts.ts';
 import { cardSubtitle, compareNames, familyOf, placeholderGlass } from '../browse.ts';
 import { INGREDIENT_TYPES, type FamilyTag, type Glass } from '../domain.ts';
 import { EMPTY_FILTER, isSearching, type FilterSection, type RecipeFilter } from '../filter.ts';
-import { foldName, type IngredientOption } from '../ingredient-search.ts';
+import { foldName, nameTakenMessage, type IngredientOption } from '../ingredient-search.ts';
 import { filterAndRank, matchedLineIndexes } from '../ranking.ts';
 import type { RecipeChanges } from '../recipe-draft.ts';
 import { suggest, type Suggestion } from '../search.ts';
@@ -353,7 +353,7 @@ export async function createRecipe(db: Db, changes: RecipeChanges): Promise<Crea
 
 export function saveProblemMessage(problem: SaveProblem): string {
 	if (problem === 'missing ingredient') return 'An Ingredient in the Recipe lines is no longer in the catalog.';
-	return `There is already an Ingredient called ${problem.taken}. Pick it from the search instead.`;
+	return `${nameTakenMessage(problem.taken)} Pick it from the search instead.`;
 }
 
 export async function setFavorite(db: Db, id: number, favorite: boolean): Promise<boolean> {
