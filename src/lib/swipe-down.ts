@@ -21,6 +21,7 @@ const IDLE_SWIPE: SwipeState = {
 const DISMISS_DISTANCE_FRACTION = 0.3;
 const FLICK_VELOCITY = 0.6;
 const FLICK_MIN_DISTANCE = 24;
+const FLICK_HOLD_TIME = 100;
 
 export function beginSwipe(atTop: boolean, y: number, time: number): SwipeState {
 	if (!atTop) return IDLE_SWIPE;
@@ -41,11 +42,12 @@ export function dragSwipe(state: SwipeState, y: number, time: number): SwipeStat
 
 export function releaseSwipe(
 	state: SwipeState,
-	{ height, cancelled = false }: { height: number; cancelled?: boolean }
+	{ height, cancelled = false, time }: { height: number; cancelled?: boolean; time?: number }
 ): { dismiss: boolean; state: SwipeState } {
 	if (state.phase === 'idle') return { dismiss: false, state };
 	const draggedFar = height > 0 && state.offset >= height * DISMISS_DISTANCE_FRACTION;
-	const flicked = state.velocity >= FLICK_VELOCITY && state.offset >= FLICK_MIN_DISTANCE;
+	const held = time !== undefined && time - state.lastTime > FLICK_HOLD_TIME;
+	const flicked = !held && state.velocity >= FLICK_VELOCITY && state.offset >= FLICK_MIN_DISTANCE;
 	return { dismiss: !cancelled && (draggedFar || flicked), state: IDLE_SWIPE };
 }
 
@@ -81,12 +83,16 @@ export function swipeDown(onDismiss: () => void): Attachment<HTMLElement> {
 
 		function finish(event: PointerEvent, cancelled: boolean) {
 			if (pointer !== event.pointerId) return;
-			const { dismiss } = releaseSwipe(state, { height: element.offsetHeight, cancelled });
+			const { dismiss } = releaseSwipe(state, {
+				height: element.offsetHeight,
+				cancelled,
+				time: event.timeStamp
+			});
 			state = IDLE_SWIPE;
 			pointer = null;
+			if (dismiss) onDismiss();
 			element.style.transition = '';
 			element.style.transform = '';
-			if (dismiss) onDismiss();
 		}
 
 		const onPointerUp = (event: PointerEvent) => finish(event, false);
