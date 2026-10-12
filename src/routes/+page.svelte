@@ -76,10 +76,6 @@
 		flex: none;
 	}
 
-	.controls :global(.chip) {
-		white-space: nowrap;
-	}
-
 	.heading {
 		justify-content: space-between;
 	}
