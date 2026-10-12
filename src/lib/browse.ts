@@ -2,10 +2,8 @@ import { FAMILY_DEFAULT_GLASS, isFamilyTag, type FamilyTag, type Glass } from '.
 
 const collator = new Intl.Collator('en', { sensitivity: 'base', numeric: true });
 
-export function sortForBrowsing<T extends { name: string; favorite: boolean }>(recipes: readonly T[]): T[] {
-	return [...recipes].sort(
-		(a, b) => Number(b.favorite) - Number(a.favorite) || collator.compare(a.name, b.name)
-	);
+export function compareNames(a: string, b: string): number {
+	return collator.compare(a, b);
 }
 
 export function familyOf(tags: readonly string[]): FamilyTag | null {

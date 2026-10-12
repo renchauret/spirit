@@ -68,7 +68,7 @@
 		<h2>Recipe lines</h2>
 		<ul class="lines">
 			{#each recipe.lines as line, i (i)}
-				<li>
+				<li class:hit={data.highlighted.includes(i)}>
 					<span class="amt">{formatLineAmount(line, units.system)}</span>
 					<span>
 						{line.ingredient}
@@ -137,6 +137,12 @@
 		gap: 10px;
 		padding: 9px 0;
 		border-bottom: 1px solid var(--line);
+	}
+
+	.lines li.hit {
+		background: var(--soft);
+		border-radius: 8px;
+		padding-inline: 6px;
 	}
 
 	.amt {

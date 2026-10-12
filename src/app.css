@@ -147,6 +147,12 @@ a {
 	font-size: 0.92rem;
 }
 
+.chip.sel {
+	background: var(--accent);
+	color: var(--accent-ink);
+	border-color: var(--accent);
+}
+
 .fav {
 	color: var(--gold);
 }

@@ -1,0 +1,76 @@
+import { render } from 'svelte/server';
+import { describe, expect, it } from 'vitest';
+import { EMPTY_FILTER, type FilterSection, type RecipeFilter } from '#lib/filter.ts';
+import ActiveFilters from './ActiveFilters.svelte';
+import FilterButton from './FilterButton.svelte';
+import FilterSheet from './FilterSheet.svelte';
+
+const sections: FilterSection[] = [
+	{ type: 'spirit', ingredients: [{ id: 1, name: 'rum' }, { id: 2, name: 'white rum' }] },
+	{ type: 'juice', ingredients: [{ id: 3, name: 'lime juice' }] }
+];
+
+const text = (html: string) => html.replace(/<!--[^>]*-->/g, '').replace(/\s+/g, ' ');
+
+describe('FilterButton', () => {
+	it('says Filter when nothing is on', () => {
+		const html = text(render(FilterButton, { props: { count: 0, onclick: () => {} } }).body);
+
+		expect(html).toMatch(/>\s*Filter\s*</);
+		expect(html).not.toMatch(/class="[^"]*\bsel\b/);
+	});
+
+	it('shows the active count and is highlighted when filters are on', () => {
+		const html = text(render(FilterButton, { props: { count: 2, onclick: () => {} } }).body);
+
+		expect(html).toContain('Filter · 2');
+		expect(html).toMatch(/class="[^"]*\bsel\b/);
+	});
+});
+
+describe('FilterSheet', () => {
+	const filter: RecipeFilter = { ingredients: [2], tags: ['sour'], favorites: false };
+	const html = text(render(FilterSheet, { props: { open: true, filter, sections, count: 3 } }).body);
+
+	it('has a house-favorites toggle, family Tags and Ingredient sections in the fixed order', () => {
+		expect(html).toContain('★ House favorites');
+		const order = ['Family', 'sour', 'daisy', 'highball', 'old fashioned', 'martini', 'flip', 'spirit', 'juice'].map((s) =>
+			html.indexOf(`>${s}<`)
+		);
+		expect(order.every((at) => at >= 0)).toBe(true);
+		expect(order).toEqual([...order].sort((a, b) => a - b));
+	});
+
+	it('shows the number of matching Recipes on its close button', () => {
+		expect(html).toContain('Show 3');
+	});
+
+	it('links each choice to the filter with it toggled', () => {
+		expect(html).toContain('href="/?i=2&amp;i=1&amp;tag=sour"');
+		expect(html).toContain('href="/?tag=sour"');
+		expect(html).toContain('href="/?i=2"');
+		expect(html).toContain('href="/?i=2&amp;tag=sour&amp;fav=1"');
+	});
+
+	it('marks the active choices', () => {
+		expect(html).toMatch(/aria-current="true"[^>]*>\s*white rum/);
+		expect(html).toMatch(/aria-current="true"[^>]*>\s*sour/);
+		expect(html).not.toMatch(/aria-current="true"[^>]*>\s*rum/);
+	});
+});
+
+describe('ActiveFilters', () => {
+	it('renders nothing when no filter is on', () => {
+		expect(text(render(ActiveFilters, { props: { filter: EMPTY_FILTER, sections } }).body).trim()).toBe('');
+	});
+
+	it('shows a removable chip per filter, and Clear all', () => {
+		const filter: RecipeFilter = { ingredients: [3], tags: ['sour'], favorites: true };
+		const html = text(render(ActiveFilters, { props: { filter, sections } }).body);
+
+		expect(html).toMatch(/href="\/\?tag=sour&amp;fav=1"[^>]*>\s*lime juice ✕/);
+		expect(html).toMatch(/href="\/\?i=3&amp;fav=1"[^>]*>\s*#sour ✕/);
+		expect(html).toMatch(/href="\/\?i=3&amp;tag=sour"[^>]*>\s*★ favorites ✕/);
+		expect(html).toMatch(/href="\/"[^>]*>\s*Clear all/);
+	});
+});

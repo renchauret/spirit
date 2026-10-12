@@ -1,48 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { cardSubtitle, familyOf, placeholderGlass, sortForBrowsing } from './browse';
+import { cardSubtitle, compareNames, familyOf, placeholderGlass } from './browse';
 
-describe('sortForBrowsing', () => {
-	it('puts favorites first, then sorts A–Z', () => {
-		const recipes = [
-			{ name: 'Sidecar', favorite: false },
-			{ name: 'Negroni', favorite: true },
-			{ name: 'Aviation', favorite: false },
-			{ name: 'Daiquiri', favorite: true },
-			{ name: 'Mojito', favorite: false }
-		];
-
-		expect(sortForBrowsing(recipes).map((r) => r.name)).toEqual([
-			'Daiquiri',
-			'Negroni',
-			'Aviation',
-			'Mojito',
-			'Sidecar'
-		]);
-	});
-
-	it('sorts names ignoring case and accents', () => {
-		const recipes = [
-			{ name: 'Vieux Carré', favorite: false },
-			{ name: 'piña colada', favorite: false },
-			{ name: 'Élan', favorite: false },
-			{ name: 'Paper Plane', favorite: false }
-		];
-
-		expect(sortForBrowsing(recipes).map((r) => r.name)).toEqual([
+describe('compareNames', () => {
+	it('sorts names A–Z ignoring case and accents', () => {
+		expect(['Vieux Carré', 'piña colada', 'Élan', 'Paper Plane'].sort(compareNames)).toEqual([
 			'Élan',
 			'Paper Plane',
 			'piña colada',
 			'Vieux Carré'
 		]);
-	});
-
-	it('does not reorder its input', () => {
-		const recipes = [
-			{ name: 'B', favorite: false },
-			{ name: 'A', favorite: false }
-		];
-		sortForBrowsing(recipes);
-		expect(recipes[0].name).toBe('B');
 	});
 });
 

@@ -10,7 +10,7 @@ export type LineAmount = {
 	unit: Unit;
 };
 
-const ML_PER: Partial<Record<Unit, number>> = {
+export const ML_PER: Partial<Record<Unit, number>> = {
 	oz: 30,
 	ml: 1,
 	cl: 10,

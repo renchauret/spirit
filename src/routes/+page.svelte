@@ -1,10 +1,15 @@
 <script lang="ts">
+	import ActiveFilters from '#lib/components/ActiveFilters.svelte';
+	import FilterButton from '#lib/components/FilterButton.svelte';
+	import FilterSheet from '#lib/components/FilterSheet.svelte';
 	import GlassPlaceholder from '#lib/components/GlassPlaceholder.svelte';
 	import OwnerRow from '#lib/components/OwnerRow.svelte';
 	import UnitToggle from '#lib/components/UnitToggle.svelte';
+	import { activeFilterCount, isFilterActive, recipeHref } from '#lib/filter.ts';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
+	let sheetOpen = $state(false);
 </script>
 
 <svelte:head>
@@ -14,12 +19,17 @@
 <main class="stack">
 	<header class="brand">
 		<h1>Spirit</h1>
-		<UnitToggle />
+		<div class="controls">
+			<FilterButton count={activeFilterCount(data.filter)} onclick={() => (sheetOpen = true)} />
+			<UnitToggle />
+		</div>
 	</header>
 	<OwnerRow signedIn={data.signedIn} />
 
+	<ActiveFilters filter={data.filter} sections={data.sections} />
+
 	<div class="row heading">
-		<h2>Favorites first</h2>
+		<h2>{isFilterActive(data.filter) ? 'Results' : 'Favorites first'}</h2>
 		<span class="count">{data.recipes.length}</span>
 	</div>
 
@@ -27,7 +37,7 @@
 		<ul class="cards">
 			{#each data.recipes as recipe (recipe.id)}
 				<li>
-					<a class="card" href="/recipes/{recipe.id}">
+					<a class="card" href={recipeHref(recipe.id, data.filter)}>
 						<GlassPlaceholder glass={recipe.glass} family={recipe.family}>
 							{#if recipe.favorite}
 								<span class="star fav" aria-label="House favorite">★</span>
@@ -43,10 +53,14 @@
 				</li>
 			{/each}
 		</ul>
+	{:else if isFilterActive(data.filter)}
+		<p class="muted">Nothing matches. Try removing a filter.</p>
 	{:else}
 		<p class="muted">No Recipes yet.</p>
 	{/if}
 </main>
+
+<FilterSheet bind:open={sheetOpen} filter={data.filter} sections={data.sections} count={data.recipes.length} />
 
 <style>
 	.brand {
@@ -58,6 +72,12 @@
 
 	.brand h1 {
 		font-size: 1.7rem;
+	}
+
+	.controls {
+		display: flex;
+		align-items: center;
+		gap: 8px;
 	}
 
 	.heading {
