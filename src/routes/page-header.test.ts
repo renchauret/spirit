@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 const source = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const css = source('../app.css');
-const recipePage = source('./recipes/[id]/+page.svelte');
+const recipeEditor = source('../lib/components/RecipeEditor.svelte');
 
 const rule = (text: string, selector: string) => {
 	const start = text.indexOf(`${selector} {`);
@@ -34,11 +34,15 @@ describe('page header', () => {
 		expect(css).not.toContain('--header-h');
 	});
 
-	it('keeps the sticky Recipe header absorbing the page top padding', () => {
-		const top = rule(recipePage, '.top');
+	it('keeps the shared sticky top bar absorbing the page top padding', () => {
+		const top = rule(css, '.top');
 
 		expect(top).toContain('position: sticky;');
 		expect(top).toContain('margin-top: calc(-1 * var(--page-top));');
 		expect(top).toContain('padding-block: var(--page-top)');
+	});
+
+	it('renders the Recipe editor top bar borderless', () => {
+		expect(recipeEditor).not.toContain('border-bottom');
 	});
 });

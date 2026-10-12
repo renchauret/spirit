@@ -132,15 +132,6 @@
 </main>
 
 <style>
-	.top {
-		position: sticky;
-		top: env(safe-area-inset-top, 0px);
-		background: var(--bg);
-		margin-top: calc(-1 * var(--page-top));
-		padding-block: var(--page-top) 6px;
-		z-index: 3;
-	}
-
 	.title {
 		display: flex;
 		align-items: center;

@@ -28,6 +28,16 @@ describe('New Recipe page', () => {
 		expect(html).not.toContain('Paste a link or the recipe text');
 	});
 
+	it('puts the editor actions in the shared page header row', () => {
+		const draft = { ...emptyDraft(), name: 'Daiquiri' };
+		const html = clean(render(Page, { props: { params: {}, data, form: { draft, duplicate: null } } }).body);
+
+		expect(html).toMatch(/<form[^>]*class="top[^"]*"[^>]*>/);
+		expect(html).toMatch(
+			/<div class="page-header[^"]*"[^>]*>\s*<button[^>]*>Cancel<\/button>\s*<strong>New Recipe<\/strong>\s*<button[^>]*type="submit"[^>]*>Done<\/button>/
+		);
+	});
+
 	it('shows the duplicate warning with a link to the existing Recipe', () => {
 		const draft = { ...emptyDraft(), name: 'Negroni' };
 		const form = { draft, duplicate: { id: 7, name: 'Negroni' } };
