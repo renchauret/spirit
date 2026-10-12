@@ -10,16 +10,27 @@ const rule = (text: string, selector: string) => {
 	return text.slice(start, text.indexOf('}', start));
 };
 
+const brandSizePx = () => {
+	const match = rule(css, ':root').match(/--brand-size:\s*([\d.]+)rem;/);
+	expect(match, '--brand-size in rem').not.toBeNull();
+	return Number(match?.[1]) * 16;
+};
+
 describe('page header', () => {
 	it('sizes the shared page header and the regular buttons to one control height', () => {
 		expect(rule(css, ':root')).toContain('--control-h: 45px;');
-		expect(rule(css, '.page-header')).toContain('min-height: var(--control-h);');
+		const header = rule(css, '.page-header');
+
+		expect(header).toContain('min-height: var(--control-h);');
+		expect(header).toContain('align-items: center;');
 		expect(rule(css, '.btn')).toContain('padding: 9px 14px;');
 		expect(rule(css, '.btn')).toContain('min-height: var(--control-h);');
 	});
 
-	it('makes the Spirit wordmark one control tall so it matches the header buttons', () => {
-		expect(rule(css, ':root')).toContain('--brand-size: var(--control-h);');
+	it('sizes the Spirit wordmark between 1.7rem and the 45px control height', () => {
+		expect(brandSizePx()).toBe(32);
+		expect(brandSizePx()).toBeGreaterThan(1.7 * 16);
+		expect(brandSizePx()).toBeLessThan(45);
 
 		const h1 = rule(css, '.page-header h1');
 
