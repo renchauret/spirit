@@ -37,11 +37,11 @@ Private notes on a Recipe that only the Owner can see.
 _Avoid_: Comments, private notes
 
 **Tag**:
-A label on a recipe, such as "sour" or "tiki".
+A label on a recipe, such as "sour" or "summer".
 _Avoid_: Category
 
 **Family Tag**:
-One of the Tags naming a cocktail family (sour, daisy, highball, old fashioned, martini, flip); it sets the color and default glass of a Recipe's placeholder drawing.
+One of the Tags naming a cocktail family (sour, daisy, highball, old fashioned, martini, flip, tiki, sparkling); a Recipe has at most one, and may have none; it sets the color and default glass of a Recipe's placeholder drawing.
 _Avoid_: Category, style
 
 **Favorite**:
