@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest';
 
 const source = (path: string) => readFileSync(new URL(path, import.meta.url), 'utf8');
 const css = source('../app.css');
-const recipeEditor = source('../lib/components/RecipeEditor.svelte');
 
 const rule = (text: string, selector: string) => {
 	const start = text.indexOf(`${selector} {`);
@@ -42,7 +41,8 @@ describe('page header', () => {
 		expect(top).toContain('padding-block: var(--page-top)');
 	});
 
-	it('renders the Recipe editor top bar borderless', () => {
-		expect(recipeEditor).not.toContain('border-bottom');
+	it('keeps the shared top bar borderless', () => {
+		expect(rule(css, '.top')).not.toContain('border');
+		expect(rule(css, '.page-header')).not.toContain('border');
 	});
 });
