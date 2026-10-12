@@ -205,10 +205,10 @@ describe('additive seed loading', () => {
 	it('reuses an existing Tag instead of duplicating it', async () => {
 		await load(local, seedStatements(additive, { additive: true }));
 
-		const { results } = await local.d1
-			.prepare("select count(*) as n from tag where name = 'sour'")
-			.all<{ n: number }>();
-		expect(results).toEqual([{ n: 1 }]);
+		const daiquiri = (await listRecipeCards(local.db)).find((c) => c.name === 'Daiquiri')!;
+		const added = (await listRecipeCards(local.db)).find((c) => c.name === 'Naked and Famous')!;
+		expect((await getRecipe(local.db, daiquiri.id))!.tags).toEqual(['sour']);
+		expect((await getRecipe(local.db, added.id))!.tags).toEqual(['sour']);
 	});
 
 	it('adds new Recipes alongside the existing ones', async () => {
@@ -269,6 +269,10 @@ describe('additive seed loading', () => {
 
 		expect(() => seedStatements(duplicates, { additive: true })).toThrow();
 		expect(() => seedStatements(duplicates)).not.toThrow();
+	});
+
+	it('refuses to replace and add at the same time', () => {
+		expect(() => seedStatements(seed, { replace: true, additive: true })).toThrow();
 	});
 });
 

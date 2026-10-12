@@ -262,6 +262,12 @@ function insertStatements(seed: Seed, replace: boolean): string[] {
 	return statements;
 }
 
+function failWhenRecipeNameExists(seed: Seed): string | null {
+	const names = seed.recipes.map((recipe) => `lower(${sql(recipe.name)})`);
+	if (!names.length) return null;
+	return `INSERT INTO recipe (name) SELECT NULL WHERE EXISTS (SELECT 1 FROM recipe WHERE lower(name) IN (${names.join(', ')}))`;
+}
+
 function additiveStatements(seed: Seed): string[] {
 	const statements: string[] = [];
 
@@ -272,12 +278,8 @@ function additiveStatements(seed: Seed): string[] {
 		seen.add(key);
 	}
 
-	const seededNames = seed.recipes.map((recipe) => `lower(${sql(recipe.name)})`);
-	if (seededNames.length) {
-		statements.push(
-			`INSERT INTO recipe (name) SELECT NULL WHERE EXISTS (SELECT 1 FROM recipe WHERE lower(name) IN (${seededNames.join(', ')}))`
-		);
-	}
+	const clashGuard = failWhenRecipeNameExists(seed);
+	if (clashGuard) statements.push(clashGuard);
 
 	for (const name of new Set(seed.recipes.flatMap((recipe) => recipe.tags))) {
 		statements.push(`INSERT INTO tag (name) VALUES (${sql(name)}) ON CONFLICT (name) DO NOTHING`);
