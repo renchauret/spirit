@@ -21,8 +21,8 @@
 		<div class="controls">
 			<FilterButton count={activeFilterCount(data.filter)} onclick={() => (sheetOpen = true)} />
 			{#if data.signedIn}
-				<a class="chip" href="/recipes/new">Create</a>
-				<a class="chip" href="/ingredients">Ingredients</a>
+				<a class="btn" href="/recipes/new">Create</a>
+				<a class="btn" href="/ingredients">Ingredients</a>
 			{/if}
 		</div>
 	</header>
