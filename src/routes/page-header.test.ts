@@ -19,6 +19,15 @@ describe('page header', () => {
 		expect(rule(css, '.btn')).toContain('min-height: var(--control-h);');
 	});
 
+	it('makes the Spirit wordmark one control tall so it matches the header buttons', () => {
+		expect(rule(css, ':root')).toContain('--brand-size: var(--control-h);');
+
+		const h1 = rule(css, '.page-header h1');
+
+		expect(h1).toContain('font-size: var(--brand-size);');
+		expect(h1).toContain('line-height: 1;');
+	});
+
 	it('removes the compact header sizing leftovers', () => {
 		expect(css).not.toContain('.btn.compact');
 		expect(css).not.toContain('--header-control-h');

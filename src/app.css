@@ -21,8 +21,8 @@
 	--mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
 	--leading: 1.45;
 	--page-top: 8px;
-	--brand-size: 1.7rem;
 	--control-h: 45px;
+	--brand-size: var(--control-h);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -145,6 +145,7 @@ a {
 
 .page-header h1 {
 	font-size: var(--brand-size);
+	line-height: 1;
 }
 
 .chips {
