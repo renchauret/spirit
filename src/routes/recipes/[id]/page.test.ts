@@ -62,4 +62,10 @@ describe('Recipe page header', () => {
 		expect(html).toMatch(/<a class="btn" href="\/"[^>]*>‹ Back<\/a>/);
 		expect(html).not.toMatch(/>Edit<\/button>/);
 	});
+
+	it('wraps the Back and Edit buttons in the shared sticky page header', () => {
+		const html = readView(true);
+
+		expect(html).toMatch(/<div class="top[^"]*"[^>]*>\s*<div class="page-header[^"]*"[^>]*>\s*<a class="btn" href="\/"/);
+	});
 });

@@ -90,11 +90,13 @@
 	};
 </script>
 
-<form class="mode" method="POST" {action} use:enhance={save}>
+<form class="top" method="POST" {action} use:enhance={save}>
 	<input type="hidden" name="recipe" value={JSON.stringify(draft)} />
-	<button type="button" class="btn" disabled={saving} onclick={oncancel}>Cancel</button>
-	<strong>{heading}</strong>
-	<button type="submit" class="btn primary" disabled={saving}>{saving ? 'Saving…' : 'Done'}</button>
+	<div class="page-header">
+		<button type="button" class="btn" disabled={saving} onclick={oncancel}>Cancel</button>
+		<strong>{heading}</strong>
+		<button type="submit" class="btn primary" disabled={saving}>{saving ? 'Saving…' : 'Done'}</button>
+	</div>
 </form>
 
 {#if duplicate}
@@ -187,19 +189,6 @@
 {/if}
 
 <style>
-	.mode {
-		position: sticky;
-		top: env(safe-area-inset-top, 0px);
-		z-index: 5;
-		background: var(--bg);
-		padding-block: 8px;
-		display: flex;
-		justify-content: space-between;
-		align-items: center;
-		border-bottom: 1px solid var(--line);
-		margin-bottom: 4px;
-	}
-
 	.errors {
 		border: 1px solid var(--accent);
 		background: var(--soft);
