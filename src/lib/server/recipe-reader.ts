@@ -162,7 +162,7 @@ export function anthropicRecipeReader(apiKey: string): RecipeReader {
 				max_tokens: MAX_TOKENS,
 				system: SYSTEM,
 				tools: [RECIPE_TOOL],
-				tool_choice: { type: 'tool', name: TOOL_NAME },
+				tool_choice: { type: 'auto' },
 				messages: [{ role: 'user', content: promptFor(input) }]
 			})
 		});
