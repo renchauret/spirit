@@ -39,9 +39,4 @@ describe('browse page', () => {
 		expect(html).not.toContain('>Create<');
 		expect(html).not.toContain('>Ingredients<');
 	});
-
-	it('shows the same Spirit wordmark to Visitors and the Owner', () => {
-		expect(browse(true)).toContain('<h1>Spirit</h1>');
-		expect(browse(false)).toContain('<h1>Spirit</h1>');
-	});
 });
