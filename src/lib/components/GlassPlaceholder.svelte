@@ -96,7 +96,7 @@
 		background: color-mix(in oklab, var(--soft) 58%, #7fd0bf 42%);
 	}
 	.ph[data-family='sparkling'] {
-		background: color-mix(in oklab, var(--soft) 60%, #ecd9a0 40%);
+		background: color-mix(in oklab, var(--soft) 50%, #ddc47e 50%);
 	}
 
 	.hero {

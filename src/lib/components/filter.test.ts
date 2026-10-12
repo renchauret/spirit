@@ -80,9 +80,12 @@ describe('FilterSheet', () => {
 		expect(html).toContain('href="/?i=2&amp;tag=sour&amp;tag=sparkling"');
 	});
 
-	it('marks an active tiki family chip', () => {
-		const tiki = text(render(FilterSheet, { props: { open: true, filter: { ...EMPTY_FILTER, tags: ['tiki'] }, sections, count: 1 } }).body);
-		expect(tiki).toMatch(/aria-current="true"[^>]*>\s*tiki/);
+	it('marks an active new-family chip', () => {
+		const active = text(
+			render(FilterSheet, { props: { open: true, filter: { ...EMPTY_FILTER, tags: ['tiki', 'sparkling'] }, sections, count: 1 } }).body
+		);
+		expect(active).toMatch(/aria-current="true"[^>]*>\s*tiki/);
+		expect(active).toMatch(/aria-current="true"[^>]*>\s*sparkling/);
 	});
 
 	it('marks the active choices', () => {
