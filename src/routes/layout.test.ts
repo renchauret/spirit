@@ -22,16 +22,16 @@ describe('signed-in row', () => {
 		expect(render(OwnerRow, { props: { signedIn: data.signedIn } }).body).not.toContain('Sign out');
 	});
 
-	it('is rendered for the Owner with + New Recipe, Ingredients and Sign out', async () => {
+	it('is rendered for the Owner with only Sign out', async () => {
 		const data = await loadFor({ id: 'owner', email: 'owner@example.com' });
 		const html = render(OwnerRow, { props: { signedIn: data.signedIn } }).body;
 
 		expect(data.signedIn).toBe(true);
-		expect(html).toContain('+ New Recipe');
-		expect(html).toContain('Ingredients');
 		expect(html).toContain('Sign out');
 		expect(html).toContain('action="/signout"');
-		expect(html).toMatch(/<a href="\/ingredients"[^>]*>Ingredients<\/a>/);
+		expect(html).not.toContain('+ New Recipe');
+		expect(html).not.toContain('>Create<');
+		expect(html).not.toContain('>Ingredients<');
 	});
 
 	it('does not send the Owner email to the page', async () => {

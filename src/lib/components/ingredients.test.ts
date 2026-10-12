@@ -28,7 +28,6 @@ describe('Ingredients page', () => {
 		]);
 		expect(html).toContain('a kind of rum');
 		expect(html).toContain('unused');
-		expect(html).toMatch(/<a href="\/ingredients"[^>]*>Ingredients<\/a>/);
 	});
 
 	it('has a compact Back button in the shared page header, like the Recipe page', () => {

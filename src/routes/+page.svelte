@@ -21,6 +21,10 @@
 		<h1>Spirit</h1>
 		<div class="controls">
 			<FilterButton count={activeFilterCount(data.filter)} onclick={() => (sheetOpen = true)} />
+			{#if data.signedIn}
+				<a class="chip" href="/recipes/new">Create</a>
+				<a class="chip" href="/ingredients">Ingredients</a>
+			{/if}
 		</div>
 	</header>
 	<OwnerRow signedIn={data.signedIn} />
@@ -69,6 +73,11 @@
 		display: flex;
 		align-items: center;
 		gap: 8px;
+		flex: none;
+	}
+
+	.controls :global(.chip) {
+		white-space: nowrap;
 	}
 
 	.heading {
