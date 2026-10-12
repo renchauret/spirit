@@ -40,6 +40,10 @@ _Avoid_: Comments, private notes
 A label on a recipe, such as "sour" or "tiki".
 _Avoid_: Category
 
+**Family Tag**:
+One of the Tags naming a cocktail family (sour, daisy, highball, old fashioned, martini, flip); it sets the color and default glass of a Recipe's placeholder drawing.
+_Avoid_: Category, style
+
 **Favorite**:
 A recipe the Owner has marked as a favorite.
 _Avoid_: Like, liked

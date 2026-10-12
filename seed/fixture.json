@@ -1,0 +1,122 @@
+{
+	"ingredients": [
+		{ "name": "rum", "type": "spirit" },
+		{ "name": "white rum", "parent": "rum" },
+		{ "name": "gin", "type": "spirit" },
+		{ "name": "whiskey", "type": "spirit" },
+		{ "name": "rye whiskey", "parent": "whiskey" },
+		{ "name": "maraschino liqueur", "type": "liqueur" },
+		{ "name": "Green Chartreuse", "type": "liqueur" },
+		{ "name": "absinthe", "type": "liqueur" },
+		{ "name": "sweet vermouth", "type": "fortified wine" },
+		{ "name": "Angostura bitters", "type": "bitters" },
+		{ "name": "orange bitters", "type": "bitters" },
+		{ "name": "simple syrup", "type": "syrup" },
+		{ "name": "lemon juice", "type": "juice" },
+		{ "name": "lime juice", "type": "juice" },
+		{ "name": "pineapple juice", "type": "juice" },
+		{ "name": "club soda", "type": "mixer" },
+		{ "name": "mint", "type": "fresh" },
+		{ "name": "cream of coconut", "type": "dairy & egg" },
+		{ "name": "sugar cube", "type": "pantry" }
+	],
+	"recipes": [
+		{
+			"name": "Daiquiri",
+			"favorite": true,
+			"tags": ["sour"],
+			"glass": "coupe",
+			"method": ["Shake hard with ice and fine-strain into a chilled coupe."],
+			"garnish": "lime wheel",
+			"iceServe": "up",
+			"lines": [
+				{ "ingredient": "simple syrup", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 0.75, "unit": "oz", "note": "fresh" },
+				{ "ingredient": "white rum", "amount": 1.5, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Improved Tom Collins",
+			"favorite": true,
+			"tags": ["highball"],
+			"glass": "collins",
+			"method": ["Shake everything but the soda with ice.", "Strain into a Collins glass over fresh ice.", "Top with club soda."],
+			"garnish": "lemon wheel",
+			"iceServe": "over ice",
+			"lines": [
+				{ "ingredient": "simple syrup", "amount": 0.25, "unit": "oz" },
+				{ "ingredient": "maraschino liqueur", "amount": 0.5, "unit": "oz" },
+				{ "ingredient": "lemon juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "absinthe", "amount": 2, "unit": "dash" },
+				{ "ingredient": "gin", "amount": 2, "unit": "oz" },
+				{ "ingredient": "club soda", "unit": "top" }
+			]
+		},
+		{
+			"name": "Old Fashioned",
+			"favorite": true,
+			"tags": ["old fashioned"],
+			"method": ["Muddle the sugar cube with the bitters and soda.", "Add the whiskey and a large cube, and stir until cold."],
+			"garnish": "expressed orange peel",
+			"iceServe": "one large cube",
+			"lines": [
+				{ "ingredient": "sugar cube", "amount": 1, "unit": "whole" },
+				{ "ingredient": "Angostura bitters", "amount": 2, "unit": "dash" },
+				{ "ingredient": "orange bitters", "amount": 2, "unit": "dash" },
+				{ "ingredient": "club soda", "amount": 1, "unit": "barspoon" },
+				{ "ingredient": "whiskey", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Last Word",
+			"tags": ["daisy"],
+			"method": ["Shake with ice and fine-strain into a chilled coupe."],
+			"lines": [
+				{ "ingredient": "maraschino liqueur", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "Green Chartreuse", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 0.75, "unit": "oz" },
+				{ "ingredient": "gin", "amount": 0.75, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Mojito",
+			"tags": ["highball"],
+			"glass": "highball",
+			"method": ["Gently muddle the mint with the syrup.", "Add the lime and rum, fill with crushed ice and stir.", "Top with club soda."],
+			"garnish": "mint sprig",
+			"iceServe": "crushed ice",
+			"lines": [
+				{ "ingredient": "mint", "amount": [6, 8], "unit": "leaf" },
+				{ "ingredient": "simple syrup", "amount": 1, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "white rum", "amount": 2, "unit": "oz" },
+				{ "ingredient": "club soda", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Manhattan",
+			"tags": ["martini"],
+			"method": ["Stir with ice and strain into a chilled cocktail glass."],
+			"garnish": "brandied cherry",
+			"iceServe": "up",
+			"lines": [
+				{ "ingredient": "Angostura bitters", "amount": 2, "unit": "dash" },
+				{ "ingredient": "sweet vermouth", "amount": 1, "unit": "oz" },
+				{ "ingredient": "rye whiskey", "amount": 2, "unit": "oz" }
+			]
+		},
+		{
+			"name": "Piña Colada",
+			"tags": ["flip", "tiki"],
+			"glass": "hurricane",
+			"method": ["Blend with a cup of crushed ice until smooth."],
+			"garnish": "pineapple wedge",
+			"lines": [
+				{ "ingredient": "cream of coconut", "amount": 2, "unit": "oz" },
+				{ "ingredient": "pineapple juice", "amount": 2, "unit": "oz" },
+				{ "ingredient": "lime juice", "amount": 1, "unit": "oz" },
+				{ "ingredient": "rum", "amount": 1.5, "unit": "oz" }
+			]
+		}
+	]
+}

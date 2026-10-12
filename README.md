@@ -32,8 +32,11 @@ So this project uses Wrangler (`wrangler.jsonc`) for local development, migratio
 ```sh
 npm install
 npm run db:migrate:local
+npm run db:seed:local
 npm run dev
 ```
+
+`npm run db:seed:local` replaces every Recipe, Ingredient and Tag in the local database with the small fixture in [`seed/fixture.json`](seed/fixture.json).
 
 `npm run dev` serves the app with local D1 and R2 simulations stored in `.wrangler/state`. To run the built Worker in the Workers runtime instead, use `npm run preview`.
 
@@ -69,6 +72,23 @@ npm run build
    ```
 
 Wrangler reads migrations from `drizzle/`, set by `migrations_dir` in `wrangler.jsonc`, and records applied ones in the `d1_migrations` table.
+
+## Seed data
+
+A seed file is JSON with an Ingredient catalog and a list of Recipes. [`seed/fixture.json`](seed/fixture.json) is a small example.
+
+- **Ingredient:** `name`, plus `type` (an Ingredient type) and/or `parent` (the name of its Parent Ingredient). A child without a `type` takes its parent's.
+- **Recipe:** `name` and `lines` are required. Optional: `favorite`, `tags`, `glass` (`coupe`, `cocktail`, `rocks`, `collins`, `highball`, `flute`, `hurricane`), `method` (a list of instructions), `garnish`, `iceServe`, `description` and `source`. Owner notes are rejected, because the repo is public.
+- **Recipe line:** `ingredient` (a catalog name), `unit`, and optionally `amount` (a number, or `[min, max]` for a range) and `note`.
+
+`scripts/seed-sql.ts` checks a seed file and turns it into SQL for `wrangler d1 execute`:
+
+```sh
+node scripts/seed-sql.ts seed/fixture.json --out .wrangler/seed/fixture.sql
+npx wrangler d1 execute spirit --remote --file .wrangler/seed/fixture.sql
+```
+
+Without `--replace`, loading fails if any of the seeded rows already exist. `--replace` first deletes every Recipe, Recipe line, Tag and Ingredient, including anything the Owner has edited, so use it on production only when that is intended.
 
 ## Deploy
 
