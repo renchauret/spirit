@@ -1,6 +1,5 @@
 <script lang="ts">
 	import IngredientSheet from '#lib/components/IngredientSheet.svelte';
-	import OwnerRow from '#lib/components/OwnerRow.svelte';
 	import { groupByType, recipeCountLabel } from '#lib/ingredient-catalog.ts';
 	import type { PageProps } from './$types';
 
@@ -19,7 +18,6 @@
 	<div class="page-header">
 		<a class="btn compact" href="/">‹ Back</a>
 	</div>
-	<OwnerRow signedIn={data.signedIn} />
 
 	<h1>Ingredients</h1>
 

@@ -1,38 +1,17 @@
-import { isRedirect, type Cookies } from '@sveltejs/kit';
+import { isRedirect } from '@sveltejs/kit';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Auth } from '#lib/server/auth/index.ts';
 import { getOwner } from '#lib/server/auth/owner.ts';
-import { createOwnerAuth, origin, type OwnerAuth } from '#lib/server/testing/owner-auth.ts';
-import { POST as signOut } from '../signout/+server';
+import {
+	CookieJar,
+	createOwnerAuth,
+	origin,
+	thrown,
+	type OwnerAuth
+} from '#lib/server/testing/owner-auth.ts';
 import { actions, load } from './+page.server';
 
-class CookieJar {
-	values = new Map<string, string>();
-
-	get header() {
-		return [...this.values].map(([name, value]) => `${name}=${encodeURIComponent(value)}`).join('; ');
-	}
-
-	asCookies(): Cookies {
-		return {
-			set: (name: string, value: string, options: { maxAge?: number }) => {
-				if (options.maxAge === 0) this.values.delete(name);
-				else this.values.set(name, value);
-			}
-		} as Cookies;
-	}
-}
-
-async function thrown(promise: unknown) {
-	try {
-		await promise;
-	} catch (error) {
-		return error;
-	}
-	throw new Error('expected a throw');
-}
-
-describe('/signin and /signout', () => {
+describe('/signin', () => {
 	let local: OwnerAuth;
 	let auth: Auth;
 	let jar: CookieJar;
@@ -117,26 +96,5 @@ describe('/signin and /signout', () => {
 		const result = await signIn({ email: 'owner@example.com', password: 'negroni-week', redirectTo: '/' });
 
 		expect(result).toMatchObject({ status: 429 });
-	});
-
-	it('signs the Owner out and returns them to the page they were on', async () => {
-		await thrown(signIn({ email: 'owner@example.com', password: 'negroni-week', redirectTo: '/' }));
-		const headers = new Headers({ cookie: jar.header, referer: `${origin}/recipes/12` });
-
-		const error = await thrown(
-			signOut({
-				request: new Request(`${origin}/signout`, {
-					method: 'POST',
-					headers
-				}),
-				url: new URL(`${origin}/signout`),
-				locals: { auth, owner: null },
-				cookies: jar.asCookies()
-			} as never)
-		);
-
-		expect(isRedirect(error) && error.location).toBe('/recipes/12');
-		expect(jar.values.size).toBe(0);
-		expect((await getOwner(auth, headers)).owner).toBeNull();
 	});
 });

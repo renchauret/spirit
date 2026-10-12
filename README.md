@@ -113,7 +113,7 @@ The bucket is private. `/photos/<key>` streams a photo from R2 with `Cache-Contr
 
 ## Owner account
 
-The Owner signs in at `/signin`, which nothing links to. After signing in, they return to the page named in `?redirectTo=`, or the page they came from. Sessions last 30 days and renew whenever the site is used. Sign-in is limited to 5 attempts per address every 15 minutes.
+The Owner signs in at `/signin`, which nothing links to. After signing in, they return to the page named in `?redirectTo=`, or the page they came from. The Owner signs out at `/signout`, which nothing links to either: it shows a single Sign out button, only a POST from that page ends the session, and a GET never signs anyone out. Sessions last 30 days and renew whenever the site is used. Sign-in is limited to 5 attempts per address every 15 minutes.
 
 There is no sign-up. Create the Owner account with:
 

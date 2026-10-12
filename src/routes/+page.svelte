@@ -2,7 +2,6 @@
 	import ActiveFilters from '#lib/components/ActiveFilters.svelte';
 	import FilterButton from '#lib/components/FilterButton.svelte';
 	import FilterSheet from '#lib/components/FilterSheet.svelte';
-	import OwnerRow from '#lib/components/OwnerRow.svelte';
 	import RecipeImage from '#lib/components/RecipeImage.svelte';
 	import SearchBox from '#lib/components/SearchBox.svelte';
 	import { activeFilterCount, isFilterActive, isNarrowed, recipeHref } from '#lib/filter.ts';
@@ -27,7 +26,6 @@
 			{/if}
 		</div>
 	</header>
-	<OwnerRow signedIn={data.signedIn} />
 
 	<SearchBox filter={data.filter} suggestions={data.suggestions} />
 	<ActiveFilters filter={data.filter} sections={data.sections} />

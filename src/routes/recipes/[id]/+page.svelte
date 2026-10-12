@@ -2,7 +2,6 @@
 	import { afterNavigate } from '$app/navigation';
 	import DeleteRecipe from '#lib/components/DeleteRecipe.svelte';
 	import FavoriteToggle from '#lib/components/FavoriteToggle.svelte';
-	import OwnerRow from '#lib/components/OwnerRow.svelte';
 	import RecipeEditor from '#lib/components/RecipeEditor.svelte';
 	import RecipeImage from '#lib/components/RecipeImage.svelte';
 	import RecipeLines from '#lib/components/RecipeLines.svelte';
@@ -64,7 +63,6 @@
 			<a class="btn compact" href="/" onclick={back}>‹ Back</a>
 			{#if data.editor}<button type="button" class="btn compact primary" onclick={startEditing}>Edit</button>{/if}
 		</div>
-		<OwnerRow signedIn={data.signedIn} />
 
 		<RecipeImage photo={recipe.photo} name={recipe.name} glass={recipe.placeholderGlass} family={recipe.family} hero />
 
