@@ -1,10 +1,14 @@
 <script lang="ts">
-	import { untrack } from 'svelte';
+	import { untrack, type Snippet } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { browseHref, type RecipeFilter } from '#lib/filter.ts';
 	import { pickSuggestion, type Suggestion } from '#lib/search.ts';
 
-	let { filter, suggestions }: { filter: RecipeFilter; suggestions: Suggestion[] } = $props();
+	let {
+		filter,
+		suggestions,
+		trailing
+	}: { filter: RecipeFilter; suggestions: Suggestion[]; trailing?: Snippet } = $props();
 
 	const DEBOUNCE_MS = 200;
 
@@ -46,18 +50,21 @@
 </script>
 
 <form method="get" action="/" role="search" {onsubmit}>
-	<input
-		bind:this={input}
-		bind:value={text}
-		{oninput}
-		class="search"
-		type="search"
-		name="q"
-		placeholder="Search"
-		aria-label="Search Recipes"
-		autocomplete="off"
-		enterkeyhint="search"
-	/>
+	<div class="search-row">
+		<input
+			bind:this={input}
+			bind:value={text}
+			{oninput}
+			class="search"
+			type="search"
+			name="q"
+			placeholder="Search"
+			aria-label="Search Recipes"
+			autocomplete="off"
+			enterkeyhint="search"
+		/>
+		{@render trailing?.()}
+	</div>
 	{#each filter.ingredients as id (id)}
 		<input type="hidden" name="i" value={id} />
 	{/each}
@@ -80,8 +87,15 @@
 {/if}
 
 <style>
+	.search-row {
+		display: flex;
+		align-items: stretch;
+		gap: 8px;
+	}
+
 	.search {
-		width: 100%;
+		flex: 1;
+		min-width: 0;
 		border: 1px solid var(--line);
 		background: var(--surface);
 		border-radius: 12px;

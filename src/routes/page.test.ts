@@ -12,18 +12,22 @@ const browse = (signedIn: boolean) =>
 		}).body
 	);
 
-describe('browse page header', () => {
-	it('shows Filter, Create and Ingredients as matching pills in that order for the Owner', () => {
+describe('browse page', () => {
+	it('puts Filter on the search row after the search box, not in the header', () => {
 		const html = browse(true);
 
-		expect(html).toMatch(/<button[^>]*class="chip[^"]*"[^>]*>Filter<\/button>/);
+		const header = html.slice(html.indexOf('<header'), html.indexOf('</header>'));
+		expect(header).not.toContain('>Filter<');
+
+		expect(html).toMatch(/<div class="search-row[^"]*">.*<input[^>]*type="search".*<button[^>]*>Filter<\/button>/);
+	});
+
+	it('shows Create and Ingredients in the header for the Owner', () => {
+		const html = browse(true);
+
 		expect(html).toMatch(/<a class="chip[^"]*" href="\/recipes\/new"[^>]*>Create<\/a>/);
 		expect(html).toMatch(/<a class="chip[^"]*" href="\/ingredients"[^>]*>Ingredients<\/a>/);
 		expect(html).not.toMatch(/class="chip[^"]*\bsel\b[^"]*"[^>]*>(Create|Ingredients)</);
-
-		const order = ['>Filter<', '>Create<', '>Ingredients<'].map((needle) => html.indexOf(needle));
-		expect(order.every((at) => at >= 0)).toBe(true);
-		expect(order).toEqual([...order].sort((a, b) => a - b));
 	});
 
 	it('never shows the Owner pills to Visitors', () => {
