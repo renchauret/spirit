@@ -10,10 +10,4 @@
 	button {
 		flex: none;
 	}
-
-	button.sel {
-		background: var(--accent);
-		color: var(--accent-ink);
-		border-color: var(--accent);
-	}
 </style>

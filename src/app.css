@@ -165,7 +165,8 @@ a {
 	font-size: 0.92rem;
 }
 
-.chip.sel {
+.chip.sel,
+.btn.sel {
 	background: var(--accent);
 	color: var(--accent-ink);
 	border-color: var(--accent);
