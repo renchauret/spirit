@@ -1,35 +1,15 @@
-import { isRedirect, type Cookies } from '@sveltejs/kit';
+import { isRedirect } from '@sveltejs/kit';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Auth } from '#lib/server/auth/index.ts';
 import { getOwner } from '#lib/server/auth/owner.ts';
-import { createOwnerAuth, origin, type OwnerAuth } from '#lib/server/testing/owner-auth.ts';
+import {
+	CookieJar,
+	createOwnerAuth,
+	origin,
+	thrown,
+	type OwnerAuth
+} from '#lib/server/testing/owner-auth.ts';
 import { actions, load } from './+page.server';
-
-class CookieJar {
-	values = new Map<string, string>();
-
-	get header() {
-		return [...this.values].map(([name, value]) => `${name}=${encodeURIComponent(value)}`).join('; ');
-	}
-
-	asCookies(): Cookies {
-		return {
-			set: (name: string, value: string, options: { maxAge?: number }) => {
-				if (options.maxAge === 0) this.values.delete(name);
-				else this.values.set(name, value);
-			}
-		} as Cookies;
-	}
-}
-
-async function thrown(promise: unknown) {
-	try {
-		await promise;
-	} catch (error) {
-		return error;
-	}
-	throw new Error('expected a throw');
-}
 
 describe('/signin', () => {
 	let local: OwnerAuth;

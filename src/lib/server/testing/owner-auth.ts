@@ -1,3 +1,4 @@
+import type { Cookies } from '@sveltejs/kit';
 import { createAuth, type Auth } from '../auth';
 import { seedOwnerSql } from '../auth/owner-account';
 import { hashPassword } from '../auth/password';
@@ -31,3 +32,29 @@ export async function createOwnerAuth(): Promise<OwnerAuth> {
 
 export const cookieHeaderFrom = (setCookie: string[]) =>
 	setCookie.map((cookie) => cookie.split(';')[0]).join('; ');
+
+export class CookieJar {
+	values = new Map<string, string>();
+
+	get header() {
+		return [...this.values].map(([name, value]) => `${name}=${encodeURIComponent(value)}`).join('; ');
+	}
+
+	asCookies(): Cookies {
+		return {
+			set: (name: string, value: string, options: { maxAge?: number }) => {
+				if (options.maxAge === 0) this.values.delete(name);
+				else this.values.set(name, value);
+			}
+		} as Cookies;
+	}
+}
+
+export async function thrown(promise: unknown): Promise<unknown> {
+	try {
+		await promise;
+	} catch (error) {
+		return error;
+	}
+	throw new Error('expected a throw');
+}
