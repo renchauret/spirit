@@ -20,7 +20,7 @@
 		{
 			"binding": "DB",
 			"database_name": "spirit",
-			"database_id": "REPLACE_WITH_D1_DATABASE_ID",
+			"database_id": "08fb3341-671b-4bc3-9fe1-0ec5ecc786b4",
 			"migrations_dir": "drizzle"
 		}
 	],
