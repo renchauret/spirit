@@ -102,4 +102,22 @@ describe('RecipeEditor on a new Recipe', () => {
 		expect(html).toContain('+ Add Recipe line');
 		expect(html).toContain('&quot;lines&quot;:[],&quot;newIngredients&quot;:[]');
 	});
+
+	it('offers to add a photo, as in Edit mode', () => {
+		const html = text(
+			render(RecipeEditor, {
+				props: {
+					draft: emptyDraft(),
+					ingredients: catalog,
+					existingTags: [],
+					action: '?/create',
+					heading: 'New Recipe',
+					oncancel: noop
+				}
+			}).body
+		);
+
+		expect(html).toMatch(/<input[^>]*type="file"[^>]*accept="image\/\*"/);
+		expect(html).toContain('Add photo');
+	});
 });

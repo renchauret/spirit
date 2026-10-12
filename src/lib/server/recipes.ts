@@ -314,11 +314,19 @@ function recipeWrites(db: Db, id: number | SQL<number>, changes: RecipeChanges, 
 	] as const;
 }
 
-async function saving<T>(db: Db, changes: RecipeChanges, write: () => Promise<T>): Promise<T | SaveProblem> {
+export type StorePhoto = () => Promise<PhotoKeys>;
+
+async function saving<T>(
+	db: Db,
+	changes: RecipeChanges,
+	storePhoto: StorePhoto | null,
+	write: (photo: PhotoKeys | null) => Promise<T>
+): Promise<T | SaveProblem> {
 	const problem = await checkIngredients(db, changes);
 	if (problem) return problem;
+	const photo = storePhoto ? await storePhoto() : null;
 	try {
-		return await write();
+		return await write(photo);
 	} catch (cause) {
 		const raced = await checkIngredients(db, changes);
 		if (raced) return raced;
@@ -330,22 +338,22 @@ export async function updateRecipe(
 	db: Db,
 	id: number,
 	changes: RecipeChanges,
-	photo: PhotoKeys | null = null
+	storePhoto: StorePhoto | null = null
 ): Promise<UpdateResult> {
 	const [found] = await db.select({ id: recipe.id }).from(recipe).where(eq(recipe.id, id));
 	if (!found) return 'missing recipe';
-	return saving(db, changes, async () => {
+	return saving(db, changes, storePhoto, async (photo) => {
 		await db.batch(recipeWrites(db, id, changes, photo));
 		return 'saved' as const;
 	});
 }
 
-export async function createRecipe(db: Db, changes: RecipeChanges): Promise<CreateResult> {
+export async function createRecipe(db: Db, changes: RecipeChanges, storePhoto: StorePhoto | null = null): Promise<CreateResult> {
 	const created = sql<number>`(select max(${recipe.id}) from ${recipe})`;
-	return saving(db, changes, async () => {
+	return saving(db, changes, storePhoto, async (photo) => {
 		const [[{ id }]] = await db.batch([
 			db.insert(recipe).values({ name: changes.name }).returning({ id: recipe.id }),
-			...recipeWrites(db, created, changes)
+			...recipeWrites(db, created, changes, photo)
 		]);
 		return { id };
 	});

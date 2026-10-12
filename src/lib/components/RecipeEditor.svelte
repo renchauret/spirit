@@ -8,7 +8,6 @@
 	import { PHOTO_VARIANTS } from '#lib/photos.ts';
 	import type { NewIngredient, RecipeDraft } from '#lib/recipe-draft.ts';
 	import Editable from './Editable.svelte';
-	import GlassPlaceholder from './GlassPlaceholder.svelte';
 	import PhotoPicker from './PhotoPicker.svelte';
 	import RecipeLineEditor from './RecipeLineEditor.svelte';
 	import TagSheet from './TagSheet.svelte';
@@ -20,7 +19,6 @@
 		action,
 		heading = 'Editing',
 		photo = null,
-		photoUpload = false,
 		oncancel,
 		onsaved
 	}: {
@@ -30,7 +28,6 @@
 		action: string;
 		heading?: string;
 		photo?: string | null;
-		photoUpload?: boolean;
 		oncancel: () => void;
 		onsaved?: () => void;
 	} = $props();
@@ -107,11 +104,7 @@
 {/if}
 
 <div class="stack">
-	{#if photoUpload}
-		<PhotoPicker bind:value={newPhoto} {photo} name={draft.name} glass={draft.glass || familyGlass} {family} disabled={saving} />
-	{:else}
-		<GlassPlaceholder glass={draft.glass || familyGlass} {family} hero />
-	{/if}
+	<PhotoPicker bind:value={newPhoto} {photo} name={draft.name} glass={draft.glass || familyGlass} {family} disabled={saving} />
 
 	<Editable as="h1" label="Name" bind:value={draft.name} />
 

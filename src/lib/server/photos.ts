@@ -13,18 +13,20 @@ export type PhotoKeys = Record<PhotoVariant, string>;
 
 export type ReadPhotoResult = { ok: true; upload: PhotoUpload | null } | { ok: false; error: string };
 
-const KEY_PATTERN = /^recipes\/\d+\/[0-9a-f-]{36}-(card|page)\.(webp|jpg)$/;
+const KEY_PATTERN = /^recipes\/[0-9a-f-]{36}-(card|page)\.(webp|jpg)$/;
 
-export function photoKeys(recipeId: number, type: PhotoType, id: string = crypto.randomUUID()): PhotoKeys {
+const KEY_UNDER_RECIPE_ID_PATTERN = /^recipes\/\d+\/[0-9a-f-]{36}-(card|page)\.(webp|jpg)$/;
+
+export function photoKeys(type: PhotoType, id: string = crypto.randomUUID()): PhotoKeys {
 	const { extension } = PHOTO_FORMATS[type];
 	return {
-		card: `recipes/${recipeId}/${id}-card.${extension}`,
-		page: `recipes/${recipeId}/${id}-page.${extension}`
+		card: `recipes/${id}-card.${extension}`,
+		page: `recipes/${id}-page.${extension}`
 	};
 }
 
 export function isPhotoKey(key: string): boolean {
-	return KEY_PATTERN.test(key);
+	return KEY_PATTERN.test(key) || KEY_UNDER_RECIPE_ID_PATTERN.test(key);
 }
 
 export function photoUrl(key: string | null): string | null {
@@ -63,9 +65,8 @@ export async function readPhotoUpload(form: FormData): Promise<ReadPhotoResult> 
 
 export async function putPhoto(
 	bucket: R2Bucket,
-	recipeId: number,
 	upload: PhotoUpload,
-	keys: PhotoKeys = photoKeys(recipeId, upload.card.type)
+	keys: PhotoKeys = photoKeys(upload.card.type)
 ): Promise<PhotoKeys> {
 	await Promise.all(
 		(['card', 'page'] as const).map(async (variant) => {

@@ -263,7 +263,7 @@ describe('/recipes/[id]', () => {
 			expect(keys).toHaveLength(2);
 			const page = keys.find((k) => k.endsWith('-page.webp'));
 			const card = keys.find((k) => k.endsWith('-card.webp'));
-			expect(page).toMatch(new RegExp(`^recipes/${id}/`));
+			expect(page).toMatch(/^recipes\/[0-9a-f-]{36}-page\.webp$/);
 			expect((await getRecipe(local.db, id))?.photo).toBe(`/photos/${page}`);
 			expect((await loadAs(null)).recipe).toMatchObject({ photo: `/photos/${page}` });
 			expect(card).toBeDefined();
@@ -278,6 +278,13 @@ describe('/recipes/[id]', () => {
 			expect(photo).not.toBe(first);
 			expect(photo).toMatch(/-page\.jpg$/);
 			expect(await storedPhotos()).toHaveLength(4);
+		});
+
+		it('stores nothing when the edit cannot be saved', async () => {
+			draft = { ...draft, lines: [{ ...draft.lines[0], ingredientId: 404 }] };
+
+			expect(await saveWithPhoto(owner, webp(), webp())).toMatchObject({ status: 400 });
+			expect(await storedPhotos()).toEqual([]);
 		});
 
 		it('saves nothing when R2 refuses the photo', async () => {

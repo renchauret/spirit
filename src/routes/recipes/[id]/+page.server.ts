@@ -1,8 +1,7 @@
 import { error, fail, redirect } from '@sveltejs/kit';
 import { parseFilter } from '#lib/filter.ts';
-import { readRecipeDraft } from '#lib/recipe-draft.ts';
 import { requireOwner } from '#lib/server/auth/guard.ts';
-import { putPhoto, readPhotoUpload } from '#lib/server/photos.ts';
+import { readRecipeForm } from '#lib/server/recipe-form.ts';
 import {
 	deleteRecipe,
 	getOwnerNotes,
@@ -41,14 +40,10 @@ export const actions: Actions = {
 	save: async ({ params, locals, request }) => {
 		requireOwner(locals);
 		const id = recipeId(params.id);
-		const form = await request.formData();
-		const parsed = readRecipeDraft(form);
-		const photo = await readPhotoUpload(form);
-		const errors = [...(parsed.ok ? [] : parsed.errors), ...(photo.ok ? [] : [photo.error])];
-		if (!parsed.ok || !photo.ok) return fail(400, { errors });
+		const form = await readRecipeForm(await request.formData(), locals.photos);
+		if (!form.ok) return fail(400, { errors: form.errors });
 
-		const keys = photo.upload ? await putPhoto(locals.photos, id, photo.upload) : null;
-		const result = await updateRecipe(locals.db, id, parsed.changes, keys);
+		const result = await updateRecipe(locals.db, id, form.changes, form.storePhoto);
 		if (result === 'missing recipe') error(404, 'Recipe not found');
 		if (result !== 'saved') return fail(400, { errors: [saveProblemMessage(result)] });
 		return { saved: true };

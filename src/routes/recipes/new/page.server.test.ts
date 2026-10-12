@@ -2,8 +2,9 @@ import { isHttpError, isRedirect } from '@sveltejs/kit';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { emptyDraft, type RecipeDraft } from '#lib/recipe-draft.ts';
 import { ingredient, recipe } from '#lib/server/db/schema.ts';
-import { getRecipe, listFilterSections } from '#lib/server/recipes.ts';
+import { getRecipe, listFilterSections, listRecipeCards } from '#lib/server/recipes.ts';
 import { createLocalD1, type LocalD1 } from '#lib/server/testing/local-d1.ts';
+import { jpeg, photoForm, webp } from '#lib/server/testing/photos.ts';
 import { actions, load } from './+page.server';
 
 const origin = 'https://spirit.renchauret.com';
@@ -50,12 +51,29 @@ describe('/recipes/new', () => {
 
 	const create = (owner: App.Locals['owner'], body: unknown) =>
 		actions.create({
-			locals: { owner, db: local.db },
+			locals: { owner, db: local.db, photos: local.photos },
 			request: new Request(`${origin}/recipes/new?/create`, {
 				method: 'POST',
 				body: new URLSearchParams({ recipe: typeof body === 'string' ? body : JSON.stringify(body) })
 			})
 		} as never);
+
+	const createWithPhoto = (
+		owner: App.Locals['owner'],
+		card: Blob | null,
+		page: Blob | null,
+		body: unknown = draft,
+		photos: R2Bucket = local.photos
+	) => {
+		const form = new FormData();
+		form.set('recipe', JSON.stringify(body));
+		return actions.create({
+			locals: { owner, db: local.db, photos },
+			request: new Request(`${origin}/recipes/new?/create`, { method: 'POST', body: photoForm(card, page, form) })
+		} as never);
+	};
+
+	const storedPhotos = async () => (await local.photos.list()).objects.map((o) => o.key);
 
 	describe('load', () => {
 		it('sends the Owner the Ingredient catalog and Tag suggestions', async () => {
@@ -88,6 +106,8 @@ describe('/recipes/new', () => {
 				]
 			});
 			expect((await listFilterSections(local.db, [])).map((s) => s.type)).toEqual(['spirit', 'juice']);
+			expect((await getRecipe(local.db, id))?.photo).toBeNull();
+			expect(await storedPhotos()).toEqual([]);
 		});
 
 		it('needs a name and at least one Recipe line, and creates nothing', async () => {
@@ -130,6 +150,90 @@ describe('/recipes/new', () => {
 				status: 400,
 				data: { errors: ['That edit could not be read.'] }
 			});
+		});
+	});
+
+	describe('create with a photo', () => {
+		it('stores the card and Recipe-page images in R2 and creates the Recipe showing them', async () => {
+			const result = await thrown(createWithPhoto(owner, webp(20), webp(80)));
+
+			const [{ id }] = await local.db.select({ id: recipe.id }).from(recipe);
+			expect(isRedirect(result) && result.location).toBe(`/recipes/${id}`);
+			const keys = await storedPhotos();
+			expect(keys).toHaveLength(2);
+			const card = keys.find((k) => k.endsWith('-card.webp'));
+			const page = keys.find((k) => k.endsWith('-page.webp'));
+			expect(page).toMatch(/^recipes\/[0-9a-f-]{36}-page\.webp$/);
+			expect(card).toBe(page?.replace('-page.', '-card.'));
+			expect(await getRecipe(local.db, id)).toMatchObject({ name: 'Daiquiri', photo: `/photos/${page}` });
+			expect((await listRecipeCards(local.db))[0]).toMatchObject({ name: 'Daiquiri', photo: `/photos/${card}` });
+		});
+
+		it('accepts the JPEG images Safari makes', async () => {
+			await thrown(createWithPhoto(owner, jpeg(), jpeg()));
+
+			const [{ id }] = await local.db.select({ id: recipe.id }).from(recipe);
+			expect((await getRecipe(local.db, id))?.photo).toMatch(/-page\.jpg$/);
+		});
+
+		it('creates nothing when R2 refuses the photo', async () => {
+			const refusing = { put: async () => null } as unknown as R2Bucket;
+
+			await expect(createWithPhoto(owner, webp(), webp(), draft, refusing)).rejects.toThrow('already exists');
+
+			expect(await local.db.select().from(recipe)).toEqual([]);
+			expect(await local.db.select().from(ingredient)).toHaveLength(1);
+		});
+
+		it('creates nothing when R2 fails', async () => {
+			const failing = {
+				put: async () => {
+					throw new Error('R2 is down');
+				}
+			} as unknown as R2Bucket;
+
+			await expect(createWithPhoto(owner, webp(), webp(), draft, failing)).rejects.toThrow('R2 is down');
+
+			expect(await local.db.select().from(recipe)).toEqual([]);
+		});
+
+		it('rejects a Visitor with 401 and stores nothing', async () => {
+			expect(isHttpError(await thrown(createWithPhoto(null, webp(), webp())), 401)).toBe(true);
+
+			expect(await storedPhotos()).toEqual([]);
+			expect(await local.db.select().from(recipe)).toEqual([]);
+		});
+
+		it('refuses an image that is not WebP or JPEG and creates nothing', async () => {
+			const gif = new Blob(['GIF89a'], { type: 'image/gif' });
+
+			expect(await createWithPhoto(owner, webp(), gif)).toMatchObject({
+				status: 400,
+				data: { errors: ['The Recipe-page image must be a WebP or JPEG image.'] }
+			});
+			expect(await storedPhotos()).toEqual([]);
+			expect(await local.db.select().from(recipe)).toEqual([]);
+		});
+
+		it('reports a bad draft and a bad photo together, and stores nothing', async () => {
+			expect(await createWithPhoto(owner, webp(), null, emptyDraft())).toMatchObject({
+				status: 400,
+				data: {
+					errors: ['Give the Recipe a name.', 'Add at least one Recipe line.', 'The Recipe-page image is missing.']
+				}
+			});
+			expect(await storedPhotos()).toEqual([]);
+		});
+
+		it('stores nothing when the Recipe cannot be saved', async () => {
+			const result = await createWithPhoto(owner, webp(), webp(), {
+				...draft,
+				newIngredients: [{ id: -1, name: 'Rum', type: 'spirit', parentId: null }]
+			});
+
+			expect(result).toMatchObject({ status: 400 });
+			expect(await storedPhotos()).toEqual([]);
+			expect(await local.db.select().from(recipe)).toEqual([]);
 		});
 	});
 });

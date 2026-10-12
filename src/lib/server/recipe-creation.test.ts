@@ -120,6 +120,39 @@ describe('Creating a Recipe', () => {
 		]);
 	});
 
+	it('creates the Recipe with the photo it stores', async () => {
+		const keys = { card: 'recipes/a-card.webp', page: 'recipes/a-page.webp' };
+
+		const id = await created(await createRecipe(local.db, changes, async () => keys));
+
+		expect((await getRecipe(local.db, id))?.photo).toBe('/photos/recipes/a-page.webp');
+		expect((await listRecipeCards(local.db))[0].photo).toBe('/photos/recipes/a-card.webp');
+	});
+
+	it('creates nothing when storing the photo fails', async () => {
+		const failing = async (): Promise<never> => {
+			throw new Error('R2 is down');
+		};
+
+		await expect(createRecipe(local.db, changes, failing)).rejects.toThrow('R2 is down');
+		expect(await local.db.select().from(recipe)).toEqual([]);
+	});
+
+	it('does not store the photo when the Recipe cannot be saved', async () => {
+		let stored = false;
+		const result = await createRecipe(
+			local.db,
+			{ ...changes, lines: [{ ingredientId: 404, amountMin: 1, amountMax: null, unit: 'oz', note: null }] },
+			async () => {
+				stored = true;
+				return { card: 'recipes/a-card.webp', page: 'recipes/a-page.webp' };
+			}
+		);
+
+		expect(result).toBe('missing ingredient');
+		expect(stored).toBe(false);
+	});
+
 	it('refuses a new Ingredient whose name is already in the catalog, ignoring case, and creates nothing', async () => {
 		const result = await createRecipe(local.db, {
 			...changes,

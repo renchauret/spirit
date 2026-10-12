@@ -55,7 +55,6 @@
 			existingTags={data.editor.tagSuggestions}
 			action="?/save"
 			photo={recipe.photo}
-			photoUpload
 			oncancel={() => (draft = null)}
 			onsaved={() => (draft = null)}
 		/>
