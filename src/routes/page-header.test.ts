@@ -13,13 +13,16 @@ const rule = (text: string, selector: string) => {
 describe('page header', () => {
 	it('sizes the shared page header and the regular buttons to one control height', () => {
 		expect(rule(css, ':root')).toContain('--control-h: 45px;');
-		expect(rule(css, '.page-header')).toContain('min-height: var(--control-h);');
+		const header = rule(css, '.page-header');
+
+		expect(header).toContain('min-height: var(--control-h);');
+		expect(header).toContain('align-items: center;');
 		expect(rule(css, '.btn')).toContain('padding: 9px 14px;');
 		expect(rule(css, '.btn')).toContain('min-height: var(--control-h);');
 	});
 
-	it('makes the Spirit wordmark one control tall so it matches the header buttons', () => {
-		expect(rule(css, ':root')).toContain('--brand-size: var(--control-h);');
+	it('sizes the Spirit wordmark between its old size and the control height', () => {
+		expect(rule(css, ':root')).toContain('--brand-size: 2rem;');
 
 		const h1 = rule(css, '.page-header h1');
 

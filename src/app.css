@@ -24,7 +24,7 @@
 	--leading: 1.45;
 	--page-top: 8px;
 	--control-h: 45px;
-	--brand-size: var(--control-h);
+	--brand-size: 2rem;
 }
 
 @media (prefers-color-scheme: dark) {
