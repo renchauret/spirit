@@ -85,6 +85,16 @@ describe('Editing a Recipe', () => {
 		expect(await getOwnerNotes(local.db, id)).toBe('Use the good gin.');
 	});
 
+	it('saves one of the new glasses over the family default', async () => {
+		expect(await updateRecipe(local.db, id, { ...changes, glass: 'copper mug' })).toBe('saved');
+
+		expect(await getRecipe(local.db, id)).toMatchObject({
+			glass: 'copper mug',
+			family: 'highball',
+			placeholderGlass: 'copper mug'
+		});
+	});
+
 	it('clears optional fields', async () => {
 		await updateRecipe(local.db, id, {
 			...changes,
