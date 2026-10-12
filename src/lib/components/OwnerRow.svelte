@@ -6,7 +6,7 @@
 	<nav class="owner-row" aria-label="Owner">
 		<span aria-disabled="true">+ New Recipe</span>
 		<span aria-hidden="true">·</span>
-		<span aria-disabled="true">Ingredients</span>
+		<a href="/ingredients">Ingredients</a>
 		<span aria-hidden="true">·</span>
 		<form method="POST" action="/signout">
 			<button type="submit">Sign out</button>
@@ -26,6 +26,10 @@
 
 	[aria-disabled='true'] {
 		opacity: 0.5;
+	}
+
+	a {
+		text-decoration: underline;
 	}
 
 	form {

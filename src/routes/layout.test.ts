@@ -25,6 +25,7 @@ describe('signed-in row', () => {
 		expect(html).toContain('Ingredients');
 		expect(html).toContain('Sign out');
 		expect(html).toContain('action="/signout"');
+		expect(html).toMatch(/<a href="\/ingredients"[^>]*>Ingredients<\/a>/);
 	});
 
 	it('does not send the Owner email to the page', async () => {
