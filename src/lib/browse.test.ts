@@ -33,6 +33,13 @@ describe('placeholderGlass', () => {
 		expect(placeholderGlass('hurricane', 'sparkling')).toBe('hurricane');
 	});
 
+	it.each(['copper mug', 'wine glass', 'irish coffee glass', 'julep cup'] as const)(
+		'keeps an explicit %s over the family default',
+		(glass) => {
+			expect(placeholderGlass(glass, 'highball')).toBe(glass);
+		}
+	);
+
 	it.each([
 		['sour', 'coupe'],
 		['daisy', 'coupe'],

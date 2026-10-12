@@ -130,6 +130,23 @@ describe('RecipeEditor on a new Recipe', () => {
 		expect(html).toContain('&quot;lines&quot;:[],&quot;newIngredients&quot;:[]');
 	});
 
+	it('offers the copper mug, wine glass, Irish coffee glass and julep cup glasses', () => {
+		const html = text(
+			render(RecipeEditor, {
+				props: { draft: emptyDraft(), ingredients: catalog, existingTags: [], action: '?/create', oncancel: noop }
+			}).body
+		);
+
+		for (const [value, label] of [
+			['copper mug', 'copper mug'],
+			['wine glass', 'wine glass'],
+			['irish coffee glass', 'Irish coffee glass'],
+			['julep cup', 'julep cup']
+		] as const) {
+			expect(html, value).toContain(`<option value="${value}">${label}</option>`);
+		}
+	});
+
 	it('offers to add a photo, as in Edit mode', () => {
 		const html = text(
 			render(RecipeEditor, {

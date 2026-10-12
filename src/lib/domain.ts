@@ -21,7 +21,19 @@ export type Unit = (typeof UNITS)[number];
 
 export const UNITS_WITHOUT_AMOUNT: readonly Unit[] = ['top', 'rinse', 'to taste'];
 
-export const GLASSES = ['coupe', 'cocktail', 'rocks', 'collins', 'highball', 'flute', 'hurricane'] as const;
+export const GLASSES = [
+	'coupe',
+	'cocktail',
+	'rocks',
+	'collins',
+	'highball',
+	'flute',
+	'hurricane',
+	'copper mug',
+	'wine glass',
+	'irish coffee glass',
+	'julep cup'
+] as const;
 export type Glass = (typeof GLASSES)[number];
 
 export const GLASS_LABELS: Record<Glass, string> = {
@@ -31,7 +43,11 @@ export const GLASS_LABELS: Record<Glass, string> = {
 	collins: 'Collins',
 	highball: 'highball',
 	flute: 'flute',
-	hurricane: 'hurricane'
+	hurricane: 'hurricane',
+	'copper mug': 'copper mug',
+	'wine glass': 'wine glass',
+	'irish coffee glass': 'Irish coffee glass',
+	'julep cup': 'julep cup'
 };
 
 export const INGREDIENT_TYPES = [

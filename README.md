@@ -84,7 +84,7 @@ Wrangler reads migrations from `drizzle/`, set by `migrations_dir` in `wrangler.
 A seed file is JSON with an Ingredient catalog and a list of Recipes. [`seed/fixture.json`](seed/fixture.json) is a small example.
 
 - **Ingredient:** `name`, plus `type` (an Ingredient type) and/or `parent` (the name of its Parent Ingredient). A child without a `type` takes its parent's.
-- **Recipe:** `name` and `lines` are required. Optional: `favorite`, `tags`, `glass` (`coupe`, `cocktail`, `rocks`, `collins`, `highball`, `flute`, `hurricane`), `method` (a list of instructions), `garnish`, `iceServe`, `description` and `source`. Owner notes are rejected, because the repo is public.
+- **Recipe:** `name` and `lines` are required. Optional: `favorite`, `tags`, `glass` (`coupe`, `cocktail`, `rocks`, `collins`, `highball`, `flute`, `hurricane`, `copper mug`, `wine glass`, `irish coffee glass`, `julep cup`), `method` (a list of instructions), `garnish`, `iceServe`, `description` and `source`. Owner notes are rejected, because the repo is public.
 - **Recipe line:** `ingredient` (a catalog name), `unit`, and optionally `amount` (a number, or `[min, max]` for a range) and `note`.
 
 `scripts/seed-sql.ts` checks a seed file and turns it into SQL for `wrangler d1 execute`:
