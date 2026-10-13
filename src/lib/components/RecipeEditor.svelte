@@ -90,7 +90,7 @@
 	};
 </script>
 
-<form class="top" method="POST" {action} use:enhance={save}>
+<form class="top" method="POST" enctype="multipart/form-data" {action} use:enhance={save}>
 	<input type="hidden" name="recipe" value={JSON.stringify(draft)} />
 	<div class="page-header">
 		<button type="button" class="btn" disabled={saving} onclick={oncancel}>Cancel</button>

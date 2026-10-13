@@ -130,3 +130,15 @@ describe('RecipeEditor on a new Recipe', () => {
 		expect(html).toContain('Add photo');
 	});
 });
+
+describe('RecipeEditor photo upload', () => {
+	it.each(['?/save', '?/create'])('submits %s as multipart so the photo files survive', (action) => {
+		const html = text(
+			render(RecipeEditor, {
+				props: { draft: emptyDraft(), ingredients: catalog, existingTags: [], action, oncancel: noop }
+			}).body
+		);
+
+		expect(html).toMatch(/<form[^>]*enctype="multipart\/form-data"/);
+	});
+});
