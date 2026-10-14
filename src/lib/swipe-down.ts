@@ -58,6 +58,9 @@ export function swipeDown(onDismiss: () => void): Attachment<HTMLElement> {
 
 		function onPointerDown(event: PointerEvent) {
 			if (event.button !== 0) return;
+			// Mouse users close the sheet with Escape or the scrim; capturing the
+			// pointer would swallow the click on any button inside the sheet.
+			if (event.pointerType === 'mouse') return;
 			state = beginSwipe(element.scrollTop <= 0, event.clientY, event.timeStamp);
 			if (state.phase === 'idle') return;
 			pointer = event.pointerId;

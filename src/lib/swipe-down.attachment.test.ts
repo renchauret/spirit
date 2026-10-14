@@ -46,6 +46,24 @@ describe('swipeDown attachment', () => {
 		expect(element.style.transform).toBe('');
 	});
 
+	it('does not capture the pointer for a mouse press', () => {
+		const element = fakeSheet();
+		attach(element, vi.fn());
+
+		element.fire('pointerdown', { button: 0, pointerId: 1, pointerType: 'mouse', clientY: 100, timeStamp: 0 });
+
+		expect(element.setPointerCapture).not.toHaveBeenCalled();
+	});
+
+	it('captures the pointer for a touch press', () => {
+		const element = fakeSheet();
+		attach(element, vi.fn());
+
+		element.fire('pointerdown', { button: 0, pointerId: 1, pointerType: 'touch', clientY: 100, timeStamp: 0 });
+
+		expect(element.setPointerCapture).toHaveBeenCalledWith(1);
+	});
+
 	it('springs back below the threshold', () => {
 		const element = fakeSheet();
 		const onDismiss = vi.fn();
