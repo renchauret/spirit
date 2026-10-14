@@ -135,6 +135,10 @@ Server code that writes data must call `requireOwner(locals)` from `src/lib/serv
 
 ## Deploy
 
+Merging to `main` deploys spirit automatically. Once the checks and tests pass on the `main` push, GitHub Actions runs `npm run deploy` with the repo's `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` secrets, so a failing test never reaches the production database. Deploys run one at a time; a deploy that has already started is never cancelled partway through its migrations.
+
+To deploy by hand (the fallback if Actions is unavailable), run:
+
 ```sh
 npm run deploy
 ```
