@@ -291,12 +291,14 @@ describe('/recipes/new', () => {
 		) => {
 			const seen: RecipeReaderInput[] = [];
 			const fetched: string[] = [];
+			const requests: RequestInit[] = [];
 			const recipeReader: RecipeReader = async (input) => {
 				seen.push(input);
 				return modelAnswer;
 			};
-			const pageFetch = async (url: string) => {
+			const pageFetch = async (url: string, init?: RequestInit) => {
 				fetched.push(url);
+				requests.push(init ?? {});
 				if (page instanceof Error) throw page;
 				return page;
 			};
@@ -308,7 +310,7 @@ describe('/recipes/new', () => {
 				}),
 				fetch: pageFetch
 			} as never) as Promise<{ draft: RecipeDraft } | { status: number; data: { text: string; errors: string[] } }>;
-			return { seen, fetched, result };
+			return { seen, fetched, requests, result };
 		};
 
 		it('rejects a Visitor with 401 and reads nothing', async () => {
@@ -578,6 +580,16 @@ describe('/recipes/new', () => {
 				units: UNITS,
 				ingredientTypes: INGREDIENT_TYPES
 			});
+		});
+
+		it('identifies the app on the page request with a User-Agent header', async () => {
+			const { requests, result } = importFromLink(owner, 'https://example.com/daiquiri', answer, html('<p>x</p>'));
+			await result;
+
+			expect(requests).toHaveLength(1);
+			expect(new Headers(requests[0].headers).get('user-agent')).toBe(
+				'Spirit/1.0 (+https://spirit.renchauret.com)'
+			);
 		});
 
 		it('treats anything that is not a single http link as pasted text and never fetches it', async () => {

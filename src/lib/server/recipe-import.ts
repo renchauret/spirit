@@ -199,11 +199,13 @@ function readableKind(contentType: string): 'html' | 'text' | null {
 	return type.startsWith('text/') ? 'text' : null;
 }
 
+const USER_AGENT = 'Spirit/1.0 (+https://spirit.renchauret.com)';
+
 async function fetchPage(fetch: PageFetch, url: string): Promise<PageContent | null> {
 	let response: Response;
 	try {
 		response = await fetch(url, {
-			headers: { accept: 'text/html, application/xhtml+xml, text/plain;q=0.9' },
+			headers: { accept: 'text/html, application/xhtml+xml, text/plain;q=0.9', 'user-agent': USER_AGENT },
 			redirect: 'follow'
 		});
 	} catch {
