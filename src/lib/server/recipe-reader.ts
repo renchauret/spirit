@@ -55,7 +55,7 @@ const SYSTEM = `You read one cocktail recipe from source text and record it with
 When the source includes a page title or JSON-LD blocks, treat them as hints; the readable text is the source of truth.
 
 Follow these rules exactly:
-- Transcribe faithfully. Keep ranges as ranges.
+- Transcribe faithfully. Keep ranges as ranges: put the low end in amountMin and the high end in amountMax. For a single amount, put it in amountMin and set amountMax to null.
 - When the source lists variations, record only the main recipe.
 - Give an optional line the note "optional".
 - Match every line to an Ingredient from the catalog, or to a new Ingredient you propose.
@@ -96,8 +96,14 @@ const RECIPE_TOOL = {
 							description:
 								'An existing catalog id, or the negative id of a proposed new Ingredient in newIngredients.'
 						},
-						amountMin: { anyOf: [{ type: 'number' }, { type: 'null' }] },
-						amountMax: { anyOf: [{ type: 'number' }, { type: 'null' }] },
+						amountMin: {
+							anyOf: [{ type: 'number' }, { type: 'null' }],
+							description: 'The amount, or the low end of a range. Null when the source gives no amount.'
+						},
+						amountMax: {
+							anyOf: [{ type: 'number' }, { type: 'null' }],
+							description: 'The high end of a range. Null unless the source gives a range.'
+						},
 						unit: { type: 'string', enum: [...UNITS] },
 						note: { type: 'string' }
 					},

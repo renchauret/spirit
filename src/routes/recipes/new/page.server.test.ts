@@ -411,6 +411,50 @@ describe('/recipes/new', () => {
 			expect(await result).toMatchObject({ status: 400, data: { errors: [NO_RECIPE] } });
 		});
 
+		it('turns a range whose ends match into a single amount, and the draft saves', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [
+					{ ...answer.lines[0], amountMin: 2, amountMax: 2 },
+					{ ...answer.lines[1], amountMin: 0.75, amountMax: 0.75 }
+				]
+			});
+			const { draft } = (await result) as { draft: RecipeDraft };
+
+			expect(draft.lines.map((l) => [l.amountMin, l.amountMax])).toEqual([
+				[2, null],
+				[0.75, null]
+			]);
+			expect(isRedirect(await thrown(create(owner, draft)))).toBe(true);
+		});
+
+		it('keeps a real range as a range', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ...answer.lines[0], amountMin: 1, amountMax: 2, unit: 'dash' }]
+			});
+
+			expect(((await result) as { draft: RecipeDraft }).draft.lines[0]).toMatchObject({ amountMin: 1, amountMax: 2 });
+		});
+
+		it('swaps a backwards range into a valid one', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ...answer.lines[0], amountMin: 2, amountMax: 1, unit: 'dash' }]
+			});
+
+			expect(((await result) as { draft: RecipeDraft }).draft.lines[0]).toMatchObject({ amountMin: 1, amountMax: 2 });
+		});
+
+		it('keeps an amount given only as the top of a range as a single amount', async () => {
+			const { result } = importFrom(owner, 'Daiquiri', {
+				...answer,
+				lines: [{ ...answer.lines[0], amountMin: null, amountMax: 2 }]
+			});
+
+			expect(((await result) as { draft: RecipeDraft }).draft.lines[0]).toMatchObject({ amountMin: 2, amountMax: null });
+		});
+
 		it('drops a glass outside Spirit’s list', async () => {
 			const { result } = importFrom(owner, 'Daiquiri', { ...answer, glass: 'tiki mug' });
 

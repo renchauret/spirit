@@ -18,6 +18,7 @@ import {
 	type NewIngredient,
 	type RecipeDraft
 } from '../recipe-draft.ts';
+import type { Amount } from '../recipe-lines.ts';
 import type { Db } from './db/index.ts';
 import { reducePage, type PageContent } from './page-content.ts';
 import { findDuplicateRecipe, listIngredientOptions, listTagNames } from './recipes.ts';
@@ -36,6 +37,12 @@ export type ImportOutcome =
 export type PageFetch = (url: string, init?: RequestInit) => Promise<Response>;
 
 type ReaderContent = Pick<RecipeReaderInput, 'text' | 'title' | 'jsonLd'>;
+
+function lineAmount({ amountMin, amountMax }: Amount): Amount {
+	if (amountMin === null) return { amountMin: amountMax, amountMax: null };
+	if (amountMax === null || amountMax === amountMin) return { amountMin, amountMax: null };
+	return amountMax < amountMin ? { amountMin: amountMax, amountMax: amountMin } : { amountMin, amountMax };
+}
 
 function toDraft(
 	answer: RecipeReaderAnswer,
@@ -99,8 +106,7 @@ function toDraft(
 		if (!isUnit(line.unit)) return null;
 		lines.push({
 			ingredientId,
-			amountMin: line.amountMin,
-			amountMax: line.amountMax,
+			...lineAmount(line),
 			unit: line.unit as Unit,
 			note: line.note
 		});
