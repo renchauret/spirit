@@ -144,6 +144,18 @@ export const verification = sqliteTable(
 	(table) => [index('verification_identifier_idx').on(table.identifier)]
 );
 
+export const browseSnapshot = sqliteTable('browse_snapshot', {
+	id: integer('id').primaryKey(),
+	formatVersion: integer('format_version').notNull(),
+	generation: integer('generation').notNull(),
+	data: text('data').notNull()
+});
+
+export const browseGeneration = sqliteTable('browse_generation', {
+	id: integer('id').primaryKey(),
+	generation: integer('generation').notNull()
+});
+
 export const rateLimit = sqliteTable('rate_limit', {
 	id: text('id').primaryKey(),
 	key: text('key').notNull().unique(),

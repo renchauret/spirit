@@ -5,12 +5,18 @@ import { cardSubtitle, compareNames, familyOf, placeholderGlass } from '../brows
 import { INGREDIENT_TYPES, type FamilyTag, type Glass } from '../domain.ts';
 import { EMPTY_FILTER, isSearching, type FilterSection, type RecipeFilter } from '../filter.ts';
 import { foldName, nameTakenMessage, sameIngredientName, type IngredientOption } from '../ingredient-search.ts';
-import { filterAndRank, matchedLineIndexes } from '../ranking.ts';
+import { filterAndRank, matchedLineIndexes, type CatalogEntry } from '../ranking.ts';
 import type { DuplicateRecipe, RecipeChanges } from '../recipe-draft.ts';
 import { suggest, type Suggestion } from '../search.ts';
 import type { Db } from './db/index.ts';
 import { photoUrl, type PhotoKeys } from './photos.ts';
 import { ingredient, recipe, recipeLine, recipeTag, tag } from './db/schema.ts';
+import {
+	detailedRecipes,
+	loadBrowseSnapshot,
+	type SnapshotIngredient,
+	type SnapshotRecipe
+} from './browse-snapshot.ts';
 
 export type RecipeCard = {
 	id: number;
@@ -52,13 +58,20 @@ export type RecipeView = {
 	lines: RecipeLineView[];
 };
 
-function groupBy<T, K, V>(rows: T[], key: (row: T) => K, value: (row: T) => V): Map<K, V[]> {
-	const groups = new Map<K, V[]>();
-	for (const row of rows) {
-		const k = key(row);
-		groups.set(k, [...(groups.get(k) ?? []), value(row)]);
-	}
-	return groups;
+function cardsFrom(recipes: readonly SnapshotRecipe[], catalog: readonly CatalogEntry[], filter: RecipeFilter): RecipeCard[] {
+	return filterAndRank(recipes, filter, catalog).map((r) => {
+		const family = familyOf(r.tags);
+		const spirits = r.lines.filter((l) => l.type === 'spirit').map((l) => l.name);
+		return {
+			id: r.id,
+			name: r.name,
+			favorite: r.favorite,
+			family,
+			glass: placeholderGlass(r.glass, family),
+			subtitle: cardSubtitle([...new Set(spirits)], family),
+			photo: photoUrl(r.cardPhotoKey)
+		};
+	});
 }
 
 export async function listRecipeCards(db: Db, filter: RecipeFilter = EMPTY_FILTER): Promise<RecipeCard[]> {
@@ -93,39 +106,17 @@ export async function listRecipeCards(db: Db, filter: RecipeFilter = EMPTY_FILTE
 		db.select({ id: ingredient.id, parentId: ingredient.parentId }).from(ingredient)
 	]);
 
-	const tagsByRecipe = groupBy(tags, (t) => t.recipeId, (t) => t.name);
-	const linesByRecipe = groupBy(lines, (l) => l.recipeId, (l) => l);
-
-	const candidates = recipes.map((r) => ({
-		...r,
-		tags: tagsByRecipe.get(r.id) ?? [],
-		lines: linesByRecipe.get(r.id) ?? []
-	}));
-
-	return filterAndRank(candidates, filter, catalog).map((r) => {
-		const family = familyOf(r.tags);
-		const spirits = r.lines.filter((l) => l.type === 'spirit').map((l) => l.name);
-		return {
-			id: r.id,
-			name: r.name,
-			favorite: r.favorite,
-			family,
-			glass: placeholderGlass(r.glass, family),
-			subtitle: cardSubtitle([...new Set(spirits)], family),
-			photo: photoUrl(r.cardPhotoKey)
-		};
-	});
+	return cardsFrom(detailedRecipes(recipes, tags, lines), catalog, filter);
 }
 
-export async function listFilterSections(db: Db, picked: readonly number[]): Promise<FilterSection[]> {
-	const [catalog, used] = await db.batch([
-		db.select({ id: ingredient.id, name: ingredient.name, parentId: ingredient.parentId, type: ingredient.type }).from(ingredient),
-		db.selectDistinct({ id: recipeLine.ingredientId }).from(recipeLine)
-	]);
-
+function sectionsFrom(
+	catalog: readonly SnapshotIngredient[],
+	usedIds: readonly number[],
+	picked: readonly number[]
+): FilterSection[] {
 	const byId = new Map(catalog.map((i) => [i.id, i]));
 	const offered = new Set<number>();
-	for (const { id } of used) {
+	for (const id of usedIds) {
 		for (let current = byId.get(id); current && !offered.has(current.id); current = byId.get(current.parentId ?? NaN)) {
 			offered.add(current.id);
 		}
@@ -141,23 +132,28 @@ export async function listFilterSections(db: Db, picked: readonly number[]): Pro
 	})).filter((section) => section.ingredients.length > 0);
 }
 
+export async function listFilterSections(db: Db, picked: readonly number[]): Promise<FilterSection[]> {
+	const [catalog, used] = await db.batch([
+		db.select({ id: ingredient.id, name: ingredient.name, parentId: ingredient.parentId, type: ingredient.type }).from(ingredient),
+		db.selectDistinct({ id: recipeLine.ingredientId }).from(recipeLine)
+	]);
+
+	return sectionsFrom(catalog, used.map((u) => u.id), picked);
+}
+
 export async function browseRecipes(db: Db, requested: RecipeFilter): Promise<Browse> {
-	const sections = await listFilterSections(db, requested.ingredients);
+	const snapshot = await loadBrowseSnapshot(db);
+	const sections = sectionsFrom(snapshot.catalog, snapshot.usedIngredientIds, requested.ingredients);
 	const offered = new Set(sections.flatMap((s) => s.ingredients.map((i) => i.id)));
 	const filter = { ...requested, ingredients: requested.ingredients.filter((id) => offered.has(id)) };
-	const [recipes, suggestions] = await Promise.all([listRecipeCards(db, filter), listSuggestions(db, filter, sections)]);
+	const recipes = cardsFrom(snapshot.recipes, snapshot.catalog, filter);
+	const suggestions = suggestionsFrom(filter, sections, snapshot.tagNames);
 	return { filter, sections, suggestions, recipes };
 }
 
-async function listSuggestions(db: Db, filter: RecipeFilter, sections: FilterSection[]): Promise<Suggestion[]> {
+function suggestionsFrom(filter: RecipeFilter, sections: FilterSection[], tagNames: readonly string[]): Suggestion[] {
 	if (!isSearching(filter)) return [];
-	const tags = await db.selectDistinct({ name: tag.name }).from(tag).innerJoin(recipeTag, eq(recipeTag.tagId, tag.id));
-	return suggest(
-		filter.query,
-		sections.flatMap((s) => s.ingredients),
-		tags.map((t) => t.name),
-		filter
-	);
+	return suggest(filter.query, sections.flatMap((s) => s.ingredients), tagNames, filter);
 }
 
 export async function matchedLines(db: Db, recipeId: number, picked: readonly number[]): Promise<number[]> {
