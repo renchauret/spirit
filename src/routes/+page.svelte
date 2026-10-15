@@ -42,7 +42,7 @@
 		<ul class="cards">
 			{#each data.recipes as recipe (recipe.id)}
 				<li>
-					<a class="card" href={recipeHref(recipe.id, data.filter)}>
+					<a class="card" rel={data.filter.ingredients.length ? 'nofollow' : undefined} href={recipeHref(recipe.id, data.filter)}>
 						<RecipeImage photo={recipe.photo} name={recipe.name} glass={recipe.glass} family={recipe.family}>
 							{#if recipe.favorite}
 								<span class="star fav" aria-label="House favorite">★</span>

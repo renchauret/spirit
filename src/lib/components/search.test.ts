@@ -32,6 +32,12 @@ describe('SearchBox', () => {
 		expect(html).toMatch(/href="\/\?i=3&amp;tag=tiki&amp;tag=camp\+classics&amp;fav=1"[^>]*>\s*Tag: camp classics/);
 	});
 
+	it('asks crawlers not to follow its suggestions', () => {
+		const links = html.match(/<a [^>]*class="chip sugg[^"]*"[^>]*>/g) ?? [];
+		expect(links).toHaveLength(2);
+		expect(links.every((a) => a.includes('rel="nofollow"'))).toBe(true);
+	});
+
 	it('shows no suggestions when there are none', () => {
 		const empty = text(render(SearchBox, { props: { filter: EMPTY_FILTER, suggestions: [] } }).body);
 		expect(empty).not.toContain('sugg');

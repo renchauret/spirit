@@ -18,15 +18,15 @@
 {#if isFilterActive(filter)}
 	<div class="chips" data-sveltekit-replacestate data-sveltekit-noscroll>
 		{#each filter.ingredients as id (id)}
-			<a class="chip sel" href={browseHref(toggleIngredient(filter, id))} aria-label="Remove {names.get(id)}">
+			<a class="chip sel" rel="nofollow" href={browseHref(toggleIngredient(filter, id))} aria-label="Remove {names.get(id)}">
 				{names.get(id)} ✕
 			</a>
 		{/each}
 		{#each filter.tags as tag (tag)}
-			<a class="chip sel" href={browseHref(toggleTag(filter, tag))} aria-label="Remove Tag {tag}">#{tag} ✕</a>
+			<a class="chip sel" rel="nofollow" href={browseHref(toggleTag(filter, tag))} aria-label="Remove Tag {tag}">#{tag} ✕</a>
 		{/each}
 		{#if filter.favorites}
-			<a class="chip sel" href={browseHref(toggleFavorites(filter))} aria-label="Remove favorites">★ favorites ✕</a>
+			<a class="chip sel" rel="nofollow" href={browseHref(toggleFavorites(filter))} aria-label="Remove favorites">★ favorites ✕</a>
 		{/if}
 		<a class="clear" href={browseHref(EMPTY_FILTER)}>Clear all</a>
 	</div>

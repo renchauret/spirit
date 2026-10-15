@@ -67,6 +67,12 @@ describe('FilterSheet', () => {
 		expect(searching).toContain('href="/?q=neg&amp;i=2&amp;i=1&amp;tag=sour"');
 	});
 
+	it('asks crawlers not to follow its filter links', () => {
+		const links = html.match(/<a [^>]*href="\/\?[^"]*"[^>]*>/g) ?? [];
+		expect(links.length).toBeGreaterThan(0);
+		expect(links.every((a) => a.includes('rel="nofollow"'))).toBe(true);
+	});
+
 	it('marks the active choices', () => {
 		expect(html).toMatch(/aria-current="true"[^>]*>\s*white rum/);
 		expect(html).toMatch(/aria-current="true"[^>]*>\s*sour/);
@@ -87,6 +93,15 @@ describe('ActiveFilters', () => {
 		expect(html).toMatch(/href="\/\?i=3&amp;fav=1"[^>]*>\s*#sour ✕/);
 		expect(html).toMatch(/href="\/\?i=3&amp;tag=sour"[^>]*>\s*★ favorites ✕/);
 		expect(html).toMatch(/href="\/"[^>]*>\s*Clear all/);
+	});
+
+	it('asks crawlers not to follow its remove links', () => {
+		const filter: RecipeFilter = { ...EMPTY_FILTER, ingredients: [3], tags: ['sour'], favorites: true };
+		const html = text(render(ActiveFilters, { props: { filter, sections } }).body);
+		const links = html.match(/<a [^>]*href="\/\?[^"]*"[^>]*>/g) ?? [];
+
+		expect(links).toHaveLength(3);
+		expect(links.every((a) => a.includes('rel="nofollow"'))).toBe(true);
 	});
 
 	it('keeps the search text when removing one filter, and clears it with Clear all', () => {

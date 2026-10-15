@@ -51,6 +51,7 @@
 				class="chip"
 				class:on={filter.favorites}
 				aria-current={filter.favorites ? 'true' : undefined}
+				rel="nofollow"
 				href={browseHref(toggleFavorites(filter))}>★ House favorites</a
 			>
 		</div>
@@ -60,7 +61,7 @@
 			<div class="chips">
 				{#each FAMILY_TAGS as tag (tag)}
 					{@const picked = filter.tags.includes(tag)}
-					<a class="chip" class:sel={picked} aria-current={picked ? 'true' : undefined} href={browseHref(toggleTag(filter, tag))}
+					<a class="chip" class:sel={picked} aria-current={picked ? 'true' : undefined} rel="nofollow" href={browseHref(toggleTag(filter, tag))}
 						>{tag}</a
 					>
 				{/each}
@@ -77,6 +78,7 @@
 							class="chip"
 							class:sel={picked}
 							aria-current={picked ? 'true' : undefined}
+							rel="nofollow"
 							href={browseHref(toggleIngredient(filter, ingredient.id))}>{ingredient.name}</a
 						>
 					{/each}

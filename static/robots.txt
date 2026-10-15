@@ -15,4 +15,4 @@ User-agent: Diffbot
 Disallow: /
 
 User-agent: *
-Disallow:
+Disallow: /*?

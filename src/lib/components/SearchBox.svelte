@@ -79,7 +79,7 @@
 {#if suggestions.length}
 	<div class="chips" data-sveltekit-replacestate data-sveltekit-noscroll>
 		{#each suggestions as suggestion (`${suggestion.kind}:${suggestion.kind === 'ingredient' ? suggestion.id : suggestion.name}`)}
-			<a class="chip sugg" href={browseHref(pickSuggestion(filter, suggestion))} onclick={clearSearch}
+			<a class="chip sugg" rel="nofollow" href={browseHref(pickSuggestion(filter, suggestion))} onclick={clearSearch}
 				>{label(suggestion)}</a
 			>
 		{/each}
